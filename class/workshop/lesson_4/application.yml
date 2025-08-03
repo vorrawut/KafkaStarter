@@ -1,0 +1,16 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: kafka-starter-lesson4
+  
+  kafka:
+    # TODO: Configure Kafka bootstrap servers
+    # TODO: Set up producer configurations for partition awareness
+    # TODO: Configure consumer settings for offset management
+    # TODO: Add admin client configuration for topic management
+
+# TODO: Add logging configuration for partition tracking
+# TODO: Configure monitoring endpoints
+# TODO: Set up metrics collection for partition monitoring

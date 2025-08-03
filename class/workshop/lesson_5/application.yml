@@ -1,0 +1,23 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: kafka-starter-lesson5
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    # TODO: Configure Schema Registry URL
+    # TODO: Set up Avro serializer configurations
+    # TODO: Set up Protobuf serializer configurations
+    # TODO: Configure consumer group settings
+
+# TODO: Add Schema Registry specific configuration
+# TODO: Configure compatibility levels
+# TODO: Set up monitoring and health checks
+# TODO: Add performance benchmarking settings
+
+# HINT: Schema Registry URL is typically http://localhost:8081
+# HINT: Use specific Avro reader for better performance
+# HINT: Configure schema caching for production

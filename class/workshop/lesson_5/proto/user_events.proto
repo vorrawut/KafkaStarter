@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package com.learning.events.protobuf;
+
+import "google/protobuf/timestamp.proto";
+
+// TODO: Define UserRegistered message
+// TODO: Add proper field numbers (1, 2, 3, etc.)
+// TODO: Include userId, email, timestamp, source fields
+// TODO: Consider optional fields for evolution
+
+message UserRegistered {
+  // TODO: Add string user_id field with field number 1
+  // TODO: Add string email field with field number 2  
+  // TODO: Add google.protobuf.Timestamp timestamp field with field number 3
+  // TODO: Add string source field with field number 4
+}
+
+// TODO: Define enum for registration sources
+// TODO: Include UNKNOWN, WEB, MOBILE, API values
+// TODO: Start with UNKNOWN = 0 as required by proto3
+
+// enum RegistrationSource {
+//   TODO: Add enum values
+// }
+
+// HINT: Reserve field numbers for removed fields
+// HINT: Use optional keyword for fields that might not be present
+// HINT: Keep field numbers sequential but leave gaps for future expansion

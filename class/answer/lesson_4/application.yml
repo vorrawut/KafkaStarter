@@ -1,0 +1,61 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: kafka-starter-lesson4
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        partitioner.class: org.apache.kafka.clients.producer.RoundRobinPartitioner
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: lesson4-partition-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: com.learning.KafkaStarter.model
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.RangeAssignor
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{partition}] %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka,topics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Custom application properties
+kafka-lesson:
+  topic:
+    default-partitions: 3
+    default-replication-factor: 1
+    auto-create: true
+  monitoring:
+    lag-threshold: 100
+    metrics-interval: 30s

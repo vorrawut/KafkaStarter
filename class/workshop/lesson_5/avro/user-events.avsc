@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "name": "UserRegistered",
+  "namespace": "com.learning.events.avro",
+  "doc": "Event representing a user registration",
+  "fields": [
+    {
+      "name": "userId",
+      "type": "string",
+      "doc": "TODO: Add documentation for userId field"
+    },
+    {
+      "name": "email", 
+      "type": "string",
+      "doc": "TODO: Add documentation for email field"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "TODO: Add documentation for timestamp field"
+    }
+  ]
+}
+
+// TODO: Add a 'source' field with default value
+// TODO: Consider adding optional fields for future evolution
+// TODO: Add proper documentation for all fields
+// HINT: Use default values for new fields to maintain backward compatibility
+// HINT: Consider using union types ["null", "string"] for optional fields

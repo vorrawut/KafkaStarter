@@ -1,0 +1,16 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: kafka-starter-lesson3
+  
+  # TODO: Configure Kafka settings
+  kafka:
+    # TODO: Add bootstrap servers configuration
+    # TODO: Configure producer settings (serializers)
+    # TODO: Configure consumer settings (deserializers, group-id)
+    # TODO: Set up JSON trusted packages for security
+
+# TODO: Add logging configuration
+# TODO: Configure actuator endpoints for monitoring

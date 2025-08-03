@@ -16,16 +16,44 @@ java {
 
 repositories {
 	mavenCentral()
+	maven("https://packages.confluent.io/maven/")
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-security")
+	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	
+	// Kotlin support
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	
+	// Kafka dependencies
+	implementation("org.springframework.kafka:spring-kafka")
+	implementation("org.apache.kafka:kafka-streams")
+	implementation("io.confluent:kafka-avro-serializer:7.4.0")
+	implementation("io.confluent:kafka-schema-registry-client:7.4.0")
+	implementation("io.confluent:kafka-streams-avro-serde:7.4.0")
+	
+	// Schema and serialization
+	implementation("org.apache.avro:avro:1.11.3")
+	implementation("com.google.protobuf:protobuf-java:3.24.4")
+	
+	// Database (for some lessons)
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly("com.h2database:h2")
+	
+	// Observability and monitoring
+	implementation("io.micrometer:micrometer-registry-prometheus")
+	implementation("io.micrometer:micrometer-tracing-bridge-brave")
+	
+	// Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.kafka:spring-kafka-test")
+	testImplementation("org.testcontainers:kafka")
+	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
