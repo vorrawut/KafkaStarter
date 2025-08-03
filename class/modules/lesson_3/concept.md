@@ -1,75 +1,108 @@
-# Lesson 3: Hello Kafka - Spring Boot Producer & Consumer Fundamentals
+# Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot
 
-## 🎯 Objective
+## 🎯 Learning Objectives
 
-Build your first Kafka application using Spring Boot and Kotlin, demonstrating the fundamental producer-consumer pattern with JSON message serialization.
+By the end of this lesson, you will:
+- **Build** your first Kafka application using Spring Boot and Kotlin
+- **Implement** both producer and consumer patterns with proper configuration
+- **Understand** JSON serialization and deserialization with Spring Kafka
+- **Apply** error handling and retry strategies for robust messaging
+- **Monitor** message flow through Kafka topics and consumer groups
+- **Test** end-to-end event flow with REST APIs and integration tests
 
-## 🧱 Core Components
+## 🏗️ Application Architecture
 
-### 1. **Event Model**
-The foundation of event-driven systems is well-defined events.
+Our first Kafka application demonstrates the core producer-consumer pattern:
 
-```kotlin
-data class UserRegisteredEvent(
-    val userId: String,
-    val email: String,
-    val timestamp: Instant = Instant.now(),
-    val source: String
-)
-```
-
-**Key Principles:**
-- **Immutable** - Events represent facts that happened
-- **Self-contained** - Include all necessary information
-- **Timestamped** - Always include when it happened
-- **Sourced** - Track where the event originated
-
-### 2. **Producer Pattern**
-Producers publish events to Kafka topics.
-
-```kotlin
-@Service
-class UserEventProducer(
-    private val kafkaTemplate: KafkaTemplate<String, UserRegisteredEvent>
-) {
-    fun publishUserRegistered(event: UserRegisteredEvent) {
-        kafkaTemplate.send("user-registration", event.userId, event)
-    }
-}
-```
-
-**Key Concepts:**
-- **Topic** - Logical channel for related events
-- **Key** - Ensures related events go to same partition
-- **Async by default** - Non-blocking event publishing
-- **Template pattern** - Spring's abstraction over Kafka producer
-
-### 3. **Consumer Pattern**
-Consumers subscribe to topics and process events.
-
-```kotlin
-@Service
-class UserEventConsumer {
+```mermaid
+graph TB
+    subgraph "Spring Boot Application (:8090)"
+        REST[REST Controller<br/>POST /api/users]
+        PROD[UserEventProducer<br/>Publishes Events]
+        CONS[UserEventConsumer<br/>Processes Events]
+        CONFIG[KafkaConfig<br/>Serializers & Settings]
+    end
     
-    @KafkaListener(topics = ["user-registration"])
-    fun handleUserRegistered(event: UserRegisteredEvent) {
-        // Process the event
-        logger.info("Processing user registration: ${event.userId}")
-    }
+    subgraph "Kafka Infrastructure"
+        BROKER[Kafka Broker<br/>:9092]
+        TOPIC[user-events Topic<br/>3 partitions]
+        GROUPS[Consumer Groups]
+    end
+    
+    subgraph "External"
+        CLIENT[HTTP Client]
+        MONITOR[Kafka UI :8080]
+    end
+    
+    CLIENT -->|POST /api/users| REST
+    REST -->|Async| PROD
+    PROD -->|JSON Message| BROKER
+    BROKER --> TOPIC
+    TOPIC --> CONS
+    CONS -->|Process| CONS
+    
+    MONITOR -->|View Messages| TOPIC
+    
+    style BROKER fill:#ff6b6b
+    style PROD fill:#4ecdc4
+    style CONS fill:#a8e6cf
+    style REST fill:#ffe66d
+```
+
+## 🔄 Event Flow Deep Dive
+
+### Producer Flow
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller
+    participant Producer
+    participant Kafka
+    
+    Client->>Controller: POST /api/users {userData}
+    Controller->>Producer: publishUserEvent(event)
+    Producer->>Producer: Serialize to JSON
+    Producer->>Kafka: Send to user-events topic
+    Kafka-->>Producer: Ack (if acks=all)
+    Producer-->>Controller: Success/Failure
+    Controller-->>Client: HTTP 201/500
+    
+    Note over Producer,Kafka: Async processing continues
+```
+
+### Consumer Flow
+```mermaid
+sequenceDiagram
+    participant Kafka
+    participant Consumer
+    participant Business
+    participant Database
+    
+    Kafka->>Consumer: Poll() - Get batch of events
+    Consumer->>Consumer: Deserialize JSON
+    loop For each event
+        Consumer->>Business: Process event
+        Business->>Database: Store/Update data
+        Business-->>Consumer: Success/Failure
+    end
+    Consumer->>Kafka: Commit offsets
+    
+    Note over Consumer: Continue polling...
+```
+
+## 🛠️ Spring Boot Kafka Integration
+
+### Dependency Configuration
+
+```kotlin
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 ```
 
-**Key Concepts:**
-- **@KafkaListener** - Annotation-driven consumption
-- **Automatic deserialization** - JSON to Kotlin objects
-- **Error handling** - Built-in retry and error handling
-- **Concurrent processing** - Multiple consumers for scalability
-
-## 🔧 Spring Boot Integration
-
-### Configuration Strategy
-
-Spring Boot provides excellent Kafka auto-configuration:
+### Application Configuration
 
 ```yaml
 spring:
@@ -78,283 +111,330 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
     consumer:
-      group-id: kafka-starter-app
+      group-id: user-service-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
       properties:
-        spring.json.trusted.packages: com.learning.KafkaStarter.model
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
 ```
 
-**Configuration Highlights:**
-- **Bootstrap servers** - Initial connection points
-- **Serializers** - Convert objects to bytes for network transfer
-- **Consumer group** - Logical grouping for load balancing
-- **Trusted packages** - Security for JSON deserialization
+## 📊 Event Model Design
 
-### Bean Configuration
+### User Event Structure
+```kotlin
+data class UserEvent(
+    val eventId: String,
+    val eventType: String, // USER_CREATED, USER_UPDATED, USER_DELETED
+    val userId: String,
+    val username: String,
+    val email: String,
+    val timestamp: Long = Instant.now().toEpochMilli(),
+    val metadata: Map<String, Any> = emptyMap()
+)
+```
 
+### JSON Serialization Example
+```json
+{
+  "eventId": "user-evt-123",
+  "eventType": "USER_CREATED",
+  "userId": "user-456",
+  "username": "john_doe",
+  "email": "john@example.com",
+  "timestamp": 1645123456789,
+  "metadata": {
+    "source": "web-ui",
+    "version": "1.0"
+  }
+}
+```
+
+## 🚀 Producer Implementation Patterns
+
+### KafkaTemplate Usage
+```kotlin
+@Service
+class UserEventProducer(
+    private val kafkaTemplate: KafkaTemplate<String, UserEvent>
+) {
+    fun publishUserEvent(event: UserEvent): CompletableFuture<SendResult<String, UserEvent>> {
+        return kafkaTemplate.send("user-events", event.userId, event)
+    }
+}
+```
+
+### Error Handling & Callbacks
+```kotlin
+fun publishWithCallback(event: UserEvent) {
+    kafkaTemplate.send("user-events", event.userId, event)
+        .whenComplete { result, throwable ->
+            if (throwable == null) {
+                val metadata = result.recordMetadata
+                logger.info("Event sent: topic=${metadata.topic()}, " +
+                    "partition=${metadata.partition()}, offset=${metadata.offset()}")
+            } else {
+                logger.error("Failed to send event: ${event.eventId}", throwable)
+            }
+        }
+}
+```
+
+## 🎯 Consumer Implementation Patterns
+
+### @KafkaListener Annotation
+```kotlin
+@Service
+class UserEventConsumer {
+    
+    @KafkaListener(topics = ["user-events"])
+    fun handleUserEvent(
+        @Payload event: UserEvent,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long
+    ) {
+        logger.info("Processing event: ${event.eventId} from $topic:$partition:$offset")
+        processUserEvent(event)
+    }
+}
+```
+
+### Manual Acknowledgment (Advanced)
+```kotlin
+@KafkaListener(
+    topics = ["user-events"],
+    containerFactory = "manualAckContainerFactory"
+)
+fun handleWithManualAck(
+    @Payload event: UserEvent,
+    acknowledgment: Acknowledgment
+) {
+    try {
+        processUserEvent(event)
+        acknowledgment.acknowledge() // Manual commit
+    } catch (e: Exception) {
+        logger.error("Failed to process event: ${event.eventId}", e)
+        // Don't acknowledge - message will be retried
+    }
+}
+```
+
+## 🔧 Configuration Deep Dive
+
+### Producer Configuration Options
 ```kotlin
 @Configuration
-class KafkaConfig {
+class KafkaProducerConfig {
     
     @Bean
     fun kafkaTemplate(): KafkaTemplate<String, Any> {
-        return KafkaTemplate(producerFactory())
+        val props = mapOf(
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
+            ProducerConfig.ACKS_CONFIG to "all",
+            ProducerConfig.RETRIES_CONFIG to 3,
+            ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to true,
+            ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to 1
+        )
+        
+        return KafkaTemplate(DefaultKafkaProducerFactory(props))
     }
+}
+```
+
+### Consumer Configuration Options
+```kotlin
+@Configuration
+class KafkaConsumerConfig {
     
     @Bean
-    fun producerFactory(): ProducerFactory<String, Any> {
-        return DefaultKafkaProducerFactory(producerConfigs())
+    fun consumerFactory(): ConsumerFactory<String, UserEvent> {
+        val props = mapOf(
+            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
+            ConsumerConfig.GROUP_ID_CONFIG to "user-service-group",
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to JsonDeserializer::class.java,
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to true,
+            ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG to 1000,
+            JsonDeserializer.TRUSTED_PACKAGES to "com.learning.KafkaStarter.model"
+        )
+        
+        return DefaultKafkaConsumerFactory(props)
     }
 }
 ```
 
-## 📊 Message Flow
+## 🛡️ Error Handling Strategies
 
+### Retry Configuration
 ```mermaid
-sequenceDiagram
-    participant Client
-    participant REST API
-    participant Producer
-    participant Kafka
-    participant Consumer
-    participant Business Logic
-
-    Client->>REST API: POST /api/users/register
-    REST API->>Producer: publishUserRegistered()
-    Producer->>Kafka: send(topic, key, event)
-    REST API->>Client: 200 OK (immediate response)
+graph TB
+    MESSAGE[Incoming Message] --> PROCESS[Process Message]
+    PROCESS -->|Success| ACK[Acknowledge]
+    PROCESS -->|Failure| RETRY{Retry Count < Max?}
+    RETRY -->|Yes| BACKOFF[Exponential Backoff]
+    BACKOFF --> PROCESS
+    RETRY -->|No| DLT[Dead Letter Topic]
     
-    Kafka->>Consumer: deliver event
-    Consumer->>Business Logic: process registration
-    Business Logic->>Consumer: processing complete
+    style ACK fill:#4ecdc4
+    style DLT fill:#ff6b6b
+    style BACKOFF fill:#ffe66d
 ```
 
-**Flow Characteristics:**
-- **Asynchronous** - API responds before event processing
-- **Decoupled** - Producer doesn't know about consumers
-- **Reliable** - Kafka guarantees event delivery
-- **Scalable** - Multiple consumers can process events
-
-## 🎯 Key Benefits
-
-### 1. **Loose Coupling**
-Services only depend on event contracts, not each other.
-
+### Exception Handling
 ```kotlin
-// Producer only knows about events
-producer.publishUserRegistered(event)
-
-// Consumer only knows about events  
-@KafkaListener(topics = ["user-registration"])
-fun handleUserRegistered(event: UserRegisteredEvent)
-```
-
-### 2. **Async Processing**
-Long-running operations don't block API responses.
-
-```kotlin
-@PostMapping("/register")
-fun registerUser(@RequestBody request: RegisterRequest): ResponseEntity<*> {
-    // Publish event (fast)
-    producer.publishUserRegistered(toEvent(request))
-    
-    // Return immediately
-    return ResponseEntity.ok("Registration initiated")
-}
-```
-
-### 3. **Scalability**
-Add consumers without changing producers.
-
-```yaml
-# Scale consumers independently
-replicas: 5  # 5 consumer instances
-```
-
-### 4. **Reliability**
-Events are persisted and can be replayed.
-
-```kotlin
-// Events survive consumer failures
-@KafkaListener(topics = ["user-registration"])
-fun handleUserRegistered(event: UserRegisteredEvent) {
+@KafkaListener(topics = ["user-events"])
+fun handleUserEvent(event: UserEvent) {
     try {
-        processRegistration(event)
-    } catch (e: Exception) {
-        // Event will be retried
-        throw e
+        processUserEvent(event)
+    } catch (e: RetryableException) {
+        logger.warn("Retryable error processing ${event.eventId}", e)
+        throw e // Let Spring Kafka retry
+    } catch (e: NonRetryableException) {
+        logger.error("Non-retryable error processing ${event.eventId}", e)
+        // Log and move on - don't retry
     }
 }
 ```
 
-## 🛡️ Error Handling
+## 📊 Monitoring & Observability
 
-### Producer Error Handling
-
-```kotlin
-fun publishUserRegistered(event: UserRegisteredEvent) {
-    kafkaTemplate.send("user-registration", event.userId, event)
-        .thenAccept { result ->
-            logger.info("Event published successfully")
-        }
-        .exceptionally { failure ->
-            logger.error("Failed to publish event", failure)
-            // Handle failure (retry, alert, etc.)
-            null
-        }
-}
+### Key Metrics to Track
+```mermaid
+graph TB
+    subgraph "Producer Metrics"
+        PM1[Messages Sent/sec]
+        PM2[Send Success Rate]
+        PM3[Send Latency]
+        PM4[Buffer Pool Usage]
+    end
+    
+    subgraph "Consumer Metrics"
+        CM1[Messages Consumed/sec]
+        CM2[Consumer Lag]
+        CM3[Processing Time]
+        CM4[Error Rate]
+    end
+    
+    subgraph "Topic Metrics"
+        TM1[Message Rate]
+        TM2[Bytes In/Out]
+        TM3[Partition Count]
+        TM4[Retention Usage]
+    end
+    
+    PM1 --> DASHBOARD[Monitoring Dashboard]
+    CM1 --> DASHBOARD
+    TM1 --> DASHBOARD
+    
+    style DASHBOARD fill:#4ecdc4
 ```
 
-### Consumer Error Handling
-
-```kotlin
-@KafkaListener(topics = ["user-registration"])
-fun handleUserRegistered(event: UserRegisteredEvent) {
-    try {
-        processRegistration(event)
-    } catch (retryableException: RetryableException) {
-        // Will be retried automatically
-        throw retryableException
-    } catch (poisonException: PoisonMessageException) {
-        // Log and skip
-        logger.error("Poison message", poisonException)
-    }
-}
-```
-
-## 🔍 JSON Serialization
-
-### Why JSON?
-- **Human readable** - Easy to debug and inspect
-- **Schema flexible** - Add fields without breaking consumers
-- **Tool friendly** - Works with Kafka UI, curl, etc.
-- **Cross-language** - Any language can consume
-
-### Schema Evolution
-
-```kotlin
-// Version 1
-data class UserRegisteredEvent(
-    val userId: String,
-    val email: String
-)
-
-// Version 2 - backward compatible
-data class UserRegisteredEvent(
-    val userId: String,
-    val email: String,
-    val firstName: String? = null,  // Optional field
-    val lastName: String? = null    // Optional field
-)
-```
-
-## 📊 Monitoring & Debugging
-
-### Application Metrics
-
+### Health Check Implementation
 ```kotlin
 @Component
-class UserEventMetrics {
-    private val registrationCounter = Counter.builder("user.registration.events")
-        .description("Total user registration events")
-        .register(Metrics.globalRegistry)
+class KafkaHealthIndicator : HealthIndicator {
     
-    fun incrementRegistrationEvent() {
-        registrationCounter.increment()
-    }
-}
-```
-
-### Logging Best Practices
-
-```kotlin
-@KafkaListener(topics = ["user-registration"])
-fun handleUserRegistered(event: UserRegisteredEvent) {
-    logger.info("Processing user registration: userId=${event.userId}, email=${event.email}")
+    @Autowired
+    private lateinit var kafkaAdmin: KafkaAdmin
     
-    try {
-        processRegistration(event)
-        logger.info("Successfully processed user registration: userId=${event.userId}")
-    } catch (e: Exception) {
-        logger.error("Failed to process user registration: userId=${event.userId}", e)
-        throw e
+    override fun health(): Health {
+        return try {
+            AdminClient.create(kafkaAdmin.configurationProperties).use { client ->
+                val metadata = client.describeCluster()
+                val brokers = metadata.nodes().get(5, TimeUnit.SECONDS)
+                
+                if (brokers.isNotEmpty()) {
+                    Health.up()
+                        .withDetail("brokers", brokers.size)
+                        .withDetail("clusterId", metadata.clusterId().get())
+                        .build()
+                } else {
+                    Health.down().withDetail("reason", "No brokers available").build()
+                }
+            }
+        } catch (e: Exception) {
+            Health.down(e).build()
+        }
     }
 }
 ```
 
 ## 🧪 Testing Strategies
 
-### Unit Testing
-
-```kotlin
-@Test
-fun `should publish user registration event`() {
-    val event = UserRegisteredEvent("user123", "test@example.com", "web")
-    
-    producer.publishUserRegistered(event)
-    
-    verify(kafkaTemplate).send("user-registration", "user123", event)
-}
-```
-
-### Integration Testing
-
+### Integration Testing with Embedded Kafka
 ```kotlin
 @SpringBootTest
-@EmbeddedKafka(topics = ["user-registration"])
+@EmbeddedKafka(partitions = 1, topics = ["user-events"])
 class UserEventIntegrationTest {
     
+    @Autowired
+    private lateinit var userEventProducer: UserEventProducer
+    
     @Test
-    fun `should process user registration end-to-end`() {
-        // Publish event
-        producer.publishUserRegistered(event)
+    fun `should send and receive user event`() {
+        val event = UserEvent(
+            eventId = "test-123",
+            eventType = "USER_CREATED",
+            userId = "user-456",
+            username = "testuser",
+            email = "test@example.com"
+        )
         
-        // Verify consumer processed it
-        await().atMost(Duration.ofSeconds(5))
-            .until { processedEvents.contains(event.userId) }
+        userEventProducer.publishUserEvent(event)
+        
+        // Assert event was consumed and processed
+        // (Implementation depends on your consumer logic)
     }
 }
 ```
 
-## ✅ Best Practices
+## 🎯 Best Practices
 
-### 1. **Event Design**
-- Use past tense names (`UserRegistered`, not `RegisterUser`)
-- Include all necessary context
-- Make events immutable
-- Version your events
+### Message Design
+- **Use meaningful event types** (USER_CREATED vs CREATED)
+- **Include correlation IDs** for tracing
+- **Add timestamps** for temporal ordering
+- **Version your messages** for schema evolution
+- **Keep events immutable** and self-contained
 
-### 2. **Topic Naming**
-- Use kebab-case (`user-registration`)
-- Include business context
-- Consider retention policies
-- Plan for multiple environments
+### Producer Best Practices
+- **Use idempotent producers** (`enable.idempotence=true`)
+- **Configure appropriate `acks`** level for durability
+- **Handle send failures** gracefully
+- **Use message keys** for partition assignment
+- **Monitor send metrics** for performance
 
-### 3. **Consumer Safety**
-- Make consumers idempotent
-- Handle poison messages
-- Use appropriate error handling
-- Monitor consumer lag
+### Consumer Best Practices
+- **Design idempotent consumers** - handle duplicate messages
+- **Use consumer groups** for parallel processing
+- **Handle deserialization errors** gracefully
+- **Monitor consumer lag** for performance
+- **Implement proper error handling** and retry logic
 
-### 4. **Producer Reliability**
-- Handle send failures
-- Use appropriate acknowledgment settings
-- Consider message ordering requirements
-- Monitor producer metrics
+## ✅ Success Criteria
+
+You've mastered this lesson when you can:
+- [ ] Configure Spring Boot with Kafka dependencies
+- [ ] Implement a producer that sends JSON events
+- [ ] Implement a consumer that processes events
+- [ ] Handle serialization/deserialization correctly
+- [ ] Add proper error handling and monitoring
+- [ ] Test the complete flow end-to-end
+- [ ] Monitor events through Kafka UI
 
 ## 🚀 What's Next?
 
-You've built your first Kafka application! This foundational pattern will scale to:
+Now that you can produce and consume events, let's dive deeper into Kafka's storage model!
 
-- **Multiple topics** - Different event types
-- **Consumer groups** - Load balancing and fault tolerance  
-- **Schema registry** - Structured data with evolution
-- **Stream processing** - Real-time event transformation
-
-Next up: [Lesson 4: Topics, Partitions & Offsets](../lesson_4/concept.md) - dive deeper into Kafka's storage model.
+**Next**: [Lesson 4 - Topics, Partitions & Offsets](../lesson_4/concept.md) where you'll master how Kafka stores and distributes your events for optimal performance and scalability.
 
 ---
 
-*Congratulations! You've just implemented the core pattern used in production Kafka applications. The producer-consumer model you've learned scales from simple notifications to complex event-driven architectures.*
+*"Your first Kafka application is running! You've crossed the threshold from theory to practice. Now let's optimize how your events are stored and processed."*

@@ -1,316 +1,383 @@
-# Lesson 2: Kafka Setup with Docker Compose
+# Lesson 2: Environment Setup & Kafka Infrastructure
 
-## 🎯 Objective
+## 🎯 Learning Objectives
 
-Set up a complete Kafka development environment using Docker Compose, including Kafka, Zookeeper, Schema Registry, and web UIs for learning and development.
+By the end of this lesson, you will:
+- **Set up** a complete Kafka development environment using Docker
+- **Understand** the core components of the Kafka ecosystem
+- **Validate** that all services are properly configured and accessible
+- **Master** basic Kafka operations and troubleshooting
+- **Configure** monitoring and observability tools
 
-## 🐳 Why Docker for Kafka Learning?
+## 🏗️ Kafka Ecosystem Architecture
 
-### ✅ Benefits
-- **Quick setup** - Environment ready in minutes
-- **Isolation** - No conflicts with system installations  
-- **Consistency** - Same environment for everyone
-- **Easy cleanup** - Remove everything with one command
-- **Production-like** - Similar to cloud deployments
-
-### 🏗️ Complete Development Stack
-Our setup includes:
-- **Kafka Broker** - The main event streaming engine
-- **Zookeeper** - Kafka coordination service
-- **Schema Registry** - Manages Avro/Protobuf schemas
-- **Kafka UI** - Modern web interface
-- **AKHQ** - Alternative Kafka management UI
-- **Kafka Connect** - Integration framework
-
-## 🚀 Environment Overview
+Understanding how Kafka components work together is crucial for successful development:
 
 ```mermaid
 graph TB
-    subgraph "Kafka Learning Environment"
-        UI[Kafka UI :8080]
-        AKHQ[AKHQ :8082]
-        SR[Schema Registry :8081]
-        KC[Kafka Connect :8083]
+    subgraph "Core Infrastructure"
+        ZK[Zookeeper<br/>:2181<br/>Coordination & Metadata]
+        K[Kafka Broker<br/>:9092<br/>Message Storage & Distribution]
+        SR[Schema Registry<br/>:8081<br/>Schema Management]
+    end
+    
+    subgraph "Management & Monitoring"
+        UI[Kafka UI<br/>:8080<br/>Web Interface]
+        AKHQ[AKHQ<br/>:8082<br/>Alternative UI]
+        P[Prometheus<br/>:9090<br/>Metrics Collection]
+        G[Grafana<br/>:3001<br/>Dashboards]
+    end
+    
+    subgraph "Your Applications"
+        APP[Spring Boot App<br/>:8090<br/>Producer/Consumer]
+    end
+    
+    ZK -.->|coordinates| K
+    K <-->|schemas| SR
+    K -->|metrics| UI
+    K -->|metrics| AKHQ
+    K -->|metrics| P
+    P -->|data| G
+    APP -->|produces/consumes| K
+    APP -->|schema ops| SR
+    
+    style K fill:#ff6b6b,color:#fff
+    style APP fill:#4ecdc4,color:#fff
+    style ZK fill:#ffe66d,color:#000
+    style SR fill:#a8e6cf,color:#000
+```
+
+## 🧱 Core Components
+
+### 1. **Apache Kafka Broker**
+The heart of the Kafka ecosystem:
+- **Message Storage**: Persists messages in topics with configurable retention
+- **Distribution**: Routes messages to consumers across partitions
+- **Replication**: Ensures data durability through replica management
+- **Performance**: Handles thousands of messages per second with low latency
+
+### 2. **Apache Zookeeper**
+Coordination service for Kafka:
+- **Metadata Management**: Stores topic and partition metadata
+- **Leader Election**: Manages partition leader selection
+- **Configuration**: Maintains cluster configuration
+- **Service Discovery**: Helps brokers find each other
+
+### 3. **Confluent Schema Registry**
+Schema management and evolution:
+- **Schema Storage**: Centralized repository for Avro, JSON, Protobuf schemas
+- **Compatibility**: Enforces schema evolution rules
+- **Serialization**: Integrates with Kafka serializers/deserializers
+- **Versioning**: Manages schema versions and migration
+
+### 4. **Management Tools**
+
+#### **Kafka UI**
+Modern web interface for Kafka management:
+- Topic browsing and message inspection
+- Consumer group monitoring
+- Schema registry integration
+- Cluster health monitoring
+
+#### **AKHQ**
+Alternative Kafka management interface:
+- Comprehensive cluster overview
+- Advanced message filtering
+- SQL-like query capabilities
+- Connect cluster management
+
+## 🐳 Docker Environment Setup
+
+### Docker Compose Configuration
+
+Our `docker-compose.yml` creates a complete Kafka ecosystem:
+
+```yaml
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on: [zookeeper]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+```
+
+### Network Architecture
+
+```mermaid
+graph LR
+    subgraph "Docker Network: kafka-starter-network"
+        subgraph "Internal Communication"
+            ZK[zookeeper:2181]
+            K[broker:29092]
+            SR[schema-registry:8081]
+        end
         
-        subgraph "Core Kafka"
-            K[Kafka Broker :9092]
-            Z[Zookeeper :2181]
+        subgraph "External Access"
+            KE[localhost:9092]
+            SRE[localhost:8081]
+            UIE[localhost:8080]
         end
     end
     
-    UI --> K
-    AKHQ --> K
-    SR --> K
-    KC --> K
-    K --> Z
+    CLIENT[Your App] -->|connects to| KE
+    CLIENT -->|schema ops| SRE
+    BROWSER[Browser] -->|management| UIE
+    
+    KE -.->|maps to| K
+    SRE -.->|maps to| SR
+    UIE -.->|connects to| K
 ```
 
-## 📋 Prerequisites
+## ⚙️ Configuration Deep Dive
 
-### Required Software
-- **Docker Desktop** (4.0+)
-- **Docker Compose** (2.0+)
-- **Web Browser** (for UIs)
+### Kafka Broker Configuration
 
-### Verify Installation
-```bash
-docker --version          # Should show 20.0+
-docker-compose --version  # Should show 2.0+
+Key configuration parameters you'll encounter:
+
+```properties
+# Broker Identity
+broker.id=1
+
+# Network & Listeners
+listeners=PLAINTEXT://0.0.0.0:29092
+advertised.listeners=PLAINTEXT://localhost:9092
+
+# Log & Storage
+log.dirs=/kafka/kafka-logs
+num.partitions=3
+default.replication.factor=1
+
+# Performance
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+
+# Topic Management
+auto.create.topics.enable=true
+delete.topic.enable=true
 ```
 
-### System Requirements
-- **Memory**: 4GB+ available RAM
-- **Disk**: 2GB+ free space
-- **Ports**: 2181, 8080-8083, 9092, 9101
+### Spring Boot Configuration
 
-## 🏃‍♂️ Quick Start
+Your application's `application.yml`:
 
-### 1. Start the Environment
-```bash
-cd docker
-docker-compose up -d
-```
-
-### 2. Verify Services
-```bash
-docker-compose ps
-```
-
-Expected output:
-```
-NAME                          STATUS
-kafka-starter-broker          Up 
-kafka-starter-zookeeper       Up
-kafka-starter-schema-registry Up
-kafka-starter-ui             Up
-kafka-starter-akhq           Up
-kafka-starter-connect        Up
-```
-
-### 3. Access Web Interfaces
-
-| Service | URL | Purpose |
-|---------|-----|---------|
-| **Kafka UI** | http://localhost:8080 | Primary management interface |
-| **AKHQ** | http://localhost:8082 | Alternative Kafka browser |
-| **Schema Registry** | http://localhost:8081 | Schema management API |
-
-## 🔧 Service Configuration
-
-### Kafka Broker
 ```yaml
-ports:
-  - "9092:9092"    # Client connections
-  - "9101:9101"    # JMX metrics
-
-environment:
-  KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092
-  KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-  KAFKA_DELETE_TOPIC_ENABLE: 'true'
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: my-app-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 ```
 
-**Key Settings:**
-- **Auto-create topics**: Enabled for easy learning
-- **Replication factor**: 1 (single broker setup)
-- **JMX monitoring**: Enabled for metrics
+## 🔍 Environment Validation
 
-### Schema Registry
-```yaml
-ports:
-  - "8081:8081"
+### Automated Health Checks
 
-environment:
-  SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
-```
+Use the workshop's `EnvironmentValidator` to systematically verify:
 
-**Purpose:**
-- Manage Avro and Protobuf schemas
-- Enforce schema evolution rules
-- Provide compatibility checking
+1. **Kafka Broker Connectivity**
+   ```kotlin
+   val result = environmentValidator.validateKafkaBroker("localhost:9092")
+   ```
 
-## 🛠️ Essential Commands
+2. **Schema Registry Access**
+   ```kotlin
+   val result = environmentValidator.validateSchemaRegistry("http://localhost:8081")
+   ```
 
-### Docker Management
+3. **Topic Operations**
+   ```kotlin
+   val result = environmentValidator.validateTopicOperations(adminClient)
+   ```
+
+### Manual Verification Commands
+
 ```bash
-# Start all services
-docker-compose up -d
-
-# View service logs
-docker-compose logs kafka
-docker-compose logs -f kafka-ui
-
-# Stop all services
-docker-compose down
-
-# Clean up (removes volumes)
-docker-compose down -v
-
-# Restart a specific service
-docker-compose restart kafka
-```
-
-### Kafka CLI Commands
-```bash
-# Create a topic
-docker exec kafka-starter-broker kafka-topics \
-  --create --topic test-topic \
-  --bootstrap-server localhost:9092 \
-  --partitions 3 \
-  --replication-factor 1
+# Test Kafka broker
+kafka-broker-api-versions --bootstrap-server localhost:9092
 
 # List topics
-docker exec kafka-starter-broker kafka-topics \
-  --list --bootstrap-server localhost:9092
+kafka-topics --list --bootstrap-server localhost:9092
 
-# Describe a topic
-docker exec kafka-starter-broker kafka-topics \
-  --describe --topic test-topic \
-  --bootstrap-server localhost:9092
-
-# Delete a topic
-docker exec kafka-starter-broker kafka-topics \
-  --delete --topic test-topic \
-  --bootstrap-server localhost:9092
-```
-
-### Producer/Consumer Testing
-```bash
-# Start a console producer
-docker exec -it kafka-starter-broker kafka-console-producer \
-  --topic test-topic \
-  --bootstrap-server localhost:9092
-
-# Start a console consumer
-docker exec -it kafka-starter-broker kafka-console-consumer \
-  --topic test-topic \
-  --from-beginning \
-  --bootstrap-server localhost:9092
-
-# Consumer with group
-docker exec -it kafka-starter-broker kafka-console-consumer \
-  --topic test-topic \
-  --group test-group \
-  --bootstrap-server localhost:9092
-```
-
-## 🎨 Exploring Kafka UI
-
-### 1. **Topics Management**
-- View all topics and their configurations
-- Create new topics with custom partitions
-- Monitor topic metrics and message rates
-
-### 2. **Message Browser**
-- Browse messages in any topic
-- View message headers and payloads
-- Filter messages by key or timestamp
-
-### 3. **Consumer Groups**
-- Monitor consumer lag
-- View group membership
-- Reset consumer offsets
-
-### 4. **Schema Registry**
-- Browse registered schemas
-- View schema evolution history
-- Test schema compatibility
-
-## 🔍 Health Checks
-
-### Verify Kafka is Ready
-```bash
-# Check broker logs for "started (kafka.server.KafkaServer)"
-docker-compose logs kafka | grep "started"
-
-# Test topic creation
-docker exec kafka-starter-broker kafka-topics \
-  --create --topic health-check \
-  --bootstrap-server localhost:9092 \
-  --partitions 1 \
-  --replication-factor 1
-```
-
-### Verify Schema Registry
-```bash
-# Check if Schema Registry responds
+# Test Schema Registry
 curl http://localhost:8081/subjects
 
-# Should return: []
-```
-
-### Verify Connectivity
-```bash
 # Test producer/consumer
-echo "Hello Kafka" | docker exec -i kafka-starter-broker kafka-console-producer \
-  --topic health-check \
-  --bootstrap-server localhost:9092
-
-docker exec kafka-starter-broker kafka-console-consumer \
-  --topic health-check \
-  --from-beginning \
-  --max-messages 1 \
-  --bootstrap-server localhost:9092
+kafka-console-producer --topic test --bootstrap-server localhost:9092
+kafka-console-consumer --topic test --from-beginning --bootstrap-server localhost:9092
 ```
 
-## 🚨 Troubleshooting
+## 📊 Monitoring Setup
 
-### Common Issues
+### Health Check Endpoints
 
-#### 1. **Port Conflicts**
+```mermaid
+graph TB
+    subgraph "Health Monitoring"
+        APP[Spring Boot App<br/>:8090/actuator/health]
+        K[Kafka Broker<br/>:9092/metrics]
+        SR[Schema Registry<br/>:8081/subjects]
+        UI[Kafka UI<br/>:8080]
+    end
+    
+    subgraph "Monitoring Stack"
+        P[Prometheus<br/>:9090]
+        G[Grafana<br/>:3001]
+        A[Alerts]
+    end
+    
+    APP --> P
+    K --> P
+    SR --> P
+    P --> G
+    G --> A
+    
+    style P fill:#ff9f43
+    style G fill:#5f27cd
+```
+
+### Key Metrics to Monitor
+
+1. **Broker Metrics**
+   - Message throughput (messages/sec)
+   - Network I/O (bytes/sec)
+   - Disk usage
+   - Active connections
+
+2. **Topic Metrics**
+   - Message count per topic
+   - Partition distribution
+   - Log size
+   - Retention compliance
+
+3. **Consumer Metrics**
+   - Consumer lag
+   - Processing rate
+   - Error rate
+   - Rebalance frequency
+
+## 🚨 Troubleshooting Guide
+
+### Common Issues & Solutions
+
+#### **Port Conflicts**
 ```bash
-# Check what's using port 9092
+# Check what's using Kafka port
 lsof -i :9092
 
-# Use different ports if needed
+# Kill conflicting process
+kill -9 <PID>
 ```
 
-#### 2. **Memory Issues**
+#### **Memory Issues**
+- **Symptom**: Services randomly stop or fail to start
+- **Solution**: Increase Docker memory allocation to 4GB+
+- **Check**: Docker Desktop → Settings → Resources → Memory
+
+#### **Slow Startup**
+- **Symptom**: Services take >2 minutes to start
+- **Cause**: Insufficient resources or network issues
+- **Solution**: 
+  - Check Docker resource allocation
+  - Verify network connectivity
+  - Check logs: `docker-compose logs <service>`
+
+#### **Schema Registry Connection Issues**
 ```bash
-# Increase Docker memory limit to 4GB+
-# Docker Desktop → Settings → Resources → Memory
+# Check Schema Registry health
+curl -f http://localhost:8081/subjects
+
+# Verify it can reach Kafka
+docker-compose logs schema-registry | grep -i error
 ```
 
-#### 3. **Services Not Starting**
+### Diagnostic Commands
+
 ```bash
-# Check logs for specific service
-docker-compose logs zookeeper
+# Service status
+docker-compose ps
+
+# Service logs  
 docker-compose logs kafka
+docker-compose logs schema-registry
 
-# Common issue: Zookeeper not ready
-# Solution: Wait longer or restart services
+# Resource usage
+docker stats
+
+# Network connectivity
+docker exec kafka-starter-broker kafka-broker-api-versions --bootstrap-server localhost:9092
 ```
 
-#### 4. **Clean Start**
-```bash
-# Stop and remove everything
-docker-compose down -v
-docker system prune -f
+## 🎯 Best Practices
 
-# Start fresh
-docker-compose up -d
-```
+### Development Environment
 
-## 📊 Environment Verification Checklist
+1. **Resource Allocation**
+   - Minimum 4GB RAM for Docker
+   - SSD storage for better I/O performance
+   - Close unnecessary applications
 
-- [ ] All 6 services running (`docker-compose ps`)
-- [ ] Kafka UI accessible (http://localhost:8080)
-- [ ] Can create topics via CLI
-- [ ] Can produce/consume messages
-- [ ] Schema Registry responding (http://localhost:8081/subjects)
-- [ ] JMX metrics available (port 9101)
+2. **Network Configuration**
+   - Use consistent port mappings
+   - Avoid port conflicts with other services
+   - Configure proper advertised listeners
 
-## 🎯 What's Next?
+3. **Data Management**
+   - Regular cleanup of test topics
+   - Monitor disk usage
+   - Configure appropriate retention policies
 
-With your Kafka environment running, you're ready for hands-on development! In [Lesson 3: Hello Kafka](../lesson_3/workshop_3.md), you'll build your first Kafka producer and consumer with Spring Boot and Kotlin.
+### Production Considerations
 
-## 💡 Pro Tips
+1. **Security**
+   - Enable SSL/SASL authentication
+   - Configure proper ACLs
+   - Use dedicated service accounts
 
-1. **Bookmark the UIs** - You'll use them constantly
-2. **Keep Docker Desktop open** - Monitor resource usage
-3. **Save commands** - Create scripts for common operations
-4. **Use volumes** - Your data persists between restarts
-5. **Monitor logs** - `docker-compose logs -f` is your friend
+2. **Monitoring**
+   - Set up comprehensive alerts
+   - Monitor key performance metrics
+   - Implement health checks
+
+3. **Backup & Recovery**
+   - Regular configuration backups
+   - Disaster recovery procedures
+   - Data replication strategies
+
+## ✅ Environment Checklist
+
+Before proceeding to the next lesson, verify:
+
+- [ ] **Docker Services**: All containers running and healthy
+- [ ] **Kafka Broker**: Accessible on port 9092
+- [ ] **Schema Registry**: Accessible on port 8081  
+- [ ] **Kafka UI**: Accessible on port 8080
+- [ ] **Topic Operations**: Can create, list, and delete topics
+- [ ] **Producer/Consumer**: Basic message flow works
+- [ ] **Health Checks**: All validation checks pass
+- [ ] **Monitoring**: Can access Prometheus and Grafana (optional)
+
+## 🚀 What's Next?
+
+With your environment validated and running, you're ready for hands-on Kafka development!
+
+**Next**: [Lesson 3 - First Producer/Consumer](../lesson_3/concept.md) where you'll build your first Kafka application and see events flowing through the system.
 
 ---
 
-*Your Kafka development environment is now ready! This setup will support all lessons in the curriculum and provides the tools you'll use in production environments.*
+*"A solid foundation enables confident building. With your Kafka environment ready, let's start producing and consuming events!"*
