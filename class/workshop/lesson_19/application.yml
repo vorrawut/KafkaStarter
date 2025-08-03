@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: kafka-monitoring-lesson19
+
+  # Kafka configuration for Lesson 19 - Observability & Monitoring
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      # TODO: Add monitoring-specific producer properties
+      
+    consumer:
+      group-id: lesson19-monitoring-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Add monitoring-specific consumer properties
+
+server:
+  port: 8095
+
+# TODO: Configure Micrometer and Prometheus metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  # TODO: Add monitoring endpoint configuration
+  # HINT: Configure metrics export and custom metrics
+
+# TODO: Configure logging for monitoring
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+  # TODO: Add monitoring-specific logging configuration
+
+# TODO: Configure alerting thresholds
+monitoring:
+  # TODO: Add alerting configuration
+  # HINT: Configure thresholds for metrics and alerts

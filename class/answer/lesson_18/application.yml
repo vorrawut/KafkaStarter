@@ -1,0 +1,143 @@
+spring:
+  application:
+    name: kafka-security-lesson18
+
+  # Kafka configuration for Lesson 18 - Kafka Security & ACLs
+  kafka:
+    bootstrap-servers: localhost:9093  # Secure port
+    
+    # Security configuration - Production ready
+    security:
+      protocol: SASL_SSL
+    
+    # SSL configuration
+    ssl:
+      trust-store-location: classpath:kafka.client.truststore.jks
+      trust-store-password: kafkastore
+      key-store-location: classpath:kafka.client.keystore.jks
+      key-store-password: kafkastore
+      key-password: kafkastore
+      protocol: TLS
+      enabled-protocols: TLSv1.2,TLSv1.3
+      endpoint-identification-algorithm: ""
+      
+    # SASL configuration  
+    sasl:
+      mechanism: PLAIN
+      jaas:
+        config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka-client" password="client-secret";
+      
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        # Security properties for producer
+        security.protocol: SASL_SSL
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka-producer" password="producer-secret";
+        ssl.truststore.location: classpath:kafka.client.truststore.jks
+        ssl.truststore.password: kafkastore
+        ssl.keystore.location: classpath:kafka.client.keystore.jks
+        ssl.keystore.password: kafkastore
+        ssl.key.password: kafkastore
+        ssl.endpoint.identification.algorithm: ""
+        enable.idempotence: true
+        
+    consumer:
+      group-id: lesson18-security-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+        # Security properties for consumer
+        security.protocol: SASL_SSL
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka-consumer" password="consumer-secret";
+        ssl.truststore.location: classpath:kafka.client.truststore.jks
+        ssl.truststore.password: kafkastore
+        ssl.keystore.location: classpath:kafka.client.keystore.jks
+        ssl.keystore.password: kafkastore
+        ssl.key.password: kafkastore
+        ssl.endpoint.identification.algorithm: ""
+        session.timeout.ms: 30000
+
+    admin:
+      properties:
+        # Security properties for admin client
+        security.protocol: SASL_SSL
+        sasl.mechanism: PLAIN
+        sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka-admin" password="admin-secret";
+        ssl.truststore.location: classpath:kafka.client.truststore.jks
+        ssl.truststore.password: kafkastore
+        ssl.keystore.location: classpath:kafka.client.keystore.jks
+        ssl.keystore.password: kafkastore
+        ssl.key.password: kafkastore
+        ssl.endpoint.identification.algorithm: ""
+
+server:
+  port: 8094
+  # HTTPS configuration for secure REST endpoints
+  ssl:
+    enabled: true
+    key-store: classpath:server.keystore.jks
+    key-store-password: serverpass
+    key-store-type: JKS
+    key-alias: serverkey
+    protocol: TLS
+    enabled-protocols: TLSv1.2,TLSv1.3
+
+# JWT configuration
+security:
+  jwt:
+    secret: mySecretKey123456789012345678901234567890
+    expiration: 86400000 # 24 hours
+    header: Authorization
+    prefix: "Bearer "
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka.common.security: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  # Secure management endpoints
+  security:
+    enabled: true
+    roles: ADMIN
+
+# Application-specific security configuration
+app:
+  security:
+    encryption:
+      algorithm: AES
+      transformation: AES/CBC/PKCS5Padding
+      key-length: 256
+    audit:
+      enabled: true
+      topic: security-audit-events
+    classification:
+      levels:
+        PUBLIC: 0
+        INTERNAL: 1
+        CONFIDENTIAL: 2
+        SECRET: 3
+      role-clearance:
+        USER: 0
+        EMPLOYEE: 1
+        MANAGER: 2
+        ADMIN: 3
