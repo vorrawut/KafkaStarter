@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: kafka-manual-ack-lesson9
+
+  # Kafka configuration for Lesson 9 - Manual Acknowledgment & Idempotent Consumers
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      # TODO: Configure idempotent producer settings
+      
+    consumer:
+      group-id: lesson9-manual-ack-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Configure manual acknowledgment settings
+      # TODO: Configure session timeout and heartbeat for manual ack
+
+server:
+  port: 8089
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka

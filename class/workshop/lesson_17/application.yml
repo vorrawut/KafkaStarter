@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: kafka-dashboard-lesson17
+
+  # Kafka configuration for Lesson 17 - Real-time Dashboard
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    
+    consumer:
+      group-id: lesson17-dashboard-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+    
+    streams:
+      application-id: lesson17-dashboard-streams
+      state-dir: /tmp/kafka-streams/lesson17
+      replication-factor: 1
+      default:
+        key:
+          serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        value:
+          serde: org.springframework.kafka.support.serializer.JsonSerde
+      properties:
+        processing.guarantee: exactly_once_v2
+        commit.interval.ms: 5000
+        cache.max.bytes.buffering: 5242880  # 5MB
+        num.stream.threads: 4
+
+server:
+  port: 8094
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.apache.kafka.streams: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka,websocket

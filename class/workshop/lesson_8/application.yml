@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: kafka-error-handling-lesson8
+
+  # Kafka configuration for Lesson 8 - Retry Strategies & Dead Letter Topics
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    
+    consumer:
+      group-id: lesson8-error-handling-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Configure error handling properties
+      # TODO: Configure retry settings
+
+server:
+  port: 8088
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka

@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: kafka-error-handling-lesson8
+
+  # Kafka configuration for Lesson 8 - Retry Strategies & Dead Letter Topics
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+    
+    consumer:
+      group-id: lesson8-error-handling-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # Error handling configuration
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+        # Session and heartbeat configuration for error handling
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 3000
+    
+    # Retry topic configuration
+    retry:
+      topic:
+        attempts: 4
+        delay: 1000
+        multiplier: 2.0
+        max-delay: 10000
+
+server:
+  port: 8088
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.retry: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  endpoint:
+    health:
+      show-details: always

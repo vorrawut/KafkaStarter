@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: kafka-transformation-lesson10
+
+  # Kafka configuration for Lesson 10 - Message Transformation & Filtering
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        compression.type: snappy
+    
+    consumer:
+      group-id: lesson10-transformation-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+        # Consumer settings for transformation patterns
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 3000
+        max.poll.records: 100
+
+server:
+  port: 8090
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  endpoint:
+    health:
+      show-details: always

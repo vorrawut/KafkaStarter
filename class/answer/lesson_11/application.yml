@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: kafka-fanout-lesson11
+
+  # Kafka configuration for Lesson 11 - Fan-out Pattern: Notification Systems
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        batch.size: 16384
+        linger.ms: 10
+    
+    consumer:
+      group-id: lesson11-fanout-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+        # Consumer settings for fan-out patterns
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 3000
+        max.poll.records: 100
+
+server:
+  port: 8091
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  endpoint:
+    health:
+      show-details: always

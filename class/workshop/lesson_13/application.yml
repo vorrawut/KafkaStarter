@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: kafka-request-reply-lesson13
+
+  # Kafka configuration for Lesson 13 - Request-Reply Patterns
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    
+    consumer:
+      group-id: lesson13-request-reply-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Configure consumer settings for request-reply patterns
+
+server:
+  port: 8093
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka

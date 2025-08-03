@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: kafka-streams-lesson15
+
+  # Kafka configuration for Lesson 15 - Windowing & Joins
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    
+    consumer:
+      group-id: lesson15-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+    
+    streams:
+      application-id: lesson15-windowing-joins-app
+      state-dir: /tmp/kafka-streams/lesson15
+      replication-factor: 1
+      default:
+        key:
+          serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        value:
+          serde: org.springframework.kafka.support.serializer.JsonSerde
+      properties:
+        processing.guarantee: exactly_once_v2
+        commit.interval.ms: 5000
+        cache.max.bytes.buffering: 2097152  # 2MB
+        num.stream.threads: 3
+
+server:
+  port: 8092
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.apache.kafka.streams: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  endpoint:
+    health:
+      show-details: always

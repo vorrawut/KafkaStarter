@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: kafka-starter-lesson5
+    
+  # Kafka Configuration with Schema Registry
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    # Producer Configuration for Schema Registry
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8081
+        auto.register.schemas: true
+        use.latest.version: true
+        
+    # Consumer Configuration for Schema Registry  
+    consumer:
+      group-id: schema-lesson-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+      auto-offset-reset: earliest
+      properties:
+        schema.registry.url: http://localhost:8081
+        specific.avro.reader: true
+
+# Server Configuration
+server:
+  port: 8095
+
+# Logging Configuration
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    io.confluent: INFO
+    org.apache.avro: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

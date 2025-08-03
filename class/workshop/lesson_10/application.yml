@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: kafka-transformation-lesson10
+
+  # Kafka configuration for Lesson 10 - Message Transformation & Filtering
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    
+    consumer:
+      group-id: lesson10-transformation-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Configure consumer settings for transformation patterns
+
+server:
+  port: 8090
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka

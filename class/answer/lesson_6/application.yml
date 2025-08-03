@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: kafka-starter-lesson6
+    
+  # Kafka Configuration for Development Tools
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    # Producer Configuration
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
+        retries: 3
+        
+    # Consumer Configuration
+    consumer:
+      group-id: dev-tools-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.learning.KafkaStarter
+        enable.auto.commit: false
+        
+    # Admin Configuration
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092
+
+# Server Configuration
+server:
+  port: 8096
+
+# Logging Configuration - Enhanced for debugging
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"
+    
+# Actuator Configuration - Enhanced monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,kafka,env,loggers
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    kafka:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        
+# Custom application properties for development tools
+kafka-tools:
+  debug:
+    enabled: true
+    message-inspection: true
+    consumer-tracking: true
+  monitoring:
+    enabled: true
+    performance-tracking: true
+    error-tracking: true
+  testing:
+    embedded-kafka: true
+    test-data-generation: true

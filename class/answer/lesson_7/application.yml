@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: kafka-consumer-groups-lesson7
+
+  # Kafka configuration for Lesson 7 - Consumer Groups & Load Balancing
+  kafka:
+    bootstrap-servers: localhost:9092
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    
+    consumer:
+      group-id: lesson7-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # Consumer group coordination settings
+      session-timeout-ms: 30000
+      heartbeat-interval-ms: 3000
+      # Performance tuning
+      max-poll-records: 100
+      max-poll-interval-ms: 300000
+      properties:
+        spring.json.trusted.packages: "com.learning.KafkaStarter.model"
+
+server:
+  port: 8087
+
+logging:
+  level:
+    com.learning.KafkaStarter: DEBUG
+    org.apache.kafka.clients.consumer: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  endpoint:
+    health:
+      show-details: always
