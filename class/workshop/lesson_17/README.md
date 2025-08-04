@@ -638,7 +638,7 @@ class DashboardController {
                 <div class="card metric-card bg-primary text-white">
                     <div class="card-body">
                         <h5 class="card-title">Total Volume</h5>
-                        <h2 id="totalVolume" class="card-text">0</h2>
+                        <h2 id="totalVolume" class="card-text"&gt;0</h2>
                     </div>
                 </div>
             </div>
@@ -646,7 +646,7 @@ class DashboardController {
                 <div class="card metric-card bg-success text-white">
                     <div class="card-body">
                         <h5 class="card-title">Trade Count</h5>
-                        <h2 id="tradeCount" class="card-text">0</h2>
+                        <h2 id="tradeCount" class="card-text"&gt;0</h2>
                     </div>
                 </div>
             </div>
@@ -662,7 +662,7 @@ class DashboardController {
                 <div class="card metric-card bg-info text-white">
                     <div class="card-body">
                         <h5 class="card-title">Active Orders</h5>
-                        <h2 id="activeOrders" class="card-text">0</h2>
+                        <h2 id="activeOrders" class="card-text"&gt;0</h2>
                     </div>
                 </div>
             </div>
@@ -986,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
 - [ ] WebSocket connection provides live updates to browser clients
 - [ ] Interactive charts display real-time trading data and metrics
 - [ ] Dashboard shows current metrics, top symbols, and recent alerts
-- [ ] Performance handles high-frequency updates (>100 updates/sec)
+- [ ] Performance handles high-frequency updates (&gt;100 updates/sec)
 - [ ] Frontend remains responsive during heavy data loads
 - [ ] Dashboard works across multiple browser sessions simultaneously
 

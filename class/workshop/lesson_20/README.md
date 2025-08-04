@@ -252,26 +252,26 @@ class KafkaConsumerAutoScaler {
 ```mermaid
 graph TB
     subgraph "Memory Tuning"
-        HEAP[JVM Heap Size<br/>6-8GB recommended]
-        PAGE_CACHE[OS Page Cache<br/>50%+ of system RAM]
-        SOCKET_BUFFER[Socket Buffers<br/>128KB-1MB]
+        HEAP[JVM Heap Size<br/&gt;6-8GB recommended]
+        PAGE_CACHE[OS Page Cache<br/&gt;50%+ of system RAM]
+        SOCKET_BUFFER[Socket Buffers<br/&gt;128KB-1MB]
     end
     
     subgraph "Disk Tuning"
         LOG_DIRS[Multiple Log Directories<br/>Separate disks]
-        LOG_SEGMENT[Log Segment Size<br/>1GB default]
+        LOG_SEGMENT[Log Segment Size<br/&gt;1GB default]
         LOG_RETENTION[Log Retention<br/>Time vs Size based]
     end
     
     subgraph "Network Tuning"
-        NUM_NETWORK[Network Threads<br/>3-8 threads]
-        NUM_IO[I/O Threads<br/>8-16 threads]
-        REPLICA_FETCH[Replica Fetch Size<br/>1MB default]
+        NUM_NETWORK[Network Threads<br/&gt;3-8 threads]
+        NUM_IO[I/O Threads<br/&gt;8-16 threads]
+        REPLICA_FETCH[Replica Fetch Size<br/&gt;1MB default]
     end
     
     subgraph "Producer Tuning"
-        BATCH_SIZE[Batch Size<br/>16KB-1MB]
-        LINGER_MS[Linger Time<br/>5-100ms]
+        BATCH_SIZE[Batch Size<br/&gt;16KB-1MB]
+        LINGER_MS[Linger Time<br/&gt;5-100ms]
         COMPRESSION[Compression<br/>LZ4, Snappy, GZIP]
     end
     

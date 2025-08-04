@@ -455,7 +455,7 @@ class UserProfileEnricher {
 - [ ] Data enrichment enhances messages with external data
 - [ ] Field mapping handles nested object transformations
 - [ ] Pipeline processes messages without data loss
-- [ ] Performance meets throughput requirements (>1000 msg/sec)
+- [ ] Performance meets throughput requirements (&gt;1000 msg/sec)
 - [ ] Error handling captures and routes failed transformations
 
 ## 🚀 Getting Started

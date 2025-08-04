@@ -32,7 +32,7 @@ graph TB
     
     subgraph "Windowing Operations"
         TUMBLING[Tumbling Windows<br/>Fixed 1-minute intervals]
-        HOPPING[Hopping Windows<br/>30-second slides, 1-minute size]
+        HOPPING[Hopping Windows<br/&gt;30-second slides, 1-minute size]
         SESSION[Session Windows<br/>Activity-based grouping]
         CUSTOM[Custom Windows<br/>Business-specific timing]
     end
@@ -90,18 +90,18 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Tumbling Windows (Non-overlapping)"
-        TW1[Window 1<br/>09:00-09:01]
-        TW2[Window 2<br/>09:01-09:02]
-        TW3[Window 3<br/>09:02-09:03]
+        TW1[Window 1<br/&gt;09:00-09:01]
+        TW2[Window 2<br/&gt;09:01-09:02]
+        TW3[Window 3<br/&gt;09:02-09:03]
         
         TW1 --> TW2
         TW2 --> TW3
     end
     
     subgraph "Hopping Windows (Overlapping)"
-        HW1[Window 1<br/>09:00-09:02]
-        HW2[Window 2<br/>09:01-09:03]
-        HW3[Window 3<br/>09:02-09:04]
+        HW1[Window 1<br/&gt;09:00-09:02]
+        HW2[Window 2<br/&gt;09:01-09:03]
+        HW3[Window 3<br/&gt;09:02-09:04]
         
         HW1 -.-> HW2
         HW2 -.-> HW3
@@ -528,7 +528,7 @@ class ComplexAggregationProcessor {
 - [ ] Stream-table joins enrich streams with latest reference data
 - [ ] Complex aggregations produce accurate financial metrics
 - [ ] Late-arriving data handled appropriately with grace periods
-- [ ] Performance handles high-frequency trading data (>100k events/sec)
+- [ ] Performance handles high-frequency trading data (&gt;100k events/sec)
 - [ ] Memory usage remains stable during large window operations
 
 ## 🚀 Getting Started

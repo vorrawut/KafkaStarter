@@ -554,7 +554,7 @@ class UserQueryController {
 - [ ] Request-reply infrastructure handles synchronous communication over Kafka
 - [ ] Correlation management correctly matches requests with responses
 - [ ] Timeout handling prevents hanging requests
-- [ ] Performance optimization achieves target throughput (>1000 req/sec)
+- [ ] Performance optimization achieves target throughput (&gt;1000 req/sec)
 - [ ] Error handling provides meaningful feedback to clients
 - [ ] Batch requests work efficiently for bulk operations
 - [ ] Integration with REST APIs is seamless

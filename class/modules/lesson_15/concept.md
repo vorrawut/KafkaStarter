@@ -345,7 +345,7 @@ graph TB
         end
         
         subgraph "Join Operations"
-            INNER[⚡ Inner Join<br/>Orders ⋈ Payments<br/>30-second window]
+            INNER[⚡ Inner Join<br/>Orders ⋈ Payments<br/&gt;30-second window]
             LEFT[🔄 Left Join<br/>Orders ⋈ Customers<br/>Co-partitioned]
         end
         

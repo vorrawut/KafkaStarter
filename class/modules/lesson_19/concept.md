@@ -262,24 +262,24 @@ kafka.server:type=ReplicaManager,name=PartitionCount
 ```mermaid
 graph TB
     subgraph "Executive Dashboard - High Level KPIs"
-        HEALTH[🟢 System Health<br/>99.9% uptime]
-        THROUGHPUT[📈 Message Throughput<br/>50K msg/sec]
-        LATENCY[⚡ Avg Latency<br/>5ms p95]
-        ERRORS[🚨 Error Rate<br/>0.01%]
+        HEALTH[🟢 System Health<br/&gt;99.9% uptime]
+        THROUGHPUT[📈 Message Throughput<br/&gt;50K msg/sec]
+        LATENCY[⚡ Avg Latency<br/&gt;5ms p95]
+        ERRORS[🚨 Error Rate<br/&gt;0.01%]
     end
     
     subgraph "Business Impact Metrics"
         REVENUE[💰 Revenue Impact<br/>$1.2M/hour processed]
-        CUSTOMERS[👥 Active Users<br/>50K concurrent]
-        ORDERS[🛒 Orders/minute<br/>1,200 orders/min]
-        ALERTS[⚠️ Active Alerts<br/>2 warnings]
+        CUSTOMERS[👥 Active Users<br/&gt;50K concurrent]
+        ORDERS[🛒 Orders/minute<br/&gt;1,200 orders/min]
+        ALERTS[⚠️ Active Alerts<br/&gt;2 warnings]
     end
     
     subgraph "Trend Analysis"
         HOURLY[📊 Hourly Trends<br/>Last 24 hours]
         DAILY[📅 Daily Trends<br/>Last 30 days]
         CAPACITY[📏 Capacity Planning<br/>Current: 60% utilization]
-        FORECAST[🔮 Growth Forecast<br/>20% monthly growth]
+        FORECAST[🔮 Growth Forecast<br/&gt;20% monthly growth]
     end
     
     HEALTH --> REVENUE
@@ -303,8 +303,8 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Cluster Health Overview"
-        BROKER_STATUS[Broker Status<br/>3/3 brokers online]
-        PARTITION_STATUS[Partition Status<br/>150 partitions healthy]
+        BROKER_STATUS[Broker Status<br/&gt;3/3 brokers online]
+        PARTITION_STATUS[Partition Status<br/&gt;150 partitions healthy]
         REPLICATION[Replication Status<br/>In-sync replicas: 100%]
         CONTROLLER[Controller Status<br/>Active controller: broker-1]
     end
@@ -576,7 +576,7 @@ graph TB
     end
     
     subgraph "Alert Channels"
-        PAGERDUTY[📱 PagerDuty<br/>Critical & High alerts<br/>24/7 on-call rotation]
+        PAGERDUTY[📱 PagerDuty<br/>Critical & High alerts<br/&gt;24/7 on-call rotation]
         SLACK[💬 Slack<br/>All alert levels<br/>Team notifications]
         EMAIL[📧 Email<br/>Medium & Low alerts<br/>Non-urgent notifications]
         DASHBOARD[📊 Dashboard<br/>Visual indicators<br/>Status overview]
@@ -670,10 +670,10 @@ graph TB
     end
     
     subgraph "SLO - Service Level Objectives"
-        AVAIL_SLO[Availability SLO<br/>99.9% uptime per month]
-        LATENCY_SLO[Latency SLO<br/>95% of requests < 100ms]
+        AVAIL_SLO[Availability SLO<br/&gt;99.9% uptime per month]
+        LATENCY_SLO[Latency SLO<br/&gt;95% of requests < 100ms]
         THROUGHPUT_SLO[Throughput SLO<br/>≥ 10K messages/second]
-        QUALITY_SLO[Quality SLO<br/>99.99% message delivery success]
+        QUALITY_SLO[Quality SLO<br/&gt;99.99% message delivery success]
     end
     
     subgraph "Error Budget Management"

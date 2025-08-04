@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_16/README",
+  "title": "Lesson 16 Workshop: Local State Stores & Fault Tolerance",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_16/README.md",
+  "sourceDirName": "workshop/lesson_16",
+  "slug": "/workshop/lesson_16/",
+  "permalink": "/KafkaStarter/workshop/lesson_16/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_16/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 16: Local State Stores & Fault Tolerance - Persistent State Management",
+    "permalink": "/KafkaStarter/modules/lesson_16/concept"
+  },
+  "next": {
+    "title": "Lesson 17: Building a Real-time Dashboard Application - Complete Analytics System",
+    "permalink": "/KafkaStarter/modules/lesson_17/concept"
+  }
+}

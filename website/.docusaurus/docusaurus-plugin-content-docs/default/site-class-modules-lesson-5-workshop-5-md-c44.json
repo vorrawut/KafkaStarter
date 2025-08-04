@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_5/workshop_5",
+  "title": "Lesson 5 Workshop: Schema Registry with Avro & Protobuf",
+  "description": "🎯 What We Want to Build",
+  "source": "@site/../class/modules/lesson_5/workshop_5.md",
+  "sourceDirName": "modules/lesson_5",
+  "slug": "/modules/lesson_5/workshop_5",
+  "permalink": "/KafkaStarter/modules/lesson_5/workshop_5",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_5/workshop_5.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 5: Schema Registry with Avro & Protobuf - Managing Structured Data",
+    "permalink": "/KafkaStarter/modules/lesson_5/concept"
+  },
+  "next": {
+    "title": "Lesson 5 Workshop: Schema Registry & Evolution",
+    "permalink": "/KafkaStarter/workshop/lesson_5/"
+  }
+}

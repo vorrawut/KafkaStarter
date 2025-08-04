@@ -60,7 +60,7 @@ graph TB
     
     subgraph "Kafka Ecosystem"
         BROKER[Kafka Broker<br/>:9092]
-        TOPIC[user-events Topic<br/>3 partitions]
+        TOPIC[user-events Topic<br/&gt;3 partitions]
     end
     
     subgraph "Data Flow"

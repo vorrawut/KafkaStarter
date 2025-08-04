@@ -212,9 +212,9 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Scaling Up"
-        S1[1 Consumer<br/>6 Partitions] --> S2[2 Consumers<br/>3 Partitions Each]
-        S2 --> S3[3 Consumers<br/>2 Partitions Each]
-        S3 --> S4[6 Consumers<br/>1 Partition Each]
+        S1[1 Consumer<br/&gt;6 Partitions] --> S2[2 Consumers<br/&gt;3 Partitions Each]
+        S2 --> S3[3 Consumers<br/&gt;2 Partitions Each]
+        S3 --> S4[6 Consumers<br/&gt;1 Partition Each]
     end
     
     subgraph "Scaling Down"

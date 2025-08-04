@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_11/concept",
+  "title": "Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing",
+  "description": "🎯 Objective",
+  "source": "@site/../class/modules/lesson_11/concept.md",
+  "sourceDirName": "modules/lesson_11",
+  "slug": "/modules/lesson_11/concept",
+  "permalink": "/KafkaStarter/modules/lesson_11/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_11/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 10 Workshop: Message Transformation & Filtering",
+    "permalink": "/KafkaStarter/workshop/lesson_10/"
+  },
+  "next": {
+    "title": "Lesson 11 Workshop: Fan-out Pattern & Notification Systems",
+    "permalink": "/KafkaStarter/workshop/lesson_11/"
+  }
+}

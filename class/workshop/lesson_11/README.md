@@ -551,7 +551,7 @@ class DeliveryTracker {
 - [ ] All notification channels (email, SMS, push) working correctly
 - [ ] Delivery tracking provides visibility into success/failure rates
 - [ ] Failure recovery handles retries and dead letter scenarios
-- [ ] Performance handles high-volume notification bursts (>10k/min)
+- [ ] Performance handles high-volume notification bursts (&gt;10k/min)
 - [ ] Business rules prevent spam and respect user preferences
 
 ## 🚀 Getting Started

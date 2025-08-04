@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_6/README",
+  "title": "Lesson 6 Workshop: Development Tools & Testing Framework",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_6/README.md",
+  "sourceDirName": "workshop/lesson_6",
+  "slug": "/workshop/lesson_6/",
+  "permalink": "/KafkaStarter/workshop/lesson_6/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_6/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 6 Workshop: Development Tools - Building Production-Ready Kafka Applications",
+    "permalink": "/KafkaStarter/modules/lesson_6/workshop_6"
+  },
+  "next": {
+    "title": "Lesson 7: Consumer Groups & Load Balancing - Scaling Kafka Consumers",
+    "permalink": "/KafkaStarter/modules/lesson_7/concept"
+  }
+}

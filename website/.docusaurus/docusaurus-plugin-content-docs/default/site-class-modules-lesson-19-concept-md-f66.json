@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_19/concept",
+  "title": "Lesson 19: Observability & Monitoring - Production Operations Excellence",
+  "description": "🎯 Learning Objectives",
+  "source": "@site/../class/modules/lesson_19/concept.md",
+  "sourceDirName": "modules/lesson_19",
+  "slug": "/modules/lesson_19/concept",
+  "permalink": "/KafkaStarter/modules/lesson_19/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_19/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 18 Workshop: Kafka Security & ACLs",
+    "permalink": "/KafkaStarter/workshop/lesson_18/"
+  },
+  "next": {
+    "title": "Lesson 19 Workshop: Observability & Monitoring",
+    "permalink": "/KafkaStarter/workshop/lesson_19/"
+  }
+}

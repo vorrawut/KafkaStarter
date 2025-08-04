@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_13/concept",
+  "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
+  "description": "🎯 Objective",
+  "source": "@site/../class/modules/lesson_13/concept.md",
+  "sourceDirName": "modules/lesson_13",
+  "slug": "/modules/lesson_13/concept",
+  "permalink": "/KafkaStarter/modules/lesson_13/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_13/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 12 Workshop: Hybrid REST + Kafka Architecture",
+    "permalink": "/KafkaStarter/workshop/lesson_12/"
+  },
+  "next": {
+    "title": "Lesson 13 Workshop: Request-Reply Patterns with Kafka",
+    "permalink": "/KafkaStarter/workshop/lesson_13/"
+  }
+}

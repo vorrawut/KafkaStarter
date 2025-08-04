@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_12/README",
+  "title": "Lesson 12 Workshop: Hybrid REST + Kafka Architecture",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_12/README.md",
+  "sourceDirName": "workshop/lesson_12",
+  "slug": "/workshop/lesson_12/",
+  "permalink": "/KafkaStarter/workshop/lesson_12/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_12/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 12: Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture",
+    "permalink": "/KafkaStarter/modules/lesson_12/concept"
+  },
+  "next": {
+    "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
+    "permalink": "/KafkaStarter/modules/lesson_13/concept"
+  }
+}

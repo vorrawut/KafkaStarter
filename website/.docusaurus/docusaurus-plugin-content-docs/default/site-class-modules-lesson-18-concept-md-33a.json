@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_18/concept",
+  "title": "Lesson 18: Kafka Security & ACLs - Production Security Implementation",
+  "description": "🎯 Learning Objectives",
+  "source": "@site/../class/modules/lesson_18/concept.md",
+  "sourceDirName": "modules/lesson_18",
+  "slug": "/modules/lesson_18/concept",
+  "permalink": "/KafkaStarter/modules/lesson_18/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_18/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 17 Workshop: Building a Real-time Dashboard Application",
+    "permalink": "/KafkaStarter/workshop/lesson_17/"
+  },
+  "next": {
+    "title": "Lesson 18 Workshop: Kafka Security & ACLs",
+    "permalink": "/KafkaStarter/workshop/lesson_18/"
+  }
+}

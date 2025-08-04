@@ -626,8 +626,8 @@ class InteractiveQueryController {
 - [ ] Fault tolerance handles instance failures gracefully
 - [ ] State recovery restores consistent state from changelog topics
 - [ ] Interactive queries provide real-time access to state
-- [ ] Performance remains acceptable with large state stores (>1GB)
-- [ ] Standby replicas enable fast failover (<30 seconds)
+- [ ] Performance remains acceptable with large state stores (&gt;1GB)
+- [ ] Standby replicas enable fast failover (&lt;30 seconds)
 - [ ] State store health monitoring detects issues proactively
 
 ## 🚀 Getting Started

@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_17/README",
+  "title": "Lesson 17 Workshop: Building a Real-time Dashboard Application",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_17/README.md",
+  "sourceDirName": "workshop/lesson_17",
+  "slug": "/workshop/lesson_17/",
+  "permalink": "/KafkaStarter/workshop/lesson_17/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_17/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 17: Building a Real-time Dashboard Application - Complete Analytics System",
+    "permalink": "/KafkaStarter/modules/lesson_17/concept"
+  },
+  "next": {
+    "title": "Lesson 18: Kafka Security & ACLs - Production Security Implementation",
+    "permalink": "/KafkaStarter/modules/lesson_18/concept"
+  }
+}

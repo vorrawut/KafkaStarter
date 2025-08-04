@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_3/concept",
+  "title": "Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot",
+  "description": "🎯 Learning Objectives",
+  "source": "@site/../class/modules/lesson_3/concept.md",
+  "sourceDirName": "modules/lesson_3",
+  "slug": "/modules/lesson_3/concept",
+  "permalink": "/KafkaStarter/modules/lesson_3/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_3/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 2 Workshop: Environment Setup & Kafka Infrastructure",
+    "permalink": "/KafkaStarter/workshop/lesson_2/"
+  },
+  "next": {
+    "title": "Lesson 3 Workshop: Hello Kafka - Your First Producer & Consumer",
+    "permalink": "/KafkaStarter/modules/lesson_3/workshop_3"
+  }
+}

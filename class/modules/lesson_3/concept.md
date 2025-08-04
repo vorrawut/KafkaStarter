@@ -25,7 +25,7 @@ graph TB
     
     subgraph "Kafka Infrastructure"
         BROKER[Kafka Broker<br/>:9092]
-        TOPIC[user-events Topic<br/>3 partitions]
+        TOPIC[user-events Topic<br/&gt;3 partitions]
         GROUPS[Consumer Groups]
     end
     

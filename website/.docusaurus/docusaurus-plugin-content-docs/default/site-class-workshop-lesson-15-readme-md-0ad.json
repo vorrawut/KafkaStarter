@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_15/README",
+  "title": "Lesson 15 Workshop: Windowing, Joins & Stateful Operations",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_15/README.md",
+  "sourceDirName": "workshop/lesson_15",
+  "slug": "/workshop/lesson_15/",
+  "permalink": "/KafkaStarter/workshop/lesson_15/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_15/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 15: Windowing, Joins & Stateful Operations - Advanced Stream Processing",
+    "permalink": "/KafkaStarter/modules/lesson_15/concept"
+  },
+  "next": {
+    "title": "Lesson 16: Local State Stores & Fault Tolerance - Persistent State Management",
+    "permalink": "/KafkaStarter/modules/lesson_16/concept"
+  }
+}

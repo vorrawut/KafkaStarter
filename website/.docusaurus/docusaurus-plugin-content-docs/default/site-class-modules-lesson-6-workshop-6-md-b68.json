@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_6/workshop_6",
+  "title": "Lesson 6 Workshop: Development Tools - Building Production-Ready Kafka Applications",
+  "description": "🎯 What We Want to Build",
+  "source": "@site/../class/modules/lesson_6/workshop_6.md",
+  "sourceDirName": "modules/lesson_6",
+  "slug": "/modules/lesson_6/workshop_6",
+  "permalink": "/KafkaStarter/modules/lesson_6/workshop_6",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_6/workshop_6.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications",
+    "permalink": "/KafkaStarter/modules/lesson_6/concept"
+  },
+  "next": {
+    "title": "Lesson 6 Workshop: Development Tools & Testing Framework",
+    "permalink": "/KafkaStarter/workshop/lesson_6/"
+  }
+}

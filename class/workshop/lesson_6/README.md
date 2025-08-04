@@ -317,7 +317,7 @@ class KafkaMessageTracer {
 - [ ] Development monitoring shows real-time application metrics
 - [ ] Performance profiling identifies bottlenecks and optimization opportunities
 - [ ] Error scenarios can be reproduced and debugged systematically
-- [ ] Code coverage meets team standards (>80% for critical paths)
+- [ ] Code coverage meets team standards (&gt;80% for critical paths)
 
 ## 🚀 Getting Started
 
@@ -408,7 +408,7 @@ logging:
 graph TB
     subgraph "Application Metrics"
         THROUGHPUT[Message Throughput<br/>messages/second]
-        LATENCY[Processing Latency<br/>95th percentile]
+        LATENCY[Processing Latency<br/&gt;95th percentile]
         ERROR_RATE[Error Rate<br/>errors/minute]
         MEMORY[Memory Usage<br/>heap utilization]
     end

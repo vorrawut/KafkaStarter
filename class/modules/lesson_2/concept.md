@@ -290,7 +290,7 @@ kill -9 <PID>
 - **Check**: Docker Desktop → Settings → Resources → Memory
 
 #### **Slow Startup**
-- **Symptom**: Services take >2 minutes to start
+- **Symptom**: Services take &gt;2 minutes to start
 - **Cause**: Insufficient resources or network issues
 - **Solution**: 
   - Check Docker resource allocation

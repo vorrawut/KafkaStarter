@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_15/concept",
+  "title": "Lesson 15: Windowing, Joins & Stateful Operations - Advanced Stream Processing",
+  "description": "🎯 Objective",
+  "source": "@site/../class/modules/lesson_15/concept.md",
+  "sourceDirName": "modules/lesson_15",
+  "slug": "/modules/lesson_15/concept",
+  "permalink": "/KafkaStarter/modules/lesson_15/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/modules/lesson_15/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 14 Workshop: Kafka Streams API Introduction",
+    "permalink": "/KafkaStarter/workshop/lesson_14/"
+  },
+  "next": {
+    "title": "Lesson 15 Workshop: Windowing, Joins & Stateful Operations",
+    "permalink": "/KafkaStarter/workshop/lesson_15/"
+  }
+}

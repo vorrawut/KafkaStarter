@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_1/README",
+  "title": "Lesson 1 Workshop: Why Kafka? Understanding Event-Driven Architecture",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_1/README.md",
+  "sourceDirName": "workshop/lesson_1",
+  "slug": "/workshop/lesson_1/",
+  "permalink": "/KafkaStarter/workshop/lesson_1/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_1/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 1: Why Kafka? Understanding Event-Driven Architecture",
+    "permalink": "/KafkaStarter/modules/lesson_1/concept"
+  },
+  "next": {
+    "title": "Lesson 2: Environment Setup & Kafka Infrastructure",
+    "permalink": "/KafkaStarter/modules/lesson_2/concept"
+  }
+}

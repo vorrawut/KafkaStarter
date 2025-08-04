@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_9/README",
+  "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_9/README.md",
+  "sourceDirName": "workshop/lesson_9",
+  "slug": "/workshop/lesson_9/",
+  "permalink": "/KafkaStarter/workshop/lesson_9/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/../class/workshop/lesson_9/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
+    "permalink": "/KafkaStarter/modules/lesson_9/workshop_9"
+  },
+  "next": {
+    "title": "Lesson 10: Message Transformation & Filtering - Building Data Processing Pipelines",
+    "permalink": "/KafkaStarter/modules/lesson_10/concept"
+  }
+}

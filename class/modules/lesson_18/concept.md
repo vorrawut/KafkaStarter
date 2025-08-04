@@ -561,24 +561,24 @@ data:
 ### Key Security Metrics
 
 1. **Authentication Metrics**
-   - Authentication success rate (target: >99.9%)
-   - Authentication failure rate (alert: >1%)
-   - Authentication latency (target: <100ms)
+   - Authentication success rate (target: &gt;99.9%)
+   - Authentication failure rate (alert: &gt;1%)
+   - Authentication latency (target: &lt;100ms)
 
 2. **Authorization Metrics**
-   - ACL evaluation success rate (target: >99.9%)
-   - Unauthorized access attempts (alert: >0)
+   - ACL evaluation success rate (target: &gt;99.9%)
+   - Unauthorized access attempts (alert: &gt;0)
    - ACL rule coverage (target: 100%)
 
 3. **Encryption Metrics**
-   - SSL handshake success rate (target: >99.9%)
-   - SSL handshake latency (target: <200ms)
-   - Certificate expiration monitoring (alert: <30 days)
+   - SSL handshake success rate (target: &gt;99.9%)
+   - SSL handshake latency (target: &lt;200ms)
+   - Certificate expiration monitoring (alert: &lt;30 days)
 
 4. **Security Health Metrics**
    - Security configuration compliance (target: 100%)
    - Vulnerability scan results (target: 0 high/critical)
-   - Security incident response time (target: <1 hour)
+   - Security incident response time (target: &lt;1 hour)
 
 ## 🔍 Troubleshooting Common Security Issues
 
@@ -610,7 +610,7 @@ data:
 
 ## 🚀 Next Steps
 
-Ready to implement production monitoring? Move to [Lesson 19: Observability & Monitoring](../lesson_19/) to learn comprehensive system observability.
+Ready to implement production monitoring? Move to [Lesson 19: Observability & Monitoring](../lesson_19/concept) to learn comprehensive system observability.
 
 ---
 

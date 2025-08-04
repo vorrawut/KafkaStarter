@@ -10,8 +10,8 @@ Master production deployment strategies, auto-scaling, disaster recovery, and op
 graph TB
     subgraph "Production Environment"
         LB[Load Balancer<br/>SSL Termination]
-        KAFKA_CLUSTER[Kafka Cluster<br/>3+ Brokers]
-        ZK_CLUSTER[Zookeeper Ensemble<br/>3+ Nodes]
+        KAFKA_CLUSTER[Kafka Cluster<br/&gt;3+ Brokers]
+        ZK_CLUSTER[Zookeeper Ensemble<br/&gt;3+ Nodes]
         SR[Schema Registry<br/>HA Setup]
     end
     
