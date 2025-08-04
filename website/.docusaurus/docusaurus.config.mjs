@@ -29,7 +29,7 @@ export default {
           "sidebarPath": "/Users/vorrawutjudasri/ODDS/KafkaStarter/website/sidebars.js",
           "path": "../class",
           "routeBasePath": "/",
-          "editUrl": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/"
+          "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/"
         },
         "blog": false,
         "theme": {
@@ -69,7 +69,7 @@ export default {
           "label": "Curriculum"
         },
         {
-          "href": "https://github.com/vorrawutjudasri/KafkaStarter",
+          "href": "https://github.com/vorrawut/KafkaStarter",
           "label": "GitHub",
           "position": "right"
         }
@@ -109,7 +109,7 @@ export default {
             },
             {
               "label": "Quick Start",
-              "href": "https://github.com/vorrawutjudasri/KafkaStarter/blob/main/QUICK_START_GUIDE.md"
+              "href": "https://github.com/vorrawut/KafkaStarter/blob/main/QUICK_START_GUIDE.md"
             }
           ]
         },
@@ -118,11 +118,11 @@ export default {
           "items": [
             {
               "label": "GitHub",
-              "href": "https://github.com/vorrawutjudasri/KafkaStarter"
+              "href": "https://github.com/vorrawut/KafkaStarter"
             },
             {
               "label": "Demo System",
-              "href": "https://github.com/vorrawutjudasri/KafkaStarter/tree/main/demo"
+              "href": "https://github.com/vorrawut/KafkaStarter/tree/main/demo"
             }
           ]
         }

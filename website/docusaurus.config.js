@@ -43,7 +43,7 @@ const config = {
           // Point to the class directory
           path: '../class',
           routeBasePath: '/', // Serve the docs at the site's root
-          editUrl: 'https://github.com/vorrawutjudasri/KafkaStarter/tree/main/class/',
+          editUrl: 'https://github.com/vorrawut/KafkaStarter/tree/main/class/',
         },
         blog: false,
         theme: {
@@ -77,7 +77,7 @@ const config = {
             label: 'Curriculum',
           },
           {
-            href: 'https://github.com/vorrawutjudasri/KafkaStarter',
+            href: 'https://github.com/vorrawut/KafkaStarter',
             label: 'GitHub',
             position: 'right',
           },
@@ -116,7 +116,7 @@ const config = {
               },
               {
                 label: 'Quick Start',
-                href: 'https://github.com/vorrawutjudasri/KafkaStarter/blob/main/QUICK_START_GUIDE.md',
+                href: 'https://github.com/vorrawut/KafkaStarter/blob/main/QUICK_START_GUIDE.md',
               },
             ],
           },
@@ -125,11 +125,11 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/vorrawutjudasri/KafkaStarter',
+                href: 'https://github.com/vorrawut/KafkaStarter',
               },
               {
                 label: 'Demo System',
-                href: 'https://github.com/vorrawutjudasri/KafkaStarter/tree/main/demo',
+                href: 'https://github.com/vorrawut/KafkaStarter/tree/main/demo',
               },
             ],
           },
