@@ -1,407 +1,596 @@
 # Lesson 4: Topics, Partitions & Offsets - Kafka's Storage Model
 
-## 🎯 Objective
+## 🎯 Learning Objectives
 
-Master Kafka's fundamental storage concepts: topics, partitions, and offsets. Learn how Kafka achieves scalability, ordering guarantees, and fault tolerance through its distributed storage model.
+By the end of this lesson, you will:
+- **Master** Kafka's storage architecture: topics, partitions, and offsets
+- **Design** optimal topic structures for performance and scalability  
+- **Implement** effective partitioning strategies for your use cases
+- **Manage** consumer offsets for reliable message processing
+- **Optimize** partition distribution and consumer group coordination
+- **Monitor** topic health and partition performance
 
-## 🧱 Core Concepts Deep Dive
+## 🏗️ Kafka Storage Architecture Deep Dive
 
-### 📁 **Topics: Logical Channels**
-
-Topics are **logical categories** for related events, like folders in a file system.
-
-```bash
-# Real-world topic examples
-user-events          # All user-related activities
-order-lifecycle      # Order creation, updates, completion
-payment-transactions # Payment processing events
-inventory-changes    # Stock level modifications
-audit-logs          # Security and compliance events
-```
-
-**Topic Characteristics:**
-- **Logical grouping** - Events of the same type
-- **Unlimited size** - Can store terabytes of data
-- **Configurable retention** - Hours to years
-- **Schema-aware** - Optional schema enforcement
-
-### 🗂️ **Partitions: Physical Storage Units**
-
-Partitions are the **physical storage and parallelism units** within topics.
+Understanding Kafka's storage model is crucial for building scalable, performant applications:
 
 ```mermaid
 graph TB
-    subgraph "Topic: user-events"
+    subgraph "Kafka Cluster"
+        subgraph "Topic: user-events (3 partitions)"
+            subgraph "Partition 0 (Leader: Broker-1)"
+                P0M1[Offset 0: {user: alice}]
+                P0M2[Offset 1: {user: bob}]
+                P0M3[Offset 2: {user: charlie}]
+                P0M4[Offset 3: {user: david}]
+            end
+            
+            subgraph "Partition 1 (Leader: Broker-2)"
+                P1M1[Offset 0: {user: eve}]
+                P1M2[Offset 1: {user: frank}]
+                P1M3[Offset 2: {user: grace}]
+            end
+            
+            subgraph "Partition 2 (Leader: Broker-3)"
+                P2M1[Offset 0: {user: henry}]
+                P2M2[Offset 1: {user: iris}]
+                P2M3[Offset 2: {user: jack}]
+                P2M4[Offset 3: {user: kate}]
+                P2M5[Offset 4: {user: leo}]
+            end
+        end
+    end
+    
+    subgraph "Producer Distribution"
+        PROD[Producer]
+        PART[Partitioner]
+        
+        PROD --> PART
+        PART -->|hash(alice) % 3 = 0| P0M1
+        PART -->|hash(eve) % 3 = 1| P1M1  
+        PART -->|hash(henry) % 3 = 2| P2M1
+    end
+    
+    style P0M4 fill:#ff6b6b
+    style P1M3 fill:#4ecdc4
+    style P2M5 fill:#a8e6cf
+```
+
+## 📚 Core Concepts
+
+### **Topics**: Logical Event Categories
+- **Named streams** of related events (e.g., `user-events`, `order-events`, `payment-events`)
+- **Logical abstraction** over physical storage
+- **Configurable retention** based on time, size, or compaction
+- **Schema evolution** support through versioning
+
+### **Partitions**: Physical Storage & Parallelism Units
+- **Ordered, immutable** sequence of records within each partition
+- **Parallel processing** - each partition can be consumed independently
+- **Fault tolerance** - replicated across multiple brokers
+- **Load distribution** - enables horizontal scaling
+
+### **Offsets**: Message Position Tracking
+- **Sequential, unique** identifiers within each partition
+- **Monotonically increasing** - never decrease within a partition
+- **Consumer progress** tracking mechanism
+- **Replay capability** - consumers can reset and reprocess from any offset
+
+## 🔄 Producer Partitioning Strategies
+
+### 1. **Key-Based Partitioning (Default)**
+```mermaid
+flowchart TD
+    subgraph "Messages with Keys"
+        M1[Message: key=user-123<br/>value={email: 'john@example.com'}]
+        M2[Message: key=user-456<br/>value={email: 'jane@example.com'}]
+        M3[Message: key=user-789<br/>value={email: 'bob@example.com'}]
+    end
+    
+    subgraph "Partitioning Process"
+        HASH[Hash Function<br/>hash(key) % partition_count]
+    end
+    
+    subgraph "Target Partitions"
+        P0[Partition 0<br/>Always gets user-123 events]
+        P1[Partition 1<br/>Always gets user-456 events]
+        P2[Partition 2<br/>Always gets user-789 events]
+    end
+    
+    M1 --> HASH
+    M2 --> HASH
+    M3 --> HASH
+    
+    HASH -->|hash(user-123) % 3 = 0| P0
+    HASH -->|hash(user-456) % 3 = 1| P1
+    HASH -->|hash(user-789) % 3 = 2| P2
+    
+    style HASH fill:#ffe66d
+    style P0 fill:#ff6b6b
+    style P1 fill:#4ecdc4
+    style P2 fill:#a8e6cf
+```
+
+**Benefits:**
+- **Ordering guarantee** - all events for the same key go to the same partition
+- **Stateful processing** - related events stay together
+- **Partition affinity** - enables stateful stream processing
+
+**Use Cases:**
+- User activity tracking (key = userId)
+- Order processing (key = orderId)
+- Account transactions (key = accountId)
+
+### 2. **Round-Robin Partitioning**
+```mermaid
+sequenceDiagram
+    participant P as Producer
+    participant P0 as Partition 0
+    participant P1 as Partition 1
+    participant P2 as Partition 2
+    
+    P->>P0: Message 1
+    P->>P1: Message 2
+    P->>P2: Message 3
+    P->>P0: Message 4
+    P->>P1: Message 5
+    P->>P2: Message 6
+    
+    Note over P,P2: Even distribution, no ordering
+```
+
+**Benefits:**
+- **Even distribution** across all partitions
+- **Maximum throughput** - utilizes all partitions equally
+- **Load balancing** - prevents hot partitions
+
+**Use Cases:**
+- Metrics and logging (order doesn't matter)
+- Bulk data ingestion
+- Analytics events
+
+### 3. **Custom Partitioning**
+```kotlin
+class GeographicPartitioner : Partitioner {
+    override fun partition(
+        topic: String,
+        key: Any?,
+        keyBytes: ByteArray?,
+        value: Any?,
+        valueBytes: ByteArray?,
+        cluster: Cluster
+    ): Int {
+        val userLocation = extractLocation(value)
+        return when (userLocation.region) {
+            "US" -> 0
+            "EU" -> 1
+            "ASIA" -> 2
+            else -> 3
+        }
+    }
+}
+```
+
+## 🎯 Consumer Groups & Partition Assignment
+
+### Consumer Group Coordination
+```mermaid
+graph TB
+    subgraph "Topic: order-events (6 partitions)"
         P0[Partition 0]
         P1[Partition 1] 
         P2[Partition 2]
+        P3[Partition 3]
+        P4[Partition 4]
+        P5[Partition 5]
     end
     
-    subgraph "Partition 0"
-        M0[user:123 → register]
-        M1[user:456 → login]
-        M2[user:123 → update]
+    subgraph "Consumer Group: order-processors (3 consumers)"
+        C1[Consumer 1<br/>Processes P0, P1]
+        C2[Consumer 2<br/>Processes P2, P3]
+        C3[Consumer 3<br/>Processes P4, P5]
     end
     
-    subgraph "Partition 1"
-        M3[user:789 → register]
-        M4[user:234 → logout]
-        M5[user:789 → delete]
+    subgraph "Consumer Group: analytics (2 consumers)"
+        A1[Consumer 1<br/>Processes P0, P1, P2]
+        A2[Consumer 2<br/>Processes P3, P4, P5]
     end
     
-    subgraph "Partition 2"
-        M6[user:567 → login]
-        M7[user:890 → register]
-        M8[user:567 → update]
-    end
+    P0 --> C1
+    P1 --> C1
+    P2 --> C2
+    P3 --> C2
+    P4 --> C3
+    P5 --> C3
+    
+    P0 --> A1
+    P1 --> A1
+    P2 --> A1
+    P3 --> A2
+    P4 --> A2
+    P5 --> A2
+    
+    style C1 fill:#ff6b6b
+    style C2 fill:#4ecdc4
+    style C3 fill:#a8e6cf
+    style A1 fill:#ffe66d
+    style A2 fill:#ffa8e6
 ```
 
-**Partition Benefits:**
-- **Scalability** - More partitions = more parallelism
-- **Ordering** - Messages within a partition are ordered
-- **Distribution** - Partitions spread across different brokers
-- **Load balancing** - Multiple consumers can process in parallel
+### Partition Assignment Strategies
 
-### 🔢 **Offsets: Message Addresses**
+1. **Range Assignment** (Default)
+   - Assigns continuous ranges of partitions to consumers
+   - Good for ordered processing within consumer
 
-Offsets are **unique identifiers** for messages within a partition.
+2. **Round-Robin Assignment**
+   - Distributes partitions evenly across consumers
+   - Better load balancing for varying partition sizes
 
-```
-Partition 0: user-events
-┌─────────────────────────────────────────────────────┐
-│ Offset: 0    1    2    3    4    5    6    7    8   │
-│ Event:  reg  log  upd  del  log  reg  upd  log  del │
-│ User:   123  456  123  789  234  567  123  456  234 │
-└─────────────────────────────────────────────────────┘
-```
+3. **Sticky Assignment**
+   - Minimizes partition reassignment during rebalancing
+   - Reduces state transfer in stateful applications
 
-**Offset Characteristics:**
-- **Sequential** - Incremental numbers (0, 1, 2, ...)
-- **Immutable** - Once assigned, never changes
-- **Partition-scoped** - Each partition has independent offset sequence
-- **Consumer tracking** - Consumers track their position via offsets
+## 📊 Offset Management Strategies
 
-## 🎯 **Message Routing & Partitioning**
-
-### Key-Based Partitioning
-
-```kotlin
-// Messages with same key go to same partition
-val userEvent = UserEvent(
-    userId = "user123",    // Key for partitioning
-    action = "login",
-    timestamp = Instant.now()
-)
-
-// Producer ensures user123 events always go to same partition
-kafkaTemplate.send("user-events", userEvent.userId, userEvent)
-```
-
-**Partitioning Strategies:**
-
-1. **Key-based** (Default) - `hash(key) % partition_count`
-2. **Round-robin** - No key, distribute evenly
-3. **Custom** - Implement custom partitioner logic
-
-### Ordering Guarantees
-
+### Automatic vs Manual Offset Management
 ```mermaid
 sequenceDiagram
-    participant Producer
-    participant Partition0
-    participant Partition1
-    participant Consumer1
-    participant Consumer2
-
-    Note over Producer,Consumer2: Key-based partitioning ensures ordering
-
-    Producer->>Partition0: user123: login (offset 0)
-    Producer->>Partition1: user456: register (offset 0)
-    Producer->>Partition0: user123: update (offset 1)
-    Producer->>Partition1: user456: login (offset 1)
-    Producer->>Partition0: user123: logout (offset 2)
-
-    Partition0->>Consumer1: Process user123 events IN ORDER
-    Partition1->>Consumer2: Process user456 events IN ORDER
+    participant C as Consumer
+    participant K as Kafka Broker
+    participant A as Application Logic
+    participant DB as Database
+    
+    Note over C,DB: Auto-commit (Default)
+    C->>K: Poll messages
+    K-->>C: Batch [offset 100-105]
+    C->>A: Process messages
+    A->>DB: Store data
+    Note over C: Auto-commit every 5 seconds
+    C->>K: Commit offset 105
+    
+    Note over C,DB: Manual commit (Reliable)
+    C->>K: Poll messages  
+    K-->>C: Batch [offset 106-110]
+    C->>A: Process messages
+    A->>DB: Store data
+    A-->>C: Success confirmation
+    C->>K: Manual commit offset 110
 ```
 
-**Ordering Rules:**
-- ✅ **Within partition** - Messages are strictly ordered
-- ❌ **Across partitions** - No ordering guarantees
-- 🔑 **Key strategy** - Same key = same partition = ordered processing
+### Offset Commit Patterns
 
-## 🛠️ **Topic Management with CLI**
-
-### Creating Topics
-
-```bash
-# Create topic with specific partition count
-docker exec kafka-starter-broker kafka-topics \
-  --create \
-  --topic user-events \
-  --bootstrap-server localhost:9092 \
-  --partitions 3 \
-  --replication-factor 1
-
-# Create with custom configuration
-docker exec kafka-starter-broker kafka-topics \
-  --create \
-  --topic order-events \
-  --bootstrap-server localhost:9092 \
-  --partitions 6 \
-  --replication-factor 1 \
-  --config retention.ms=604800000 \
-  --config cleanup.policy=compact
-```
-
-### Inspecting Topics
-
-```bash
-# List all topics
-docker exec kafka-starter-broker kafka-topics \
-  --list \
-  --bootstrap-server localhost:9092
-
-# Describe topic details
-docker exec kafka-starter-broker kafka-topics \
-  --describe \
-  --topic user-events \
-  --bootstrap-server localhost:9092
-
-# Output shows:
-# Topic: user-events  PartitionCount: 3  ReplicationFactor: 1
-# Partition: 0  Leader: 1  Replicas: 1  Isr: 1
-# Partition: 1  Leader: 1  Replicas: 1  Isr: 1  
-# Partition: 2  Leader: 1  Replicas: 1  Isr: 1
-```
-
-### Modifying Topics
-
-```bash
-# Increase partition count (can only increase!)
-docker exec kafka-starter-broker kafka-topics \
-  --alter \
-  --topic user-events \
-  --partitions 6 \
-  --bootstrap-server localhost:9092
-
-# Update topic configuration
-docker exec kafka-starter-broker kafka-configs \
-  --alter \
-  --entity-type topics \
-  --entity-name user-events \
-  --add-config retention.ms=86400000 \
-  --bootstrap-server localhost:9092
-```
-
-## 📊 **Partition Strategy Planning**
-
-### How Many Partitions?
-
-```kotlin
-// Rule of thumb calculation
-val expectedThroughput = 100_000 // messages/second
-val consumerThroughput = 5_000   // messages/second per consumer
-val partitionCount = expectedThroughput / consumerThroughput
-// Result: 20 partitions
-```
-
-**Factors to Consider:**
-- **Throughput requirements** - More partitions = more parallelism
-- **Consumer count** - One consumer per partition max
-- **Ordering needs** - Fewer partitions = more ordering
-- **Storage** - More partitions = more file handles
-
-### Partitioning Best Practices
-
-```kotlin
-// ✅ Good: User-based partitioning
-kafkaTemplate.send("user-events", event.userId, event)
-
-// ✅ Good: Account-based partitioning  
-kafkaTemplate.send("account-updates", event.accountId, event)
-
-// ❌ Avoid: Random keys
-kafkaTemplate.send("user-events", UUID.randomUUID().toString(), event)
-
-// ❌ Avoid: Timestamp-based keys (creates hot partitions)
-kafkaTemplate.send("user-events", event.timestamp.toString(), event)
-```
-
-## 🔍 **Consumer Offset Management**
-
-### Manual Offset Control
-
+#### 1. **Auto-Commit (Simple)**
 ```kotlin
 @KafkaListener(topics = ["user-events"])
-fun processUserEvent(
-    @Payload event: UserEvent,
-    @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
-    @Header(KafkaHeaders.OFFSET) offset: Long,
+fun handleUserEvent(event: UserEvent) {
+    // Process event
+    processUserEvent(event)
+    // Offset automatically committed every 5 seconds
+}
+```
+
+#### 2. **Manual Sync Commit (Reliable)**
+```kotlin
+@KafkaListener(
+    topics = ["user-events"],
+    containerFactory = "manualCommitContainerFactory"
+)
+fun handleUserEventManual(
+    event: UserEvent,
     acknowledgment: Acknowledgment
 ) {
-    logger.info("Processing event from partition $partition, offset $offset")
-    
     try {
-        // Process the event
-        userService.handleEvent(event)
-        
-        // Manually commit offset after successful processing
-        acknowledgment.acknowledge()
-        
-    } catch (retryableException: RetryableException) {
-        logger.warn("Retryable error, will retry: ${retryableException.message}")
-        throw retryableException // Don't acknowledge, will retry
-        
-    } catch (poisonException: PoisonMessageException) {
-        logger.error("Poison message, skipping: ${poisonException.message}")
-        acknowledgment.acknowledge() // Skip this message
+        processUserEvent(event)
+        acknowledgment.acknowledge() // Sync commit
+    } catch (e: Exception) {
+        // Don't commit - message will be redelivered
+        logger.error("Processing failed for ${event.eventId}", e)
     }
 }
 ```
 
-### Offset Reset Strategies
-
-```yaml
-spring:
-  kafka:
-    consumer:
-      auto-offset-reset: earliest  # Start from beginning
-      # auto-offset-reset: latest    # Start from end  
-      # auto-offset-reset: none      # Fail if no offset stored
-```
-
-**Reset Strategy Use Cases:**
-- **earliest** - Reprocess all historical data
-- **latest** - Only process new messages
-- **none** - Fail fast if offset tracking is lost
-
-## 🧪 **Hands-On Examples**
-
-### Partition Key Distribution Testing
-
+#### 3. **Batch Commit (Performance)**
 ```kotlin
-@Service
-class PartitioningTestService {
-    
-    fun testKeyDistribution() {
-        val userIds = listOf("user1", "user2", "user3", "user4", "user5")
-        
-        userIds.forEach { userId ->
-            val partition = calculatePartition(userId, partitionCount = 3)
-            println("User $userId → Partition $partition")
+@KafkaListener(topics = ["user-events"])
+fun handleUserEventBatch(events: List<UserEvent>) {
+    events.forEach { event ->
+        try {
+            processUserEvent(event)
+        } catch (e: Exception) {
+            logger.error("Failed to process ${event.eventId}", e)
+            // Handle individual failures
         }
     }
-    
-    private fun calculatePartition(key: String, partitionCount: Int): Int {
-        return Math.abs(key.hashCode()) % partitionCount
-    }
+    // Commit after entire batch
 }
 ```
 
-### Monitoring Partition Lag
+## 🎛️ Topic Configuration & Management
 
-```bash
-# Check consumer group lag by partition
-docker exec kafka-starter-broker kafka-consumer-groups \
-  --bootstrap-server localhost:9092 \
-  --group user-events-group \
-  --describe
-
-# Output shows lag per partition:
-# TOPIC      PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG
-# user-events    0         150             150           0
-# user-events    1         200             205           5  <- Lag detected!
-# user-events    2         175             175           0
-```
-
-## ⚠️ **Common Pitfalls & Solutions**
-
-### 1. **Hot Partitions**
+### Essential Topic Configurations
 ```kotlin
-// ❌ Problem: All events go to one partition
-kafkaTemplate.send("events", "constant-key", event)
-
-// ✅ Solution: Use balanced keys
-kafkaTemplate.send("events", event.userId, event)
+val topicConfig = mapOf(
+    // Retention settings
+    TopicConfig.RETENTION_MS_CONFIG to "604800000", // 7 days
+    TopicConfig.RETENTION_BYTES_CONFIG to "1073741824", // 1GB
+    
+    // Performance settings
+    TopicConfig.COMPRESSION_TYPE_CONFIG to "lz4",
+    TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG to "2",
+    
+    // Cleanup settings
+    TopicConfig.CLEANUP_POLICY_CONFIG to "delete", // or "compact"
+    TopicConfig.DELETE_RETENTION_MS_CONFIG to "86400000", // 1 day
+    
+    // Segment settings
+    TopicConfig.SEGMENT_MS_CONFIG to "604800000", // 7 days
+    TopicConfig.SEGMENT_BYTES_CONFIG to "1073741824" // 1GB
+)
 ```
 
-### 2. **Too Many Partitions**
-```kotlin
-// ❌ Problem: 1000 partitions for low-volume topic
-// Creates overhead and resource waste
+### Partition Sizing Guidelines
 
-// ✅ Solution: Start small, scale up
-// Begin with 3-6 partitions, monitor and adjust
+```mermaid
+graph TB
+    subgraph "Partition Count Decision Matrix"
+        THROUGHPUT[Expected Throughput<br/>messages/second]
+        CONSUMERS[Number of Consumers]
+        RETENTION[Retention Period]
+        SIZE[Message Size]
+        
+        THROUGHPUT --> CALC[Partition Count Calculator]
+        CONSUMERS --> CALC
+        RETENTION --> CALC
+        SIZE --> CALC
+        
+        CALC --> RESULT[Recommended Partitions]
+    end
+    
+    subgraph "Guidelines"
+        G1[Low throughput + Few consumers = 1-3 partitions]
+        G2[Medium throughput + Multiple consumers = 3-12 partitions]
+        G3[High throughput + Many consumers = 12+ partitions]
+        G4[Rule of thumb: 2-3x expected consumer count]
+    end
+    
+    style CALC fill:#ffe66d
+    style RESULT fill:#4ecdc4
 ```
 
-### 3. **Lost Ordering**
-```kotlin
-// ❌ Problem: Multiple consumers for ordered processing
-@KafkaListener(topics = ["user-events"], concurrency = "5")
-fun processEvent(event: UserEvent) { /* Parallel processing breaks order */ }
+**Best Practices:**
+- **Start small**: Begin with 3-6 partitions
+- **Plan for growth**: Consider 2-3x expected consumer count
+- **Monitor performance**: Adjust based on throughput needs
+- **Avoid over-partitioning**: Too many partitions increase overhead
 
-// ✅ Solution: Single consumer per partition
-@KafkaListener(topics = ["user-events"], concurrency = "1") 
-fun processEvent(event: UserEvent) { /* Maintains order */ }
+## 📈 Performance Optimization
+
+### Partition Distribution Monitoring
+```mermaid
+graph TB
+    subgraph "Healthy Partition Distribution"
+        HP0[Partition 0: 1000 messages]
+        HP1[Partition 1: 980 messages]
+        HP2[Partition 2: 1020 messages]
+        BALANCED[✅ Balanced Load]
+    end
+    
+    subgraph "Unhealthy Partition Distribution"
+        UP0[Partition 0: 50 messages]
+        UP1[Partition 1: 2000 messages]
+        UP2[Partition 2: 100 messages]
+        HOTSPOT[❌ Hot Partition]
+    end
+    
+    HP0 --> BALANCED
+    HP1 --> BALANCED
+    HP2 --> BALANCED
+    
+    UP0 --> HOTSPOT
+    UP1 --> HOTSPOT
+    UP2 --> HOTSPOT
+    
+    style BALANCED fill:#4ecdc4
+    style HOTSPOT fill:#ff6b6b
 ```
 
-## 📊 **Monitoring & Observability**
-
-### Key Metrics to Track
-
+### Consumer Lag Monitoring
 ```kotlin
 @Component
-class KafkaPartitionMetrics {
+class ConsumerLagMonitor {
     
-    private val partitionLagGauge = Gauge.builder("kafka.consumer.partition.lag")
-        .description("Consumer lag by partition")
-        .register(Metrics.globalRegistry)
-    
-    private val messageProcessingRate = Counter.builder("kafka.message.processed")
-        .description("Messages processed by partition")
-        .register(Metrics.globalRegistry)
-    
-    @EventListener
-    fun recordPartitionMetrics(event: PartitionMetricsEvent) {
-        partitionLagGauge.set(event.lag.toDouble())
-        messageProcessingRate.increment()
+    fun checkConsumerLag(groupId: String): Map<String, Long> {
+        AdminClient.create(adminConfig).use { admin ->
+            val groupDescription = admin.describeConsumerGroups(listOf(groupId))
+                .all().get()
+            
+            val memberAssignments = groupDescription[groupId]!!.members()
+                .flatMap { it.assignment().topicPartitions() }
+            
+            val endOffsets = admin.listOffsets(
+                memberAssignments.associateWith { 
+                    OffsetSpec.latest() 
+                }
+            ).all().get()
+            
+            val groupOffsets = admin.listConsumerGroupOffsets(groupId)
+                .partitionsToOffsetAndMetadata().get()
+            
+            return memberAssignments.associate { tp ->
+                val endOffset = endOffsets[tp]?.offset() ?: 0
+                val currentOffset = groupOffsets[tp]?.offset() ?: 0
+                val lag = endOffset - currentOffset
+                "${tp.topic()}-${tp.partition()}" to lag
+            }
+        }
     }
 }
 ```
 
-### Kafka UI Monitoring
+## 🛡️ Fault Tolerance & Recovery
 
-Access http://localhost:8080 to visualize:
-- **Topic overview** - Partition count and configuration
-- **Message distribution** - Events per partition
-- **Consumer lag** - Partition-level lag monitoring
-- **Throughput metrics** - Messages per second by partition
+### Partition Leadership & Replication
+```mermaid
+graph TB
+    subgraph "Cluster: 3 Brokers"
+        subgraph "Broker 1"
+            B1P0L[Partition 0 Leader]
+            B1P1F[Partition 1 Follower]
+            B1P2F[Partition 2 Follower]
+        end
+        
+        subgraph "Broker 2"
+            B2P0F[Partition 0 Follower]
+            B2P1L[Partition 1 Leader]
+            B2P2F[Partition 2 Follower]
+        end
+        
+        subgraph "Broker 3"
+            B3P0F[Partition 0 Follower]
+            B3P1F[Partition 1 Follower]
+            B3P2L[Partition 2 Leader]
+        end
+    end
+    
+    subgraph "Producers & Consumers"
+        PROD[Producers]
+        CONS[Consumers]
+    end
+    
+    PROD -->|Writes| B1P0L
+    PROD -->|Writes| B2P1L
+    PROD -->|Writes| B3P2L
+    
+    B1P0L -.->|Replication| B2P0F
+    B1P0L -.->|Replication| B3P0F
+    
+    B1P0L -->|Reads| CONS
+    B2P1L -->|Reads| CONS
+    B3P2L -->|Reads| CONS
+    
+    style B1P0L fill:#ff6b6b
+    style B2P1L fill:#ff6b6b
+    style B3P2L fill:#ff6b6b
+```
 
-## ✅ **Best Practices Summary**
+### Recovery Scenarios
 
-### 🎯 **Topic Design**
-- Use **descriptive names** (`user-registration`, not `topic1`)
-- Plan for **growth** but start with reasonable partition counts
-- Consider **data retention** requirements upfront
-- Group **related events** in the same topic
+#### **Broker Failure Recovery**
+1. **Leader election** for affected partitions
+2. **ISR (In-Sync Replica)** promotes to leader
+3. **Producers/consumers** automatically reconnect
+4. **No data loss** if `min.insync.replicas` configured properly
 
-### 🗂️ **Partitioning Strategy**
-- Use **business keys** for partitioning (userId, accountId, etc.)
-- Aim for **even distribution** across partitions
-- **Monitor partition lag** and rebalance if needed
-- Remember: **more partitions ≠ always better**
+#### **Consumer Recovery**
+1. **Group rebalancing** triggered
+2. **Partitions reassigned** to remaining consumers
+3. **Processing resumes** from last committed offset
+4. **Duplicate processing** possible if manual commit used
 
-### 📊 **Operational Excellence**
-- **Monitor consumer lag** by partition
-- **Test key distribution** before production
-- **Plan partition scaling** as part of capacity planning
-- **Document partitioning strategy** for your team
+## 🔍 Monitoring & Observability
 
-## 🚀 **What's Next?**
+### Key Metrics Dashboard
+```mermaid
+graph TB
+    subgraph "Topic Metrics"
+        TM1[Messages In Rate]
+        TM2[Bytes In Rate]
+        TM3[Message Size Avg]
+        TM4[Error Rate]
+    end
+    
+    subgraph "Partition Metrics"
+        PM1[Partition Size]
+        PM2[Leader Distribution]
+        PM3[Under-replicated Partitions]
+        PM4[Log End Offset]
+    end
+    
+    subgraph "Consumer Metrics"
+        CM1[Consumer Lag]
+        CM2[Processing Rate]
+        CM3[Commit Rate]
+        CM4[Rebalance Rate]
+    end
+    
+    TM1 --> ALERT1[High Throughput Alert]
+    PM3 --> ALERT2[Replication Alert]
+    CM1 --> ALERT3[Consumer Lag Alert]
+    
+    style ALERT1 fill:#ffe66d
+    style ALERT2 fill:#ff6b6b
+    style ALERT3 fill:#ffa8e6
+```
 
-Now that you understand Kafka's storage model, you're ready for [Lesson 5: Schema Registry](../lesson_5/concept.md), where you'll learn to manage structured data with schema evolution and type safety.
+### Health Check Implementation
+```kotlin
+@Service
+class TopicHealthService {
+    
+    fun checkTopicHealth(topicName: String): TopicHealthReport {
+        return AdminClient.create(adminConfig).use { admin ->
+            val topicDescription = admin.describeTopics(listOf(topicName))
+                .allTopicNames().get()[topicName]!!
+            
+            val issues = mutableListOf<String>()
+            
+            // Check partition health
+            topicDescription.partitions().forEach { partition ->
+                if (partition.leader() == null) {
+                    issues.add("Partition ${partition.partition()} has no leader")
+                }
+                
+                val inSyncReplicas = partition.isr().size
+                val totalReplicas = partition.replicas().size
+                if (inSyncReplicas < totalReplicas) {
+                    issues.add("Partition ${partition.partition()} under-replicated")
+                }
+            }
+            
+            TopicHealthReport(
+                topicName = topicName,
+                partitionCount = topicDescription.partitions().size,
+                isHealthy = issues.isEmpty(),
+                issues = issues
+            )
+        }
+    }
+}
+```
+
+## ✅ Best Practices Summary
+
+### Topic Design
+- **Use descriptive names** with consistent naming conventions
+- **Plan partition count** for future scale (start with 3-6, grow as needed)
+- **Choose retention policies** based on business requirements
+- **Group related events** in the same topic when possible
+
+### Partitioning Strategy
+- **Use meaningful keys** for related event ordering
+- **Avoid hot partitions** through good key distribution
+- **Monitor partition balance** and consumer lag regularly
+- **Consider custom partitioners** for specific business logic
+
+### Consumer Design
+- **Design idempotent consumers** to handle duplicate messages
+- **Use appropriate commit strategies** based on delivery guarantees needed
+- **Monitor consumer lag** to ensure keeping up with production
+- **Handle rebalancing gracefully** in consumer code
+
+### Operations
+- **Monitor key metrics** (throughput, lag, errors, partition health)
+- **Set up alerting** for critical issues (under-replication, high lag)
+- **Plan for failures** with proper replication and recovery procedures
+- **Test disaster recovery** scenarios regularly
+
+## 🚀 What's Next?
+
+You've mastered Kafka's storage fundamentals! Now let's add structure to your events with schemas.
+
+**Next**: [Lesson 5 - Schema Registry & Evolution](../lesson_5/concept.md) where you'll learn to manage data formats, ensure compatibility, and evolve your event schemas safely over time.
 
 ---
 
-*Understanding topics, partitions, and offsets is crucial for building scalable Kafka applications. This knowledge forms the foundation for all advanced Kafka patterns you'll learn in subsequent lessons.*
+*"Understanding how Kafka stores and distributes your data is the key to building scalable, reliable systems. With topics, partitions, and offsets mastered, you're ready to add structure and evolution to your events!"*
