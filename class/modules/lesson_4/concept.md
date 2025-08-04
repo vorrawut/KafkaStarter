@@ -82,28 +82,28 @@ graph TB
 ```mermaid
 flowchart TD
     subgraph "Messages with Keys"
-        M1[Message: key=user-123<br/>value={email: 'john@example.com'}]
-        M2[Message: key=user-456<br/>value={email: 'jane@example.com'}]
-        M3[Message: key=user-789<br/>value={email: 'bob@example.com'}]
+        M1["Message: key=user-123<br/>value={email: 'john@example.com'}"]
+        M2["Message: key=user-456<br/>value={email: 'jane@example.com'}"]
+        M3["Message: key=user-789<br/>value={email: 'bob@example.com'}"]
     end
     
     subgraph "Partitioning Process"
-        HASH[Hash Function<br/>hash(key) % partition_count]
+        HASH["Hash Function<br/>hash(key) % partition_count"]
     end
     
     subgraph "Target Partitions"
-        P0[Partition 0<br/>Always gets user-123 events]
-        P1[Partition 1<br/>Always gets user-456 events]
-        P2[Partition 2<br/>Always gets user-789 events]
+        P0["Partition 0<br/>Always gets user-123 events"]
+        P1["Partition 1<br/>Always gets user-456 events"]
+        P2["Partition 2<br/>Always gets user-789 events"]
     end
     
     M1 --> HASH
     M2 --> HASH
     M3 --> HASH
     
-    HASH -->|hash(user-123) % 3 = 0| P0
-    HASH -->|hash(user-456) % 3 = 1| P1
-    HASH -->|hash(user-789) % 3 = 2| P2
+    HASH -->|"hash(user-123) % 3 = 0"| P0
+    HASH -->|"hash(user-456) % 3 = 1"| P1
+    HASH -->|"hash(user-789) % 3 = 2"| P2
     
     style HASH fill:#ffe66d
     style P0 fill:#ff6b6b
