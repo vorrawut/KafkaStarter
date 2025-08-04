@@ -82,9 +82,9 @@ graph TB
 ```mermaid
 flowchart TD
     subgraph "Messages with Keys"
-        M1["Message: key=user-123<br/>value={email: 'john@example.com'}"]
-        M2["Message: key=user-456<br/>value={email: 'jane@example.com'}"]
-        M3["Message: key=user-789<br/>value={email: 'bob@example.com'}"]
+        M1["Message: key=user-123 value={email: 'john@example.com'}"]
+        M2["Message: key=user-456 value={email: 'jane@example.com'}"]
+        M3["Message: key=user-789 value={email: 'bob@example.com'}"]
     end
     
     subgraph "Partitioning Process"
@@ -92,9 +92,9 @@ flowchart TD
     end
     
     subgraph "Target Partitions"
-        P0["Partition 0<br/>Always gets user-123 events"]
-        P1["Partition 1<br/>Always gets user-456 events"]
-        P2["Partition 2<br/>Always gets user-789 events"]
+        P0["Partition 0 Always gets user-123 events"]
+        P1["Partition 1 Always gets user-456 events"]
+        P2["Partition 2 Always gets user-789 events"]
     end
     
     M1 --> HASH
