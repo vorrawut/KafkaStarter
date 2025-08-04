@@ -308,6 +308,55 @@ class UserServiceRequestProcessor {
 
 ## 🏗️ **Advanced Request-Reply Patterns**
 
+### Correlation ID Lifecycle & Timeout Handling
+
+Understanding how correlation IDs work and how timeouts are handled is crucial for reliable request-reply implementations.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant RequestReplyService as Request-Reply Service
+    participant KafkaProducer as Kafka Producer
+    participant RequestTopic as Request Topic
+    participant ProcessorA as Processor A
+    participant ReplyTopic as Reply Topic
+    participant KafkaConsumer as Kafka Consumer
+    participant TimeoutHandler as Timeout Handler
+    
+    Note over Client, TimeoutHandler: Successful Request-Reply Flow
+    
+    Client->>RequestReplyService: sendRequest(data)
+    RequestReplyService->>RequestReplyService: Generate correlationId: "req-123"
+    RequestReplyService->>RequestReplyService: Create CompletableFuture
+    RequestReplyService->>RequestReplyService: Store in pendingRequests map
+    RequestReplyService->>KafkaProducer: Send request with correlationId
+    KafkaProducer->>RequestTopic: Publish request message
+    
+    RequestTopic->>ProcessorA: Consume request (req-123)
+    ProcessorA->>ProcessorA: Process request
+    ProcessorA->>ReplyTopic: Publish reply with correlationId
+    
+    ReplyTopic->>KafkaConsumer: Consume reply (req-123)
+    KafkaConsumer->>RequestReplyService: Handle reply with correlationId
+    RequestReplyService->>RequestReplyService: Find pending request (req-123)
+    RequestReplyService->>RequestReplyService: Complete CompletableFuture
+    RequestReplyService->>Client: Return response
+    
+    Note over Client, TimeoutHandler: Timeout Scenario
+    
+    Client->>RequestReplyService: sendRequest(data2)
+    RequestReplyService->>RequestReplyService: Generate correlationId: "req-456"
+    RequestReplyService->>KafkaProducer: Send request
+    KafkaProducer->>RequestTopic: Publish request
+    
+    Note over ProcessorA: No response received
+    
+    TimeoutHandler->>RequestReplyService: Check expired requests
+    RequestReplyService->>RequestReplyService: Find expired request (req-456)
+    RequestReplyService->>RequestReplyService: Complete with TimeoutException
+    RequestReplyService->>Client: Throw TimeoutException
+```
+
 ### 1. **Multi-Step Request Processing**
 
 ```kotlin
