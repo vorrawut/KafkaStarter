@@ -46,9 +46,9 @@ graph TB
         PART[Partitioner]
         
         PROD --> PART
-        PART -->|hash(alice) % 3 = 0| P0M1
-        PART -->|hash(eve) % 3 = 1| P1M1  
-        PART -->|hash(henry) % 3 = 2| P2M1
+        PART -->|"hash(alice) % 3 = 0"| P0M1
+        PART -->|"hash(eve) % 3 = 1"| P1M1  
+        PART -->|"hash(henry) % 3 = 2"| P2M1
     end
     
     style P0M4 fill:#ff6b6b
