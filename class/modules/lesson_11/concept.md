@@ -347,6 +347,68 @@ class PushNotificationConsumer {
 
 ### 1. **Conditional Fan-out with Filtering**
 
+Some consumers should only receive events that match specific criteria.
+
+```mermaid
+graph TB
+    subgraph "Smart Event Routing Architecture"
+        EVENT[Order Placed Event]
+        ROUTER[Routing Service]
+        
+        subgraph "Business Rules"
+            AMOUNT{Amount > $1000?}
+            VIP{VIP Customer?}
+            REGION{International?}
+            TIME{Business Hours?}
+        end
+        
+        subgraph "Specialized Consumers"
+            FRAUD[🔍 Fraud Detection<br/>High Value Orders]
+            VIP_SUPPORT[👑 VIP Support<br/>Premium Service]
+            CUSTOMS[🌍 Customs Processing<br/>International Orders]
+            URGENT[⚡ Urgent Queue<br/>Business Hours]
+            STANDARD[📋 Standard Processing<br/>Default Handler]
+            ANALYTICS[📊 Analytics<br/>All Events]
+        end
+        
+        subgraph "Routing Topics"
+            T1[high-value-orders]
+            T2[vip-orders]
+            T3[international-orders]
+            T4[urgent-processing]
+            T5[standard-orders]
+            T6[order-analytics]
+        end
+    end
+    
+    EVENT --> ROUTER
+    ROUTER --> AMOUNT
+    ROUTER --> VIP
+    ROUTER --> REGION
+    ROUTER --> TIME
+    
+    AMOUNT -->|Yes| T1
+    VIP -->|Yes| T2
+    REGION -->|Yes| T3
+    TIME -->|Yes| T4
+    ROUTER --> T5
+    ROUTER --> T6
+    
+    T1 --> FRAUD
+    T2 --> VIP_SUPPORT
+    T3 --> CUSTOMS
+    T4 --> URGENT
+    T5 --> STANDARD
+    T6 --> ANALYTICS
+    
+    style ROUTER fill:#e3f2fd
+    style FRAUD fill:#ffebee
+    style VIP_SUPPORT fill:#e8f5e8
+    style CUSTOMS fill:#fff3e0
+    style URGENT fill:#f3e5f5
+    style ANALYTICS fill:#e0f2f1
+```
+
 ```kotlin
 @Component
 class ConditionalFanoutService {

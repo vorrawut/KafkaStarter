@@ -62,6 +62,44 @@ graph TB
 
 ## 🚀 **Command API with Event Publishing**
 
+### Request-Response Flow in Hybrid Architecture
+
+Understanding the temporal flow of requests, commands, and events is crucial for building reliable hybrid systems.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant REST_API as REST Command API
+    participant Command_Service as Command Service
+    participant Database
+    participant Kafka
+    participant Event_Consumer as Event Consumer
+    participant External_Service as External Service
+    
+    Note over Client, External_Service: Hybrid Request-Response Flow
+    
+    Client->>REST_API: POST /orders (Create Order)
+    REST_API->>Command_Service: Execute CreateOrderCommand
+    
+    Note over Command_Service: Synchronous Phase
+    Command_Service->>Database: Validate & Store Order
+    Database-->>Command_Service: Order Saved (ID: order-123)
+    Command_Service->>Kafka: Publish OrderCreatedEvent
+    Command_Service-->>REST_API: Command Result (200 OK)
+    REST_API-->>Client: HTTP 201 Created {orderId: "order-123"}
+    
+    Note over Kafka, External_Service: Asynchronous Phase
+    Kafka->>Event_Consumer: OrderCreatedEvent
+    Event_Consumer->>External_Service: Process Payment
+    External_Service-->>Event_Consumer: Payment Successful
+    Event_Consumer->>Kafka: Publish PaymentCompletedEvent
+    
+    Event_Consumer->>External_Service: Send Confirmation Email
+    Event_Consumer->>Database: Update Order Status
+    
+    Note over Client, External_Service: Client gets immediate response, processing continues async
+```
+
 ### 1. **Command Pattern Implementation**
 
 ```kotlin

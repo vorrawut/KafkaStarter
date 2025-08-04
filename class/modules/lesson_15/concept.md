@@ -333,6 +333,59 @@ class SessionWindowProcessing {
 
 ## 🔗 **Advanced Stream Joins**
 
+Stream joins enable correlation of events across different streams for complex event processing.
+
+```mermaid
+graph TB
+    subgraph "Stream Join Architecture"
+        subgraph "Input Streams"
+            ORDERS[📦 Orders Stream<br/>orderId, customerId, amount]
+            PAYMENTS[💳 Payments Stream<br/>orderId, paymentId, status]
+            CUSTOMERS[👤 Customer Stream<br/>customerId, tier, region]
+        end
+        
+        subgraph "Join Operations"
+            INNER[⚡ Inner Join<br/>Orders ⋈ Payments<br/>30-second window]
+            LEFT[🔄 Left Join<br/>Orders ⋈ Customers<br/>Co-partitioned]
+        end
+        
+        subgraph "State Management"
+            ORDER_STORE[Order State Store<br/>Windowed]
+            PAYMENT_STORE[Payment State Store<br/>Windowed]
+            CUSTOMER_STORE[Customer Global Store<br/>Latest values]
+        end
+        
+        subgraph "Output Streams"
+            ENRICHED[🎯 Enriched Events<br/>Order + Payment + Customer]
+            INCOMPLETE[⚠️ Incomplete Orders<br/>No matching payment]
+        end
+        
+        subgraph "Join Windows"
+            WINDOW[Time Window: 30s<br/>Grace Period: 10s<br/>Retention: 1h]
+        end
+    end
+    
+    ORDERS --> INNER
+    PAYMENTS --> INNER
+    ORDERS --> LEFT
+    CUSTOMERS --> LEFT
+    
+    INNER -.->|Stores| ORDER_STORE
+    INNER -.->|Stores| PAYMENT_STORE
+    LEFT -.->|Queries| CUSTOMER_STORE
+    
+    INNER -->|Match Found| ENRICHED
+    INNER -->|No Match| INCOMPLETE
+    LEFT --> ENRICHED
+    
+    WINDOW -.->|Controls| INNER
+    
+    style INNER fill:#e3f2fd
+    style LEFT fill:#e8f5e8
+    style ENRICHED fill:#fff3e0
+    style WINDOW fill:#f3e5f5
+```
+
 ### 1. **Multi-Stream Join Patterns**
 
 ```kotlin

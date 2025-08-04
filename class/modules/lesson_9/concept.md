@@ -156,6 +156,41 @@ class AdvancedAckConsumer {
 
 Idempotent processing ensures the same message can be processed multiple times with the same result.
 
+```mermaid
+graph TB
+    subgraph "Idempotent Processing Pattern"
+        MSG[Incoming Message<br/>ID: msg-123]
+        CHECK[Check Processing History]
+        PROCESS[Process Message]
+        STORE[Store Processing Record]
+        ACK[Acknowledge Message]
+        SKIP[Skip Processing<br/>Already Handled]
+        
+        subgraph "Deduplication Store"
+            DB[(Database<br/>Processing Records)]
+            CACHE[Redis Cache<br/>Recent Messages]
+            TABLE[message_id | status | timestamp]
+        end
+    end
+    
+    MSG --> CHECK
+    CHECK -->|Not Found| PROCESS
+    CHECK -->|Found: Completed| SKIP
+    CHECK -->|Found: In Progress| SKIP
+    PROCESS --> STORE
+    STORE --> ACK
+    SKIP --> ACK
+    
+    CHECK -.->|Query| DB
+    CHECK -.->|Fast Lookup| CACHE
+    STORE -.->|Insert/Update| TABLE
+    
+    style SKIP fill:#e8f5e8
+    style PROCESS fill:#fff3e0
+    style STORE fill:#e3f2fd
+    style CHECK fill:#f3e5f5
+```
+
 ### 1. **Message Deduplication Strategies**
 
 #### **Strategy 1: Unique Message IDs**
