@@ -82,9 +82,9 @@ graph TB
 ```mermaid
 flowchart TD
     subgraph "Messages with Keys"
-        M1["Message: key=user-123 value={email: john@example.com}"]
-        M2["Message: key=user-456 value={email: jane@example.com}"]
-        M3["Message: key=user-789 value={email: bob@example.com}"]
+        M1["Message: key=user-123 value={email john@example.com}"]
+        M2["Message: key=user-456 value={email jane@example.com}"]
+        M3["Message: key=user-789 value={email bob@example.com}"]
     end
     
     subgraph "Partitioning Process"
