@@ -19,24 +19,24 @@ graph TB
     subgraph "Kafka Cluster"
         subgraph "Topic: user-events (3 partitions)"
             subgraph "Partition 0 (Leader: Broker-1)"
-                P0M1[Offset 0: {user: alice}]
-                P0M2[Offset 1: {user: bob}]
-                P0M3[Offset 2: {user: charlie}]
-                P0M4[Offset 3: {user: david}]
+                P0M1["Offset 0: {user: alice}"]
+                P0M2["Offset 1: {user: bob}"]
+                P0M3["Offset 2: {user: charlie}"]
+                P0M4["Offset 3: {user: david}"]
             end
             
             subgraph "Partition 1 (Leader: Broker-2)"
-                P1M1[Offset 0: {user: eve}]
-                P1M2[Offset 1: {user: frank}]
-                P1M3[Offset 2: {user: grace}]
+                P1M1["Offset 0: {user: eve}"]
+                P1M2["Offset 1: {user: frank}"]
+                P1M3["Offset 2: {user: grace}"]
             end
             
             subgraph "Partition 2 (Leader: Broker-3)"
-                P2M1[Offset 0: {user: henry}]
-                P2M2[Offset 1: {user: iris}]
-                P2M3[Offset 2: {user: jack}]
-                P2M4[Offset 3: {user: kate}]
-                P2M5[Offset 4: {user: leo}]
+                P2M1["Offset 0: {user: henry}"]
+                P2M2["Offset 1: {user: iris}"]
+                P2M3["Offset 2: {user: jack}"]
+                P2M4["Offset 3: {user: kate}"]
+                P2M5["Offset 4: {user: leo}"]
             end
         end
     end
