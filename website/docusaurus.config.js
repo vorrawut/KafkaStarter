@@ -39,11 +39,12 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          id: 'curriculum',
           sidebarPath: require.resolve('./sidebars.js'),
-          // Point to the class directory
           path: '../class',
-          routeBasePath: '/', // Serve the docs at the site's root
+          routeBasePath: '/',
           editUrl: 'https://github.com/vorrawut/KafkaStarter/tree/main/class/',
+          exclude: ['**/answer/**'],
         },
         blog: false,
         theme: {
@@ -52,6 +53,8 @@ const config = {
       }),
     ],
   ],
+  
+  plugins: [],
 
   themes: ['@docusaurus/theme-mermaid'],
   markdown: {
@@ -75,6 +78,12 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Curriculum',
+            docsPluginId: 'curriculum',
+          },
+          {
+            to: '/answers',
+            label: 'Answer Code',
+            position: 'left',
           },
           {
             href: 'https://github.com/vorrawut/KafkaStarter',

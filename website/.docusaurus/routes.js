@@ -3,38 +3,8 @@ import ComponentCreator from '@docusaurus/ComponentCreator';
 
 export default [
   {
-    path: '/KafkaStarter/__docusaurus/debug',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug', '51c'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/config',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/config', '254'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/content',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/content', '1f5'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/globalData',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/globalData', '11f'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/metadata',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/metadata', '32c'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/registry',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/registry', '722'),
-    exact: true
-  },
-  {
-    path: '/KafkaStarter/__docusaurus/debug/routes',
-    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/routes', '99d'),
+    path: '/KafkaStarter/answers',
+    component: ComponentCreator('/KafkaStarter/answers', '59d'),
     exact: true
   },
   {
@@ -44,11 +14,11 @@ export default [
   },
   {
     path: '/KafkaStarter/',
-    component: ComponentCreator('/KafkaStarter/', '9c2'),
+    component: ComponentCreator('/KafkaStarter/', '1c1'),
     routes: [
       {
         path: '/KafkaStarter/',
-        component: ComponentCreator('/KafkaStarter/', '054'),
+        component: ComponentCreator('/KafkaStarter/', '1d7'),
         routes: [
           {
             path: '/KafkaStarter/',

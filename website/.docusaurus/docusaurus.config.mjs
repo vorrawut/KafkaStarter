@@ -26,10 +26,14 @@ export default {
       "classic",
       {
         "docs": {
+          "id": "curriculum",
           "sidebarPath": "/Users/vorrawutjudasri/ODDS/KafkaStarter/website/sidebars.js",
           "path": "../class",
           "routeBasePath": "/",
-          "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/"
+          "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/",
+          "exclude": [
+            "**/answer/**"
+          ]
         },
         "blog": false,
         "theme": {
@@ -38,6 +42,7 @@ export default {
       }
     ]
   ],
+  "plugins": [],
   "themes": [
     "@docusaurus/theme-mermaid"
   ],
@@ -66,7 +71,13 @@ export default {
           "type": "docSidebar",
           "sidebarId": "tutorialSidebar",
           "position": "left",
-          "label": "Curriculum"
+          "label": "Curriculum",
+          "docsPluginId": "curriculum"
+        },
+        {
+          "to": "/answers",
+          "label": "Answer Code",
+          "position": "left"
         },
         {
           "href": "https://github.com/vorrawut/KafkaStarter",
@@ -395,7 +406,6 @@ export default {
     "static"
   ],
   "customFields": {},
-  "plugins": [],
   "scripts": [],
   "headTags": [],
   "stylesheets": [],

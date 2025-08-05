@@ -1,0 +1,9 @@
+{
+  "type": "mdx",
+  "permalink": "/KafkaStarter/answers",
+  "source": "@site/src/pages/answers.md",
+  "title": "Answer Code",
+  "description": "Access the complete solution code for all lessons directly on GitHub:",
+  "frontMatter": {},
+  "unlisted": false
+}

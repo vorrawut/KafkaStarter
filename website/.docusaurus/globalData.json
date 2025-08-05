@@ -1,6 +1,6 @@
 {
   "docusaurus-plugin-content-docs": {
-    "default": {
+    "curriculum": {
       "path": "/KafkaStarter/",
       "versions": [
         {
