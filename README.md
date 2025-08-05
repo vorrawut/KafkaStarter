@@ -1,5 +1,7 @@
 # 🎉 Kafka Mastery Curriculum - Complete Education System
 
+GITBOOK: https://vorrawut.github.io/KafkaStarter/
+
 [![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.5+-blue.svg)](https://kafka.apache.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-green.svg)](https://spring.io/projects/spring-boot)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple.svg)](https://kotlinlang.org/)
