@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_11/README.md",
   "sourceDirName": "workshop/lesson_11",
   "slug": "/workshop/lesson_11/",
-  "permalink": "/KafkaStarter/workshop/lesson_11/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_11/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_11/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing",
-    "permalink": "/KafkaStarter/modules/lesson_11/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_11/concept"
   },
   "next": {
     "title": "Lesson 12: Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture",
-    "permalink": "/KafkaStarter/modules/lesson_12/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_12/concept"
   }
 }

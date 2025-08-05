@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_4/README.md",
   "sourceDirName": "workshop/lesson_4",
   "slug": "/workshop/lesson_4/",
-  "permalink": "/KafkaStarter/workshop/lesson_4/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_4/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_4/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 4 Workshop: Topics, Partitions & Offsets Management",
-    "permalink": "/KafkaStarter/modules/lesson_4/workshop_4"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/workshop_4"
   },
   "next": {
     "title": "Lesson 5: Schema Registry with Avro & Protobuf - Managing Structured Data",
-    "permalink": "/KafkaStarter/modules/lesson_5/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
   }
 }

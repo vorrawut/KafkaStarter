@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_6/concept.md",
   "sourceDirName": "modules/lesson_6",
   "slug": "/modules/lesson_6/concept",
-  "permalink": "/KafkaStarter/modules/lesson_6/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_6/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_6/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 5 Workshop: Schema Registry & Evolution",
-    "permalink": "/KafkaStarter/workshop/lesson_5/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_5/"
   },
   "next": {
     "title": "Lesson 6 Workshop: Development Tools - Building Production-Ready Kafka Applications",
-    "permalink": "/KafkaStarter/modules/lesson_6/workshop_6"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_6"
   }
 }

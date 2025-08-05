@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_7/concept.md",
   "sourceDirName": "modules/lesson_7",
   "slug": "/modules/lesson_7/concept",
-  "permalink": "/KafkaStarter/modules/lesson_7/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_7/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_7/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 6 Workshop: Development Tools & Testing Framework",
-    "permalink": "/KafkaStarter/workshop/lesson_6/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_6/"
   },
   "next": {
     "title": "Lesson 7 Workshop: Consumer Groups & Load Balancing",
-    "permalink": "/KafkaStarter/workshop/lesson_7/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_7/"
   }
 }

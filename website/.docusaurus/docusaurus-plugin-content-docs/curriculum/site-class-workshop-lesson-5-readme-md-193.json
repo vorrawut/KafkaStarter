@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_5/README.md",
   "sourceDirName": "workshop/lesson_5",
   "slug": "/workshop/lesson_5/",
-  "permalink": "/KafkaStarter/workshop/lesson_5/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_5/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_5/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 5 Workshop: Schema Registry with Avro & Protobuf",
-    "permalink": "/KafkaStarter/modules/lesson_5/workshop_5"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5"
   },
   "next": {
     "title": "Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications",
-    "permalink": "/KafkaStarter/modules/lesson_6/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/concept"
   }
 }

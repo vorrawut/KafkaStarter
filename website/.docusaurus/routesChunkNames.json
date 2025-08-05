@@ -6,212 +6,212 @@
     },
     "content": "35311386"
   },
+  "/KafkaStarter/curriculum-799": {
+    "__comp": "5e95c892",
+    "__context": {
+      "plugin": "f30e90f2"
+    }
+  },
+  "/KafkaStarter/curriculum-8be": {
+    "__comp": "a7bd4aaa",
+    "__props": "8ece4e51"
+  },
+  "/KafkaStarter/curriculum-578": {
+    "__comp": "a94703ab"
+  },
+  "/KafkaStarter/curriculum/CURRICULUM_GUIDE-076": {
+    "__comp": "17896441",
+    "content": "9fefbcf1"
+  },
+  "/KafkaStarter/curriculum/LESSON_TEMPLATE-628": {
+    "__comp": "17896441",
+    "content": "3aa1b77c"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_1/concept-987": {
+    "__comp": "17896441",
+    "content": "9baeebad"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_10/concept-c6e": {
+    "__comp": "17896441",
+    "content": "3bc71e69"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_11/concept-bfd": {
+    "__comp": "17896441",
+    "content": "f748dd7c"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_12/concept-7e6": {
+    "__comp": "17896441",
+    "content": "aa652def"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_13/concept-3ed": {
+    "__comp": "17896441",
+    "content": "5ac815a1"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_14/concept-a43": {
+    "__comp": "17896441",
+    "content": "ace0d6e1"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_15/concept-27f": {
+    "__comp": "17896441",
+    "content": "38a2330a"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_16/concept-44e": {
+    "__comp": "17896441",
+    "content": "a427d238"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_17/concept-a0e": {
+    "__comp": "17896441",
+    "content": "c480ae07"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_18/concept-b5b": {
+    "__comp": "17896441",
+    "content": "33ae2073"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_19/concept-4e0": {
+    "__comp": "17896441",
+    "content": "f66178ff"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_2/concept-b03": {
+    "__comp": "17896441",
+    "content": "3b810a2e"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_20/concept-33a": {
+    "__comp": "17896441",
+    "content": "3e372d48"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_3/concept-af5": {
+    "__comp": "17896441",
+    "content": "8b21d6b3"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_3/workshop_3-985": {
+    "__comp": "17896441",
+    "content": "01b03719"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/concept-25e": {
+    "__comp": "17896441",
+    "content": "4c6d8f1a"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/workshop_4-f5f": {
+    "__comp": "17896441",
+    "content": "3b3221db"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_5/concept-b32": {
+    "__comp": "17896441",
+    "content": "318cb15d"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_5/workshop_5-5a0": {
+    "__comp": "17896441",
+    "content": "c44376f6"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_6/concept-1d3": {
+    "__comp": "17896441",
+    "content": "65b484c2"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_6/workshop_6-3a5": {
+    "__comp": "17896441",
+    "content": "b68530b7"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_7/concept-1be": {
+    "__comp": "17896441",
+    "content": "b00710d1"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_8/concept-108": {
+    "__comp": "17896441",
+    "content": "af69ddfd"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_9/concept-e09": {
+    "__comp": "17896441",
+    "content": "c3fd5c31"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_9/workshop_9-607": {
+    "__comp": "17896441",
+    "content": "32cb76af"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_1/-1f0": {
+    "__comp": "17896441",
+    "content": "51387aa0"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_10/-47e": {
+    "__comp": "17896441",
+    "content": "ec4318e1"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_11/-538": {
+    "__comp": "17896441",
+    "content": "705fdc05"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_12/-0be": {
+    "__comp": "17896441",
+    "content": "f7eb53a3"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_13/-7bf": {
+    "__comp": "17896441",
+    "content": "b2c8d3a1"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_14/-8cf": {
+    "__comp": "17896441",
+    "content": "8c45afd7"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_15/-ce4": {
+    "__comp": "17896441",
+    "content": "0adb98e1"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_16/-3b5": {
+    "__comp": "17896441",
+    "content": "46bde37d"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_17/-f46": {
+    "__comp": "17896441",
+    "content": "0d033bd6"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_18/-f6f": {
+    "__comp": "17896441",
+    "content": "1ea4fbc8"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_19/-ce7": {
+    "__comp": "17896441",
+    "content": "a6bd054d"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_2/-9f0": {
+    "__comp": "17896441",
+    "content": "f03851be"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_20/-433": {
+    "__comp": "17896441",
+    "content": "3d424503"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_3/-dd9": {
+    "__comp": "17896441",
+    "content": "2036b4e9"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_4/-ace": {
+    "__comp": "17896441",
+    "content": "ea62c6a2"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_5/-f97": {
+    "__comp": "17896441",
+    "content": "193b258d"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_6/-959": {
+    "__comp": "17896441",
+    "content": "7b80b024"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_7/-640": {
+    "__comp": "17896441",
+    "content": "0a1a2c3f"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_8/-c66": {
+    "__comp": "17896441",
+    "content": "49090863"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_9/-c68": {
+    "__comp": "17896441",
+    "content": "eb8796c1"
+  },
   "/KafkaStarter/-855": {
     "__comp": "c4f5d8e4",
     "__context": {
       "plugin": "a7456010"
     },
     "config": "5e9f5e1a"
-  },
-  "/KafkaStarter/-1c1": {
-    "__comp": "5e95c892",
-    "__context": {
-      "plugin": "f30e90f2"
-    }
-  },
-  "/KafkaStarter/-1d7": {
-    "__comp": "a7bd4aaa",
-    "__props": "5e2dedec"
-  },
-  "/KafkaStarter/-6d9": {
-    "__comp": "a94703ab"
-  },
-  "/KafkaStarter/CURRICULUM_GUIDE-0be": {
-    "__comp": "17896441",
-    "content": "9fefbcf1"
-  },
-  "/KafkaStarter/LESSON_TEMPLATE-fff": {
-    "__comp": "17896441",
-    "content": "3aa1b77c"
-  },
-  "/KafkaStarter/modules/lesson_1/concept-a38": {
-    "__comp": "17896441",
-    "content": "9baeebad"
-  },
-  "/KafkaStarter/modules/lesson_10/concept-b31": {
-    "__comp": "17896441",
-    "content": "3bc71e69"
-  },
-  "/KafkaStarter/modules/lesson_11/concept-5f5": {
-    "__comp": "17896441",
-    "content": "f748dd7c"
-  },
-  "/KafkaStarter/modules/lesson_12/concept-581": {
-    "__comp": "17896441",
-    "content": "aa652def"
-  },
-  "/KafkaStarter/modules/lesson_13/concept-997": {
-    "__comp": "17896441",
-    "content": "5ac815a1"
-  },
-  "/KafkaStarter/modules/lesson_14/concept-4b1": {
-    "__comp": "17896441",
-    "content": "ace0d6e1"
-  },
-  "/KafkaStarter/modules/lesson_15/concept-96a": {
-    "__comp": "17896441",
-    "content": "38a2330a"
-  },
-  "/KafkaStarter/modules/lesson_16/concept-697": {
-    "__comp": "17896441",
-    "content": "a427d238"
-  },
-  "/KafkaStarter/modules/lesson_17/concept-115": {
-    "__comp": "17896441",
-    "content": "c480ae07"
-  },
-  "/KafkaStarter/modules/lesson_18/concept-784": {
-    "__comp": "17896441",
-    "content": "33ae2073"
-  },
-  "/KafkaStarter/modules/lesson_19/concept-d8d": {
-    "__comp": "17896441",
-    "content": "f66178ff"
-  },
-  "/KafkaStarter/modules/lesson_2/concept-d46": {
-    "__comp": "17896441",
-    "content": "3b810a2e"
-  },
-  "/KafkaStarter/modules/lesson_20/concept-fb7": {
-    "__comp": "17896441",
-    "content": "3e372d48"
-  },
-  "/KafkaStarter/modules/lesson_3/concept-a3d": {
-    "__comp": "17896441",
-    "content": "8b21d6b3"
-  },
-  "/KafkaStarter/modules/lesson_3/workshop_3-f44": {
-    "__comp": "17896441",
-    "content": "01b03719"
-  },
-  "/KafkaStarter/modules/lesson_4/concept-aad": {
-    "__comp": "17896441",
-    "content": "4c6d8f1a"
-  },
-  "/KafkaStarter/modules/lesson_4/workshop_4-652": {
-    "__comp": "17896441",
-    "content": "3b3221db"
-  },
-  "/KafkaStarter/modules/lesson_5/concept-6b7": {
-    "__comp": "17896441",
-    "content": "318cb15d"
-  },
-  "/KafkaStarter/modules/lesson_5/workshop_5-5a6": {
-    "__comp": "17896441",
-    "content": "c44376f6"
-  },
-  "/KafkaStarter/modules/lesson_6/concept-daf": {
-    "__comp": "17896441",
-    "content": "65b484c2"
-  },
-  "/KafkaStarter/modules/lesson_6/workshop_6-1b4": {
-    "__comp": "17896441",
-    "content": "b68530b7"
-  },
-  "/KafkaStarter/modules/lesson_7/concept-4dc": {
-    "__comp": "17896441",
-    "content": "b00710d1"
-  },
-  "/KafkaStarter/modules/lesson_8/concept-7ba": {
-    "__comp": "17896441",
-    "content": "af69ddfd"
-  },
-  "/KafkaStarter/modules/lesson_9/concept-36d": {
-    "__comp": "17896441",
-    "content": "c3fd5c31"
-  },
-  "/KafkaStarter/modules/lesson_9/workshop_9-38d": {
-    "__comp": "17896441",
-    "content": "32cb76af"
-  },
-  "/KafkaStarter/workshop/lesson_1/-f9d": {
-    "__comp": "17896441",
-    "content": "51387aa0"
-  },
-  "/KafkaStarter/workshop/lesson_10/-1bc": {
-    "__comp": "17896441",
-    "content": "ec4318e1"
-  },
-  "/KafkaStarter/workshop/lesson_11/-a5f": {
-    "__comp": "17896441",
-    "content": "705fdc05"
-  },
-  "/KafkaStarter/workshop/lesson_12/-6d0": {
-    "__comp": "17896441",
-    "content": "f7eb53a3"
-  },
-  "/KafkaStarter/workshop/lesson_13/-b16": {
-    "__comp": "17896441",
-    "content": "b2c8d3a1"
-  },
-  "/KafkaStarter/workshop/lesson_14/-708": {
-    "__comp": "17896441",
-    "content": "8c45afd7"
-  },
-  "/KafkaStarter/workshop/lesson_15/-e6a": {
-    "__comp": "17896441",
-    "content": "0adb98e1"
-  },
-  "/KafkaStarter/workshop/lesson_16/-e96": {
-    "__comp": "17896441",
-    "content": "46bde37d"
-  },
-  "/KafkaStarter/workshop/lesson_17/-143": {
-    "__comp": "17896441",
-    "content": "0d033bd6"
-  },
-  "/KafkaStarter/workshop/lesson_18/-99f": {
-    "__comp": "17896441",
-    "content": "1ea4fbc8"
-  },
-  "/KafkaStarter/workshop/lesson_19/-69c": {
-    "__comp": "17896441",
-    "content": "a6bd054d"
-  },
-  "/KafkaStarter/workshop/lesson_2/-d45": {
-    "__comp": "17896441",
-    "content": "f03851be"
-  },
-  "/KafkaStarter/workshop/lesson_20/-42f": {
-    "__comp": "17896441",
-    "content": "3d424503"
-  },
-  "/KafkaStarter/workshop/lesson_3/-e87": {
-    "__comp": "17896441",
-    "content": "2036b4e9"
-  },
-  "/KafkaStarter/workshop/lesson_4/-374": {
-    "__comp": "17896441",
-    "content": "ea62c6a2"
-  },
-  "/KafkaStarter/workshop/lesson_5/-739": {
-    "__comp": "17896441",
-    "content": "193b258d"
-  },
-  "/KafkaStarter/workshop/lesson_6/-90d": {
-    "__comp": "17896441",
-    "content": "7b80b024"
-  },
-  "/KafkaStarter/workshop/lesson_7/-ce3": {
-    "__comp": "17896441",
-    "content": "0a1a2c3f"
-  },
-  "/KafkaStarter/workshop/lesson_8/-e8c": {
-    "__comp": "17896441",
-    "content": "49090863"
-  },
-  "/KafkaStarter/workshop/lesson_9/-24c": {
-    "__comp": "17896441",
-    "content": "eb8796c1"
   }
 }

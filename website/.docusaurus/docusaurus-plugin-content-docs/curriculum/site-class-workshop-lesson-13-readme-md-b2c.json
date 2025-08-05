@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_13/README.md",
   "sourceDirName": "workshop/lesson_13",
   "slug": "/workshop/lesson_13/",
-  "permalink": "/KafkaStarter/workshop/lesson_13/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_13/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_13/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
-    "permalink": "/KafkaStarter/modules/lesson_13/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_13/concept"
   },
   "next": {
     "title": "Lesson 14: Kafka Streams API Introduction - Real-time Stream Processing",
-    "permalink": "/KafkaStarter/modules/lesson_14/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_14/concept"
   }
 }

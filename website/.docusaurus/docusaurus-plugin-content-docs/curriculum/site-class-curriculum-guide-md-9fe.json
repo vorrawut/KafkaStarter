@@ -5,7 +5,7 @@
   "source": "@site/../class/CURRICULUM_GUIDE.md",
   "sourceDirName": ".",
   "slug": "/CURRICULUM_GUIDE",
-  "permalink": "/KafkaStarter/CURRICULUM_GUIDE",
+  "permalink": "/KafkaStarter/curriculum/CURRICULUM_GUIDE",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/CURRICULUM_GUIDE.md",
@@ -15,6 +15,6 @@
   "sidebar": "tutorialSidebar",
   "next": {
     "title": "Lesson 1: Why Kafka? Understanding Event-Driven Architecture",
-    "permalink": "/KafkaStarter/modules/lesson_1/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_1/concept"
   }
 }

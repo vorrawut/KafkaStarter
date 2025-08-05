@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_12/concept.md",
   "sourceDirName": "modules/lesson_12",
   "slug": "/modules/lesson_12/concept",
-  "permalink": "/KafkaStarter/modules/lesson_12/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_12/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_12/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 11 Workshop: Fan-out Pattern & Notification Systems",
-    "permalink": "/KafkaStarter/workshop/lesson_11/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_11/"
   },
   "next": {
     "title": "Lesson 12 Workshop: Hybrid REST + Kafka Architecture",
-    "permalink": "/KafkaStarter/workshop/lesson_12/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_12/"
   }
 }

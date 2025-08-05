@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_10/concept.md",
   "sourceDirName": "modules/lesson_10",
   "slug": "/modules/lesson_10/concept",
-  "permalink": "/KafkaStarter/modules/lesson_10/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_10/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_10/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
-    "permalink": "/KafkaStarter/workshop/lesson_9/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_9/"
   },
   "next": {
     "title": "Lesson 10 Workshop: Message Transformation & Filtering",
-    "permalink": "/KafkaStarter/workshop/lesson_10/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_10/"
   }
 }

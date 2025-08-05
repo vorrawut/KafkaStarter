@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_17/concept.md",
   "sourceDirName": "modules/lesson_17",
   "slug": "/modules/lesson_17/concept",
-  "permalink": "/KafkaStarter/modules/lesson_17/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_17/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_17/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 16 Workshop: Local State Stores & Fault Tolerance",
-    "permalink": "/KafkaStarter/workshop/lesson_16/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_16/"
   },
   "next": {
     "title": "Lesson 17 Workshop: Building a Real-time Dashboard Application",
-    "permalink": "/KafkaStarter/workshop/lesson_17/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_17/"
   }
 }

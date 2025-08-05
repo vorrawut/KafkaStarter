@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_9/concept.md",
   "sourceDirName": "modules/lesson_9",
   "slug": "/modules/lesson_9/concept",
-  "permalink": "/KafkaStarter/modules/lesson_9/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_9/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_9/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 8 Workshop: Error Handling & Dead Letter Topics",
-    "permalink": "/KafkaStarter/workshop/lesson_8/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_8/"
   },
   "next": {
     "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
-    "permalink": "/KafkaStarter/modules/lesson_9/workshop_9"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_9/workshop_9"
   }
 }

@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_2/concept.md",
   "sourceDirName": "modules/lesson_2",
   "slug": "/modules/lesson_2/concept",
-  "permalink": "/KafkaStarter/modules/lesson_2/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_2/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 1 Workshop: Why Kafka? Understanding Event-Driven Architecture",
-    "permalink": "/KafkaStarter/workshop/lesson_1/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_1/"
   },
   "next": {
     "title": "Lesson 2 Workshop: Environment Setup & Kafka Infrastructure",
-    "permalink": "/KafkaStarter/workshop/lesson_2/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_2/"
   }
 }

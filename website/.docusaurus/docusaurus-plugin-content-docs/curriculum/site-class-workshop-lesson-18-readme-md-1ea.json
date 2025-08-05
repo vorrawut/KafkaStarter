@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_18/README.md",
   "sourceDirName": "workshop/lesson_18",
   "slug": "/workshop/lesson_18/",
-  "permalink": "/KafkaStarter/workshop/lesson_18/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_18/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_18/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 18: Kafka Security & ACLs - Production Security Implementation",
-    "permalink": "/KafkaStarter/modules/lesson_18/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_18/concept"
   },
   "next": {
     "title": "Lesson 19: Observability & Monitoring - Production Operations Excellence",
-    "permalink": "/KafkaStarter/modules/lesson_19/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_19/concept"
   }
 }

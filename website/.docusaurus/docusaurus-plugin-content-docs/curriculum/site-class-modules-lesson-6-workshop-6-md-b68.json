@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_6/workshop_6.md",
   "sourceDirName": "modules/lesson_6",
   "slug": "/modules/lesson_6/workshop_6",
-  "permalink": "/KafkaStarter/modules/lesson_6/workshop_6",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_6",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_6/workshop_6.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications",
-    "permalink": "/KafkaStarter/modules/lesson_6/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/concept"
   },
   "next": {
     "title": "Lesson 6 Workshop: Development Tools & Testing Framework",
-    "permalink": "/KafkaStarter/workshop/lesson_6/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_6/"
   }
 }

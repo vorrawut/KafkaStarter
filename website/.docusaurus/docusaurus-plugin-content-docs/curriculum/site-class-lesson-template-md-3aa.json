@@ -5,7 +5,7 @@
   "source": "@site/../class/LESSON_TEMPLATE.md",
   "sourceDirName": ".",
   "slug": "/LESSON_TEMPLATE",
-  "permalink": "/KafkaStarter/LESSON_TEMPLATE",
+  "permalink": "/KafkaStarter/curriculum/LESSON_TEMPLATE",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/LESSON_TEMPLATE.md",
@@ -15,6 +15,6 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 20 Workshop: Deployment & Scaling Best Practices",
-    "permalink": "/KafkaStarter/workshop/lesson_20/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_20/"
   }
 }

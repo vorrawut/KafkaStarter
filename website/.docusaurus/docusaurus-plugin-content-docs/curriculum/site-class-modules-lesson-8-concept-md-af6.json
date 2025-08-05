@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_8/concept.md",
   "sourceDirName": "modules/lesson_8",
   "slug": "/modules/lesson_8/concept",
-  "permalink": "/KafkaStarter/modules/lesson_8/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_8/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_8/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 7 Workshop: Consumer Groups & Load Balancing",
-    "permalink": "/KafkaStarter/workshop/lesson_7/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_7/"
   },
   "next": {
     "title": "Lesson 8 Workshop: Error Handling & Dead Letter Topics",
-    "permalink": "/KafkaStarter/workshop/lesson_8/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_8/"
   }
 }

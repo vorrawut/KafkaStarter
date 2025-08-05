@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_20/concept.md",
   "sourceDirName": "modules/lesson_20",
   "slug": "/modules/lesson_20/concept",
-  "permalink": "/KafkaStarter/modules/lesson_20/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_20/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_20/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 19 Workshop: Observability & Monitoring",
-    "permalink": "/KafkaStarter/workshop/lesson_19/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_19/"
   },
   "next": {
     "title": "Lesson 20 Workshop: Deployment & Scaling Best Practices",
-    "permalink": "/KafkaStarter/workshop/lesson_20/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_20/"
   }
 }

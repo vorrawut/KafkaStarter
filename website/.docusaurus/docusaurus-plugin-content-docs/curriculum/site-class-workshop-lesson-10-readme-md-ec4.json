@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_10/README.md",
   "sourceDirName": "workshop/lesson_10",
   "slug": "/workshop/lesson_10/",
-  "permalink": "/KafkaStarter/workshop/lesson_10/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_10/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_10/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 10: Message Transformation & Filtering - Building Data Processing Pipelines",
-    "permalink": "/KafkaStarter/modules/lesson_10/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_10/concept"
   },
   "next": {
     "title": "Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing",
-    "permalink": "/KafkaStarter/modules/lesson_11/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_11/concept"
   }
 }

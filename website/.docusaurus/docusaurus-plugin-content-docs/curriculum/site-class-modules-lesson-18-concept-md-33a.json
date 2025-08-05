@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_18/concept.md",
   "sourceDirName": "modules/lesson_18",
   "slug": "/modules/lesson_18/concept",
-  "permalink": "/KafkaStarter/modules/lesson_18/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_18/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_18/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 17 Workshop: Building a Real-time Dashboard Application",
-    "permalink": "/KafkaStarter/workshop/lesson_17/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_17/"
   },
   "next": {
     "title": "Lesson 18 Workshop: Kafka Security & ACLs",
-    "permalink": "/KafkaStarter/workshop/lesson_18/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_18/"
   }
 }

@@ -5,7 +5,7 @@
   "source": "@site/../class/workshop/lesson_2/README.md",
   "sourceDirName": "workshop/lesson_2",
   "slug": "/workshop/lesson_2/",
-  "permalink": "/KafkaStarter/workshop/lesson_2/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_2/",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_2/README.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 2: Environment Setup & Kafka Infrastructure",
-    "permalink": "/KafkaStarter/modules/lesson_2/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
   },
   "next": {
     "title": "Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot",
-    "permalink": "/KafkaStarter/modules/lesson_3/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/concept"
   }
 }

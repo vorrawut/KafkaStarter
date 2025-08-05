@@ -29,7 +29,7 @@ export default {
           "id": "curriculum",
           "sidebarPath": "/Users/vorrawutjudasri/ODDS/KafkaStarter/website/sidebars.js",
           "path": "../class",
-          "routeBasePath": "/",
+          "routeBasePath": "/curriculum",
           "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/",
           "exclude": [
             "**/answer/**"
@@ -95,19 +95,19 @@ export default {
           "items": [
             {
               "label": "Phase 1: Foundations",
-              "to": "/modules/lesson_1/concept"
+              "to": "/curriculum/modules/lesson_1/concept"
             },
             {
               "label": "Phase 2: Resilient Messaging",
-              "to": "/modules/lesson_7/concept"
+              "to": "/curriculum/modules/lesson_7/concept"
             },
             {
               "label": "Phase 3: Streaming",
-              "to": "/modules/lesson_14/concept"
+              "to": "/curriculum/modules/lesson_14/concept"
             },
             {
               "label": "Phase 4: Production",
-              "to": "/modules/lesson_18/concept"
+              "to": "/curriculum/modules/lesson_18/concept"
             }
           ]
         },
@@ -116,7 +116,7 @@ export default {
           "items": [
             {
               "label": "Curriculum Guide",
-              "to": "/CURRICULUM_GUIDE"
+              "to": "/curriculum/CURRICULUM_GUIDE"
             },
             {
               "label": "Quick Start",

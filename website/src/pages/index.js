@@ -17,7 +17,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/CURRICULUM_GUIDE">
+            to="/curriculum/CURRICULUM_GUIDE">
             Start Your Kafka Journey - 20 Progressive Lessons 🚀
           </Link>
         </div>

@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_5/concept.md",
   "sourceDirName": "modules/lesson_5",
   "slug": "/modules/lesson_5/concept",
-  "permalink": "/KafkaStarter/modules/lesson_5/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/concept.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 4 Workshop: Topics, Partitions & Offsets",
-    "permalink": "/KafkaStarter/workshop/lesson_4/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_4/"
   },
   "next": {
     "title": "Lesson 5 Workshop: Schema Registry with Avro & Protobuf",
-    "permalink": "/KafkaStarter/modules/lesson_5/workshop_5"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5"
   }
 }

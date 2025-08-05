@@ -5,7 +5,7 @@
   "source": "@site/../class/modules/lesson_9/workshop_9.md",
   "sourceDirName": "modules/lesson_9",
   "slug": "/modules/lesson_9/workshop_9",
-  "permalink": "/KafkaStarter/modules/lesson_9/workshop_9",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_9/workshop_9",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_9/workshop_9.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Lesson 9: Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
-    "permalink": "/KafkaStarter/modules/lesson_9/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_9/concept"
   },
   "next": {
     "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
-    "permalink": "/KafkaStarter/workshop/lesson_9/"
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_9/"
   }
 }
