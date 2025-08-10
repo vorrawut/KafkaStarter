@@ -1,4 +1,6 @@
-# Lesson 5: Schema Registry with Avro & Protobuf - Managing Structured Data
+# Concept
+
+## Schema Registry with Avro & Protobuf - Managing Structured Data
 
 ## 🎯 Objective
 

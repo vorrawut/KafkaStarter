@@ -1,4 +1,6 @@
-# Lesson 1: Why Kafka? Understanding Event-Driven Architecture
+# Concept
+
+## Why Kafka? Understanding Event-Driven Architecture
 
 ## 🎯 Learning Objectives
 

@@ -1,4 +1,6 @@
-# Lesson 4 Workshop: Topics, Partitions & Offsets Management
+# Workshop
+
+## Topics, Partitions & Offsets Management
 
 ## 🎯 What We Want to Build
 

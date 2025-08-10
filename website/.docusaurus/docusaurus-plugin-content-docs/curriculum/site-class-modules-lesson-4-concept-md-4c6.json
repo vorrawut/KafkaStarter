@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_4/concept",
-  "title": "Lesson 4: Topics, Partitions & Offsets - Kafka's Storage Model",
-  "description": "🎯 Learning Objectives",
+  "title": "Concept",
+  "description": "Topics, Partitions & Offsets - Kafka's Storage Model",
   "source": "@site/../class/modules/lesson_4/concept.md",
   "sourceDirName": "modules/lesson_4",
   "slug": "/modules/lesson_4/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 3 Workshop: First Producer/Consumer - Hello Kafka!",
+    "title": "Workshop: First Producer/Consumer - Hello Kafka!",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_3/"
   },
   "next": {
-    "title": "Lesson 4 Workshop: Topics, Partitions & Offsets Management",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_4/workshop_4"
   }
 }

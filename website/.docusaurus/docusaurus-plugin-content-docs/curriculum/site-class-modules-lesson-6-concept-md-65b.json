@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_6/concept",
-  "title": "Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Development Tools - Debugging, Testing & Monitoring Kafka Applications",
   "source": "@site/../class/modules/lesson_6/concept.md",
   "sourceDirName": "modules/lesson_6",
   "slug": "/modules/lesson_6/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 5 Workshop: Schema Registry & Evolution",
+    "title": "Workshop: Schema Registry & Evolution",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_5/"
   },
   "next": {
-    "title": "Lesson 6 Workshop: Development Tools - Building Production-Ready Kafka Applications",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_6"
   }
 }

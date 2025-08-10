@@ -1,4 +1,4 @@
-# Lesson 19 Workshop: Observability & Monitoring
+# Workshop: Observability & Monitoring
 
 ## 🎯 Objective
 Implement comprehensive observability for production Kafka systems including metrics collection, distributed tracing, structured logging, alerting, and real-time dashboards for operational excellence.

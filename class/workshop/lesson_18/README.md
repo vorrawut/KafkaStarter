@@ -1,4 +1,4 @@
-# Lesson 18 Workshop: Kafka Security & ACLs
+# Workshop: Kafka Security & ACLs
 
 ## 🎯 Objective
 Implement production-grade security for Kafka clusters including SSL/TLS encryption, SASL authentication, and Access Control Lists (ACLs) for comprehensive authorization.

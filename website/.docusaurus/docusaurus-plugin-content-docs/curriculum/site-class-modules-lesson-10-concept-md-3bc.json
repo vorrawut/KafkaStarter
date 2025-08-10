@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_10/concept",
-  "title": "Lesson 10: Message Transformation & Filtering - Building Data Processing Pipelines",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Message Transformation & Filtering - Building Data Processing Pipelines",
   "source": "@site/../class/modules/lesson_10/concept.md",
   "sourceDirName": "modules/lesson_10",
   "slug": "/modules/lesson_10/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
+    "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_9/"
   },
   "next": {
-    "title": "Lesson 10 Workshop: Message Transformation & Filtering",
+    "title": "Workshop: Message Transformation & Filtering",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_10/"
   }
 }

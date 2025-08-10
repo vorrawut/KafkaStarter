@@ -1,4 +1,4 @@
-# Lesson 20 Workshop: Deployment & Scaling Best Practices
+# Workshop: Deployment & Scaling Best Practices
 
 ## 🎯 Objective  
 Master production deployment strategies, auto-scaling patterns, and operational best practices for running Kafka clusters at scale in cloud and on-premises environments.

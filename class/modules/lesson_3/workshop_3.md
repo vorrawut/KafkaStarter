@@ -1,4 +1,6 @@
-# Lesson 3 Workshop: Hello Kafka - Your First Producer & Consumer
+# Workshop
+
+## Hello Kafka - Your First Producer & Consumer
 
 ## 🎯 What We Want to Build
 

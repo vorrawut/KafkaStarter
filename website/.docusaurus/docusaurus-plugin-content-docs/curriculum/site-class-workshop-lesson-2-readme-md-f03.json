@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_2/README",
-  "title": "Lesson 2 Workshop: Environment Setup & Kafka Infrastructure",
+  "title": "Workshop: Environment Setup & Kafka Infrastructure",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_2/README.md",
   "sourceDirName": "workshop/lesson_2",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 2: Environment Setup & Kafka Infrastructure",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
   },
   "next": {
-    "title": "Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_3/concept"
   }
 }

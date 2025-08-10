@@ -1,4 +1,6 @@
-# Lesson 6 Workshop: Development Tools - Building Production-Ready Kafka Applications
+# Workshop
+
+## Development Tools - Building Production-Ready Kafka Applications
 
 ## 🎯 What We Want to Build
 

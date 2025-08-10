@@ -1,4 +1,6 @@
-# Lesson 15: Windowing, Joins & Stateful Operations - Advanced Stream Processing
+# Concept
+
+## Windowing, Joins & Stateful Operations - Advanced Stream Processing
 
 ## 🎯 Objective
 

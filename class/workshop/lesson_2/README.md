@@ -1,4 +1,4 @@
-# Lesson 2 Workshop: Environment Setup & Kafka Infrastructure
+# Workshop: Environment Setup & Kafka Infrastructure
 
 ## 🎯 Objective
 Set up a complete Kafka development environment and validate that all components are working correctly.

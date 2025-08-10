@@ -1,4 +1,4 @@
-# Lesson 16 Workshop: Local State Stores & Fault Tolerance
+# Workshop: Local State Stores & Fault Tolerance
 
 ## 🎯 Objective
 Master stateful stream processing with Kafka Streams local state stores, implement fault tolerance mechanisms, state backup and recovery, and build resilient stream applications that maintain state consistency across failures.

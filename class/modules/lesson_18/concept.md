@@ -1,4 +1,6 @@
-# Lesson 18: Kafka Security & ACLs - Production Security Implementation
+# Concept
+
+## Kafka Security & ACLs - Production Security Implementation
 
 ## 🎯 Learning Objectives
 

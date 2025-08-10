@@ -1,4 +1,4 @@
-# Lesson 6 Workshop: Development Tools & Testing Framework
+# Workshop: Development Tools & Testing Framework
 
 ## 🎯 Objective
 Master essential Kafka development tools, debugging techniques, testing strategies, and monitoring setups for productive and reliable Kafka application development.

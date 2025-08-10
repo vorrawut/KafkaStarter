@@ -1,4 +1,6 @@
-# Lesson 9: Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing
+# Concept
+
+## Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing
 
 ## 🎯 Objective
 

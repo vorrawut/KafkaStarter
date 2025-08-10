@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_20/README",
-  "title": "Lesson 20 Workshop: Deployment & Scaling Best Practices",
+  "title": "Workshop: Deployment & Scaling Best Practices",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_20/README.md",
   "sourceDirName": "workshop/lesson_20",
@@ -14,11 +14,7 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 20: Deployment & Scaling Best Practices - Production Excellence",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_20/concept"
-  },
-  "next": {
-    "title": "📖 Lesson Template",
-    "permalink": "/KafkaStarter/curriculum/LESSON_TEMPLATE"
   }
 }

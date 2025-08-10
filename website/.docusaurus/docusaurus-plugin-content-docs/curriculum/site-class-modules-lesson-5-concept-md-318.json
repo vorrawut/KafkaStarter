@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_5/concept",
-  "title": "Lesson 5: Schema Registry with Avro & Protobuf - Managing Structured Data",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Schema Registry with Avro & Protobuf - Managing Structured Data",
   "source": "@site/../class/modules/lesson_5/concept.md",
   "sourceDirName": "modules/lesson_5",
   "slug": "/modules/lesson_5/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 4 Workshop: Topics, Partitions & Offsets",
+    "title": "Workshop: Topics, Partitions & Offsets",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_4/"
   },
   "next": {
-    "title": "Lesson 5 Workshop: Schema Registry with Avro & Protobuf",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5"
   }
 }

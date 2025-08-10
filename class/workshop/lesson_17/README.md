@@ -1,4 +1,4 @@
-# Lesson 17 Workshop: Building a Real-time Dashboard Application
+# Workshop: Building a Real-time Dashboard Application
 
 ## 🎯 Objective
 Build a comprehensive real-time dashboard application using Kafka Streams, WebSockets, and modern web technologies to visualize streaming data, create interactive charts, and provide live business intelligence.

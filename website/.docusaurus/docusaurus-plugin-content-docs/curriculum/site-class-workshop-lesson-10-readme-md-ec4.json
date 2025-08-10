@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_10/README",
-  "title": "Lesson 10 Workshop: Message Transformation & Filtering",
+  "title": "Workshop: Message Transformation & Filtering",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_10/README.md",
   "sourceDirName": "workshop/lesson_10",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 10: Message Transformation & Filtering - Building Data Processing Pipelines",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_10/concept"
   },
   "next": {
-    "title": "Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_11/concept"
   }
 }

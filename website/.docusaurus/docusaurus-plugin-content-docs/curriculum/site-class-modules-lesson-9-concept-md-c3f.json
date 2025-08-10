@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_9/concept",
-  "title": "Lesson 9: Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
   "source": "@site/../class/modules/lesson_9/concept.md",
   "sourceDirName": "modules/lesson_9",
   "slug": "/modules/lesson_9/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 8 Workshop: Error Handling & Dead Letter Topics",
+    "title": "Workshop: Error Handling & Dead Letter Topics",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_8/"
   },
   "next": {
-    "title": "Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_9/workshop_9"
   }
 }

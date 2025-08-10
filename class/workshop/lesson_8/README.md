@@ -1,4 +1,4 @@
-# Lesson 8 Workshop: Error Handling & Dead Letter Topics
+# Workshop: Error Handling & Dead Letter Topics
 
 ## 🎯 Objective
 Build robust, fault-tolerant Kafka applications with comprehensive error handling, retry strategies, and dead letter topic patterns for production resilience.

@@ -1,4 +1,6 @@
-# Lesson 19: Observability & Monitoring - Production Operations Excellence
+# Concept
+
+## Observability & Monitoring - Production Operations Excellence
 
 ## 🎯 Learning Objectives
 

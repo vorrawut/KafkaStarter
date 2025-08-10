@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_4/README",
-  "title": "Lesson 4 Workshop: Topics, Partitions & Offsets",
+  "title": "Workshop: Topics, Partitions & Offsets",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_4/README.md",
   "sourceDirName": "workshop/lesson_4",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 4 Workshop: Topics, Partitions & Offsets Management",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_4/workshop_4"
   },
   "next": {
-    "title": "Lesson 5: Schema Registry with Avro & Protobuf - Managing Structured Data",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
   }
 }

@@ -1,4 +1,4 @@
-# Lesson 5 Workshop: Schema Registry & Evolution
+# Workshop: Schema Registry & Evolution
 
 ## 🎯 Objective
 Master schema management with Confluent Schema Registry, implementing Avro and Protobuf schemas with proper evolution strategies for production systems.

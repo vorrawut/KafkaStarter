@@ -1,4 +1,6 @@
-# Lesson 10: Message Transformation & Filtering - Building Data Processing Pipelines
+# Concept
+
+## Message Transformation & Filtering - Building Data Processing Pipelines
 
 ## 🎯 Objective
 

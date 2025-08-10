@@ -1,4 +1,4 @@
-# Lesson 7 Workshop: Consumer Groups & Load Balancing
+# Workshop: Consumer Groups & Load Balancing
 
 ## 🎯 Objective
 Master Kafka consumer groups for scalable, fault-tolerant message processing. Learn partition assignment strategies, rebalancing mechanisms, and how to design consumer applications that scale horizontally.

@@ -1,4 +1,6 @@
-# Lesson 14: Kafka Streams API Introduction - Real-time Stream Processing
+# Concept
+
+## Kafka Streams API Introduction - Real-time Stream Processing
 
 ## 🎯 Objective
 

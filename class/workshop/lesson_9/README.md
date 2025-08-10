@@ -1,4 +1,4 @@
-# Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers
+# Workshop: Manual Acknowledgment & Idempotent Consumers
 
 ## 🎯 Objective
 Master precise message processing control with manual acknowledgment, implement idempotent consumers for exactly-once semantics, and handle duplicate messages gracefully in production systems.

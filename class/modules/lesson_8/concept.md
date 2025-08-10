@@ -1,4 +1,6 @@
-# Lesson 8: Retry Strategies & Dead Letter Topics - Bulletproof Error Handling
+# Concept
+
+## Retry Strategies & Dead Letter Topics - Bulletproof Error Handling
 
 ## 🎯 Objective
 

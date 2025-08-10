@@ -1,4 +1,4 @@
-# Lesson 11 Workshop: Fan-out Pattern & Notification Systems
+# Workshop: Fan-out Pattern & Notification Systems
 
 ## 🎯 Objective
 Master the fan-out messaging pattern for building scalable notification systems that deliver messages across multiple channels (email, SMS, push notifications, webhooks) with reliable delivery and failure handling.

@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_19/README",
-  "title": "Lesson 19 Workshop: Observability & Monitoring",
+  "title": "Workshop: Observability & Monitoring",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_19/README.md",
   "sourceDirName": "workshop/lesson_19",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 19: Observability & Monitoring - Production Operations Excellence",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_19/concept"
   },
   "next": {
-    "title": "Lesson 20: Deployment & Scaling Best Practices - Production Excellence",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_20/concept"
   }
 }

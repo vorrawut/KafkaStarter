@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_7/README",
-  "title": "Lesson 7 Workshop: Consumer Groups & Load Balancing",
+  "title": "Workshop: Consumer Groups & Load Balancing",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_7/README.md",
   "sourceDirName": "workshop/lesson_7",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 7: Consumer Groups & Load Balancing - Scaling Kafka Consumers",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_7/concept"
   },
   "next": {
-    "title": "Lesson 8: Retry Strategies & Dead Letter Topics - Bulletproof Error Handling",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_8/concept"
   }
 }

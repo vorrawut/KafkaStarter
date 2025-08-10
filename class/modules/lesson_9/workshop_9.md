@@ -1,4 +1,6 @@
-# Lesson 9 Workshop: Manual Acknowledgment & Idempotent Consumers
+# Workshop
+
+## Manual Acknowledgment & Idempotent Consumers
 
 ## 🎯 What We Want to Build
 

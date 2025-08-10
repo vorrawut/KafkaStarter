@@ -1,4 +1,6 @@
-# Lesson 7: Consumer Groups & Load Balancing - Scaling Kafka Consumers
+# Concept
+
+## Consumer Groups & Load Balancing - Scaling Kafka Consumers
 
 ## 🎯 Objective
 

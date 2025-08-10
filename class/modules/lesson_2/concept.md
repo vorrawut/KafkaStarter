@@ -1,4 +1,6 @@
-# Lesson 2: Environment Setup & Kafka Infrastructure
+# Concept
+
+## Environment Setup & Kafka Infrastructure
 
 ## 🎯 Learning Objectives
 

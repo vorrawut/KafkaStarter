@@ -1,4 +1,4 @@
-# Lesson 13 Workshop: Request-Reply Patterns with Kafka
+# Workshop: Request-Reply Patterns with Kafka
 
 ## 🎯 Objective
 Master request-reply patterns over Kafka for synchronous communication needs, implementing correlation-based responses, timeout handling, and high-performance request-response systems using asynchronous messaging.

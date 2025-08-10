@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_11/README",
-  "title": "Lesson 11 Workshop: Fan-out Pattern & Notification Systems",
+  "title": "Workshop: Fan-out Pattern & Notification Systems",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_11/README.md",
   "sourceDirName": "workshop/lesson_11",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_11/concept"
   },
   "next": {
-    "title": "Lesson 12: Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_12/concept"
   }
 }

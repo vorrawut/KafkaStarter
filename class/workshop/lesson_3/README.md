@@ -1,4 +1,4 @@
-# Lesson 3 Workshop: First Producer/Consumer - Hello Kafka!
+# Workshop: First Producer/Consumer - Hello Kafka!
 
 ## 🎯 Objective
 Build your first Kafka application with Spring Boot and Kotlin, implementing both producer and consumer patterns with proper error handling and monitoring.

@@ -1,4 +1,6 @@
-# Lesson 4: Topics, Partitions & Offsets - Kafka's Storage Model
+# Concept
+
+## Topics, Partitions & Offsets - Kafka's Storage Model
 
 ## 🎯 Learning Objectives
 

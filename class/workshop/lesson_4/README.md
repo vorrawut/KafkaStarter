@@ -1,4 +1,4 @@
-# Lesson 4 Workshop: Topics, Partitions & Offsets
+# Workshop: Topics, Partitions & Offsets
 
 ## 🎯 Objective
 Master Kafka's storage model by understanding topics, partitions, and offsets. Learn how to design efficient topic structures and manage data distribution.

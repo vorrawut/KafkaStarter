@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_4/workshop_4",
-  "title": "Lesson 4 Workshop: Topics, Partitions & Offsets Management",
-  "description": "🎯 What We Want to Build",
+  "title": "Workshop",
+  "description": "Topics, Partitions & Offsets Management",
   "source": "@site/../class/modules/lesson_4/workshop_4.md",
   "sourceDirName": "modules/lesson_4",
   "slug": "/modules/lesson_4/workshop_4",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 4: Topics, Partitions & Offsets - Kafka's Storage Model",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_4/concept"
   },
   "next": {
-    "title": "Lesson 4 Workshop: Topics, Partitions & Offsets",
+    "title": "Workshop: Topics, Partitions & Offsets",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_4/"
   }
 }

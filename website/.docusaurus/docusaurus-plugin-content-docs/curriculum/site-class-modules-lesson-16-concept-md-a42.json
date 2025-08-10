@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_16/concept",
-  "title": "Lesson 16: Local State Stores & Fault Tolerance - Persistent State Management",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Local State Stores & Fault Tolerance - Persistent State Management",
   "source": "@site/../class/modules/lesson_16/concept.md",
   "sourceDirName": "modules/lesson_16",
   "slug": "/modules/lesson_16/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 15 Workshop: Windowing, Joins & Stateful Operations",
+    "title": "Workshop: Windowing, Joins & Stateful Operations",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_15/"
   },
   "next": {
-    "title": "Lesson 16 Workshop: Local State Stores & Fault Tolerance",
+    "title": "Workshop: Local State Stores & Fault Tolerance",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_16/"
   }
 }

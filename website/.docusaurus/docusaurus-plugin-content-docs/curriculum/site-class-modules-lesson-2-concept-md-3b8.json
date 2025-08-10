@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_2/concept",
-  "title": "Lesson 2: Environment Setup & Kafka Infrastructure",
-  "description": "🎯 Learning Objectives",
+  "title": "Concept",
+  "description": "Environment Setup & Kafka Infrastructure",
   "source": "@site/../class/modules/lesson_2/concept.md",
   "sourceDirName": "modules/lesson_2",
   "slug": "/modules/lesson_2/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 1 Workshop: Why Kafka? Understanding Event-Driven Architecture",
+    "title": "Workshop: Why Kafka? Understanding Event-Driven Architecture",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_1/"
   },
   "next": {
-    "title": "Lesson 2 Workshop: Environment Setup & Kafka Infrastructure",
+    "title": "Workshop: Environment Setup & Kafka Infrastructure",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_2/"
   }
 }

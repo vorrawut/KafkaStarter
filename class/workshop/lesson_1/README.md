@@ -1,4 +1,4 @@
-# Lesson 1 Workshop: Why Kafka? Understanding Event-Driven Architecture
+# Workshop: Why Kafka? Understanding Event-Driven Architecture
 
 ## 🎯 Objective
 Understand the fundamentals of event-driven architecture and why Apache Kafka is the leading solution for building resilient, scalable systems.

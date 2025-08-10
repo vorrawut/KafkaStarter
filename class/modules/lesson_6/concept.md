@@ -1,4 +1,6 @@
-# Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications
+# Concept 
+
+## Development Tools - Debugging, Testing & Monitoring Kafka Applications
 
 ## 🎯 Objective
 

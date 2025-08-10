@@ -1,4 +1,7 @@
-# Lesson 20: Deployment & Scaling Best Practices - Production Excellence
+# Concept
+
+## Deployment & Scaling Best Practices - Production Excellence
+
 
 ## 🎯 Learning Objectives
 

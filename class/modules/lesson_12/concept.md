@@ -1,4 +1,6 @@
-# Lesson 12: Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture
+# Concept
+
+## Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture
 
 ## 🎯 Objective
 

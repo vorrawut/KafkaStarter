@@ -1,4 +1,4 @@
-# Lesson 15 Workshop: Windowing, Joins & Stateful Operations
+# Workshop: Windowing, Joins & Stateful Operations
 
 ## 🎯 Objective
 Master advanced Kafka Streams operations including temporal windowing, stream-stream joins, stream-table joins, and stateful aggregations for complex real-time analytics and event processing.

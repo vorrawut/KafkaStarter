@@ -1,4 +1,6 @@
-# Lesson 5 Workshop: Schema Registry with Avro & Protobuf
+# Workshop
+
+## Schema Registry with Avro & Protobuf
 
 ## 🎯 What We Want to Build
 

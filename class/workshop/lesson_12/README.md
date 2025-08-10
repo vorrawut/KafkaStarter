@@ -1,4 +1,4 @@
-# Lesson 12 Workshop: Hybrid REST + Kafka Architecture
+# Workshop: Hybrid REST + Kafka Architecture
 
 ## 🎯 Objective
 Master hybrid architectures that seamlessly combine REST APIs with Kafka event streaming, implementing command-query separation, event-driven microservices, and synchronous-asynchronous integration patterns.

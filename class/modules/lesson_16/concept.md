@@ -1,4 +1,7 @@
-# Lesson 16: Local State Stores & Fault Tolerance - Persistent State Management
+# Concept
+
+## Local State Stores & Fault Tolerance - Persistent State Management
+
 
 ## 🎯 Objective
 

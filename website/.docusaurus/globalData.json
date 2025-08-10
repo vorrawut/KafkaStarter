@@ -16,11 +16,6 @@
               "sidebar": "tutorialSidebar"
             },
             {
-              "id": "LESSON_TEMPLATE",
-              "path": "/KafkaStarter/curriculum/LESSON_TEMPLATE",
-              "sidebar": "tutorialSidebar"
-            },
-            {
               "id": "modules/lesson_1/concept",
               "path": "/KafkaStarter/curriculum/modules/lesson_1/concept",
               "sidebar": "tutorialSidebar"

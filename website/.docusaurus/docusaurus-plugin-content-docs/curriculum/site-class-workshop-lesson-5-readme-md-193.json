@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_5/README",
-  "title": "Lesson 5 Workshop: Schema Registry & Evolution",
+  "title": "Workshop: Schema Registry & Evolution",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_5/README.md",
   "sourceDirName": "workshop/lesson_5",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 5 Workshop: Schema Registry with Avro & Protobuf",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5"
   },
   "next": {
-    "title": "Lesson 6: Development Tools - Debugging, Testing & Monitoring Kafka Applications",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_6/concept"
   }
 }

@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_8/concept",
-  "title": "Lesson 8: Retry Strategies & Dead Letter Topics - Bulletproof Error Handling",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Retry Strategies & Dead Letter Topics - Bulletproof Error Handling",
   "source": "@site/../class/modules/lesson_8/concept.md",
   "sourceDirName": "modules/lesson_8",
   "slug": "/modules/lesson_8/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 7 Workshop: Consumer Groups & Load Balancing",
+    "title": "Workshop: Consumer Groups & Load Balancing",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_7/"
   },
   "next": {
-    "title": "Lesson 8 Workshop: Error Handling & Dead Letter Topics",
+    "title": "Workshop: Error Handling & Dead Letter Topics",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_8/"
   }
 }

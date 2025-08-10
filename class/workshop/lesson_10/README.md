@@ -1,4 +1,4 @@
-# Lesson 10 Workshop: Message Transformation & Filtering
+# Workshop: Message Transformation & Filtering
 
 ## 🎯 Objective
 Master message transformation patterns, content-based routing, field mapping, data enrichment, and filtering strategies for building flexible data processing pipelines with Kafka.

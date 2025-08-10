@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_3/README",
-  "title": "Lesson 3 Workshop: First Producer/Consumer - Hello Kafka!",
+  "title": "Workshop: First Producer/Consumer - Hello Kafka!",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_3/README.md",
   "sourceDirName": "workshop/lesson_3",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 3 Workshop: Hello Kafka - Your First Producer & Consumer",
+    "title": "Workshop",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_3/workshop_3"
   },
   "next": {
-    "title": "Lesson 4: Topics, Partitions & Offsets - Kafka's Storage Model",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_4/concept"
   }
 }

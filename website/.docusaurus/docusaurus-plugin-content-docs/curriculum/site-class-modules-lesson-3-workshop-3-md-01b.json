@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_3/workshop_3",
-  "title": "Lesson 3 Workshop: Hello Kafka - Your First Producer & Consumer",
-  "description": "🎯 What We Want to Build",
+  "title": "Workshop",
+  "description": "Hello Kafka - Your First Producer & Consumer",
   "source": "@site/../class/modules/lesson_3/workshop_3.md",
   "sourceDirName": "modules/lesson_3",
   "slug": "/modules/lesson_3/workshop_3",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_3/concept"
   },
   "next": {
-    "title": "Lesson 3 Workshop: First Producer/Consumer - Hello Kafka!",
+    "title": "Workshop: First Producer/Consumer - Hello Kafka!",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_3/"
   }
 }

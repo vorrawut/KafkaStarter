@@ -1,4 +1,4 @@
-# Lesson 14 Workshop: Kafka Streams API Introduction
+# Workshop: Kafka Streams API Introduction
 
 ## 🎯 Objective
 Master Kafka Streams for real-time stream processing, building stateless transformations, filtering, and branching operations with the Streams DSL.

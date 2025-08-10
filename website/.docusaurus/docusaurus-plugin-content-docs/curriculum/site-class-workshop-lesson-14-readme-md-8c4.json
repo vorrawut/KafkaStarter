@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_14/README",
-  "title": "Lesson 14 Workshop: Kafka Streams API Introduction",
+  "title": "Workshop: Kafka Streams API Introduction",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_14/README.md",
   "sourceDirName": "workshop/lesson_14",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 14: Kafka Streams API Introduction - Real-time Stream Processing",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_14/concept"
   },
   "next": {
-    "title": "Lesson 15: Windowing, Joins & Stateful Operations - Advanced Stream Processing",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_15/concept"
   }
 }

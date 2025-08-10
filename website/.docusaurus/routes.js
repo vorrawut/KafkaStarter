@@ -3,31 +3,60 @@ import ComponentCreator from '@docusaurus/ComponentCreator';
 
 export default [
   {
+    path: '/KafkaStarter/__docusaurus/debug',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug', '51c'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/config',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/config', '254'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/content',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/content', '1f5'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/globalData',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/globalData', '11f'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/metadata',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/metadata', '32c'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/registry',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/registry', '722'),
+    exact: true
+  },
+  {
+    path: '/KafkaStarter/__docusaurus/debug/routes',
+    component: ComponentCreator('/KafkaStarter/__docusaurus/debug/routes', '99d'),
+    exact: true
+  },
+  {
     path: '/KafkaStarter/answers',
     component: ComponentCreator('/KafkaStarter/answers', '59d'),
     exact: true
   },
   {
     path: '/KafkaStarter/curriculum',
-    component: ComponentCreator('/KafkaStarter/curriculum', '799'),
+    component: ComponentCreator('/KafkaStarter/curriculum', 'f00'),
     routes: [
       {
         path: '/KafkaStarter/curriculum',
-        component: ComponentCreator('/KafkaStarter/curriculum', '8be'),
+        component: ComponentCreator('/KafkaStarter/curriculum', 'f7f'),
         routes: [
           {
             path: '/KafkaStarter/curriculum',
-            component: ComponentCreator('/KafkaStarter/curriculum', '578'),
+            component: ComponentCreator('/KafkaStarter/curriculum', '887'),
             routes: [
               {
                 path: '/KafkaStarter/curriculum/CURRICULUM_GUIDE',
                 component: ComponentCreator('/KafkaStarter/curriculum/CURRICULUM_GUIDE', '076'),
-                exact: true,
-                sidebar: "tutorialSidebar"
-              },
-              {
-                path: '/KafkaStarter/curriculum/LESSON_TEMPLATE',
-                component: ComponentCreator('/KafkaStarter/curriculum/LESSON_TEMPLATE', '628'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },

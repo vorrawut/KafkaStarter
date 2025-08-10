@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_8/README",
-  "title": "Lesson 8 Workshop: Error Handling & Dead Letter Topics",
+  "title": "Workshop: Error Handling & Dead Letter Topics",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_8/README.md",
   "sourceDirName": "workshop/lesson_8",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 8: Retry Strategies & Dead Letter Topics - Bulletproof Error Handling",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_8/concept"
   },
   "next": {
-    "title": "Lesson 9: Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_9/concept"
   }
 }

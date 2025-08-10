@@ -1,4 +1,6 @@
-# Lesson 11: Fan-out Pattern - Notification Systems & Parallel Processing
+# Concept
+
+## Fan-out Pattern - Notification Systems & Parallel Processing
 
 ## 🎯 Objective
 

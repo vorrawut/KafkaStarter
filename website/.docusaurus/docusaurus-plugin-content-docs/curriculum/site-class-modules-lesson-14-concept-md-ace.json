@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_14/concept",
-  "title": "Lesson 14: Kafka Streams API Introduction - Real-time Stream Processing",
-  "description": "🎯 Objective",
+  "title": "Concept",
+  "description": "Kafka Streams API Introduction - Real-time Stream Processing",
   "source": "@site/../class/modules/lesson_14/concept.md",
   "sourceDirName": "modules/lesson_14",
   "slug": "/modules/lesson_14/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 13 Workshop: Request-Reply Patterns with Kafka",
+    "title": "Workshop: Request-Reply Patterns with Kafka",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_13/"
   },
   "next": {
-    "title": "Lesson 14 Workshop: Kafka Streams API Introduction",
+    "title": "Workshop: Kafka Streams API Introduction",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_14/"
   }
 }

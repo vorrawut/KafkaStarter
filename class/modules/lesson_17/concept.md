@@ -1,4 +1,6 @@
-# Lesson 17: Building a Real-time Dashboard Application - Complete Analytics System
+# Concept
+
+## Building a Real-time Dashboard Application - Complete Analytics System
 
 ## 🎯 Objective
 

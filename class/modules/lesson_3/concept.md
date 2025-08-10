@@ -1,4 +1,7 @@
-# Lesson 3: First Producer/Consumer - Hello Kafka with Spring Boot
+# Concept
+
+## First Producer/Consumer - Hello Kafka with Spring Boot
+
 
 ## 🎯 Learning Objectives
 
