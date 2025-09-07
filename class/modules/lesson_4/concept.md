@@ -2,35 +2,119 @@
 
 ## Topics, Partitions & Offsets - Kafka's Storage Model
 
-## 🎯 Learning Objectives
+## Introduction of Topics
 
-By the end of this lesson, you will:
-- **Master** Kafka's storage architecture: topics, partitions, and offsets
-- **Design** optimal topic structures for performance and scalability  
-- **Implement** effective partitioning strategies for your use cases
-- **Manage** consumer offsets for reliable message processing
-- **Optimize** partition distribution and consumer group coordination
-- **Monitor** topic health and partition performance
+## 1. Databases vs Kafka
 
-## 📚 Core Concepts
+### Traditional Database
+- Data stored in **tables** (rows & columns).
+- Example: `thermostat_readings` table with:
+   - `sensor_id`
+   - `location`
+   - `temperature`
+   - `timestamp`
+- New data → **insert row**
+- Updated data → **update row** (loses history ❌)
 
-### **Topics**: Logical Event Categories
-- **Named streams** of related events (e.g., `user-events`, `order-events`, `payment-events`)
-- **Logical abstraction** over physical storage
-- **Configurable retention** based on time, size, or compaction
-- **Schema evolution** support through versioning
+👉 Problem: difficult to track historical changes (e.g., kitchen temp rising from 22°C → 24°C).
 
-### **Partitions**: Physical Storage & Parallelism Units
-- **Ordered, immutable** sequence of records within each partition
-- **Parallel processing** - each partition can be consumed independently
-- **Fault tolerance** - replicated across multiple brokers
-- **Load distribution** - enables horizontal scaling
+### Kafka
+- Uses **logs** instead of tables.
+- **Log = sequence of immutable events/messages**.
+- The equivalent of a table = **topic**.
 
-### **Offsets**: Message Position Tracking
-- **Sequential, unique** identifiers within each partition
-- **Monotonically increasing** - never decrease within a partition
-- **Consumer progress** tracking mechanism
-- **Replay capability** - consumers can reset and reprocess from any offset
+---
+
+![topic.png](images/topic.png)
+
+## 2. Kafka Topics
+- A **topic** is a named log that stores messages (events).
+- Messages are always **appended** to the end.
+- You can have **thousands of topics** in a cluster.
+- **Key properties**:
+   - Messages are **immutable** (cannot be changed).
+   - Messages remain **ordered**.
+   - Messages can be read by **many consumers**.
+   - Messages are **not deleted** after reading.
+
+---
+
+## 3. Kafka ≠ Queue
+
+| Queue | Kafka Topic (Log) |
+|-------|-------------------|
+| Message removed after reading | Message stays, can be read again |
+| One-time consumption | Multiple consumers can read independently |
+| Ephemeral | Persistent, ordered log |
+
+⚠️ Don’t call it a “Kafka Queue.” Kafka uses **logs**.
+
+---
+
+## 4. Kafka Message Structure
+
+A Kafka message has several fields:
+
+1. **Value** → main event data (JSON, Avro, Protobuf, string, integer, etc.)
+2. **Key** → identifier (e.g., `sensor_id: 42`), helps partition data
+3. **Timestamp** → when the event happened (producer-assigned or broker time)
+4. **Headers** → optional key–value metadata
+5. **Topic Name** → which topic it belongs to
+6. **Offset** → message’s position in the topic (starts at `0` and increments)
+
+---
+
+## 5. Example: Thermostat Readings
+
+### Database table approach
+| sensor_id | location | temperature | timestamp           |
+|-----------|----------|-------------|---------------------|
+| 42        | kitchen  | 22          | 2025-10-01 10:00:00 |
+| 42        | kitchen  | 24          | 2025-10-01 11:00:00 |
+
+❌ Updates overwrite data → history lost.
+
+### Kafka topic approach
+| Offset | Key (sensor_id) | Value (temperature) | Timestamp           |
+|--------|-----------------|---------------------|---------------------|
+| 0      | 42              | 22                  | 2025-10-01 10:00:00 |
+| 1      | 42              | 24                  | 2025-10-01 11:00:00 |
+
+✅ History preserved.
+
+---
+
+### Kafka topic approach
+Topic: thermostat_readings
+
+Offset | Key (sensor_id) | Value (temperature) | Timestamp
+0 | 42 | 22 | 10:00
+1 | 42 | 24 | 11:00
+
+
+✅ History preserved.
+
+---
+
+## 6. Transforming Topics
+- Messages are immutable.
+- To change data → **create new topics**.
+- Example:
+   - Source: `thermostat_readings`
+   - Derived: `hot_locations` (only readings with temp > 30°C)
+
+---
+
+## 7. Key Takeaways
+- Kafka topics = **immutable logs** of messages.
+- Logs ≠ queues → data isn’t removed after reading.
+- Messages contain **value, key, timestamp, headers, topic, offset**.
+- Transformations create **new topics**.
+- Kafka is built for **event-driven, streaming, and historical** data.
+
+---
+
+
 
 ## 🔄 Producer Partitioning Strategies
 
