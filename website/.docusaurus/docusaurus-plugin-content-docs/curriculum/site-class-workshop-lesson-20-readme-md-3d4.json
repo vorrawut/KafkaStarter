@@ -16,5 +16,9 @@
   "previous": {
     "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_20/concept"
+  },
+  "next": {
+    "title": "👍 Practical Use Cases",
+    "permalink": "/KafkaStarter/curriculum/modules/practical_usecases_guideline"
   }
 }

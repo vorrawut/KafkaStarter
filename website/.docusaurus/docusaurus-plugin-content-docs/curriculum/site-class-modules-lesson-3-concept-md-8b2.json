@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_3/concept",
   "title": "Concept",
-  "description": "First Producer/Consumer - Hello Kafka with Spring Boot",
+  "description": "First Producer/Consumer",
   "source": "@site/../class/modules/lesson_3/concept.md",
   "sourceDirName": "modules/lesson_3",
   "slug": "/modules/lesson_3/concept",
@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_2/"
   },
   "next": {
-    "title": "Workshop",
+    "title": "workshop_3",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_3/workshop_3"
   }
 }

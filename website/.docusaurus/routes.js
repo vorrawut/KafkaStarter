@@ -44,15 +44,15 @@ export default [
   },
   {
     path: '/KafkaStarter/curriculum',
-    component: ComponentCreator('/KafkaStarter/curriculum', 'f00'),
+    component: ComponentCreator('/KafkaStarter/curriculum', '91c'),
     routes: [
       {
         path: '/KafkaStarter/curriculum',
-        component: ComponentCreator('/KafkaStarter/curriculum', 'f7f'),
+        component: ComponentCreator('/KafkaStarter/curriculum', '24f'),
         routes: [
           {
             path: '/KafkaStarter/curriculum',
-            component: ComponentCreator('/KafkaStarter/curriculum', '887'),
+            component: ComponentCreator('/KafkaStarter/curriculum', 'a44'),
             routes: [
               {
                 path: '/KafkaStarter/curriculum/CURRICULUM_GUIDE',
@@ -207,6 +207,12 @@ export default [
               {
                 path: '/KafkaStarter/curriculum/modules/lesson_9/workshop_9',
                 component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_9/workshop_9', '607'),
+                exact: true,
+                sidebar: "tutorialSidebar"
+              },
+              {
+                path: '/KafkaStarter/curriculum/modules/practical_usecases_guideline',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/practical_usecases_guideline', 'e81'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },

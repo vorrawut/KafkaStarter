@@ -1,0 +1,20 @@
+{
+  "id": "modules/practical_usecases_guideline",
+  "title": "practical_usecases_guideline",
+  "description": "",
+  "source": "@site/../class/modules/practical_usecases_guideline.md",
+  "sourceDirName": "modules",
+  "slug": "/modules/practical_usecases_guideline",
+  "permalink": "/KafkaStarter/curriculum/modules/practical_usecases_guideline",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/practical_usecases_guideline.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Workshop: Deployment & Scaling Best Practices",
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_20/"
+  }
+}

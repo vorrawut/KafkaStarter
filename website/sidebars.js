@@ -164,6 +164,11 @@ const sidebars = {
         },
       ],
     },
+    {
+      type: "doc",
+      id:"modules/practical_usecases_guideline",
+      label: "👍 Practical Use Cases",
+    },
   ],
 };
 

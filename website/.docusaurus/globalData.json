@@ -141,6 +141,11 @@
               "sidebar": "tutorialSidebar"
             },
             {
+              "id": "modules/practical_usecases_guideline",
+              "path": "/KafkaStarter/curriculum/modules/practical_usecases_guideline",
+              "sidebar": "tutorialSidebar"
+            },
+            {
               "id": "workshop/lesson_1/README",
               "path": "/KafkaStarter/curriculum/workshop/lesson_1/",
               "sidebar": "tutorialSidebar"

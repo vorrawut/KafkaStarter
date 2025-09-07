@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_3/workshop_3",
-  "title": "Workshop",
-  "description": "Hello Kafka - Your First Producer & Consumer",
+  "title": "workshop_3",
+  "description": "",
   "source": "@site/../class/modules/lesson_3/workshop_3.md",
   "sourceDirName": "modules/lesson_3",
   "slug": "/modules/lesson_3/workshop_3",
