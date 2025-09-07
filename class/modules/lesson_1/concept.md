@@ -13,6 +13,9 @@ By the end of this lesson, you will:
 
 ## 🧠 Core Concepts
 
+### Imagine
+้เราอยู่ในที่สาธารณะ ถ้าเรานั่งเหม่อ ๆ  ก็เหมือนไม่ได้ฟัง topic อะไร ถ้าเราเริ่มสนใจเรื่องของใครซักคนแปลว่าเราเริ่ม subscribe แล้ว
+
 ### What is Event-Driven Architecture?
 
 Event-driven architecture (EDA) is a software design pattern where services communicate by producing and consuming events. Instead of direct service-to-service calls, components react to events that represent meaningful business occurrences.
@@ -101,32 +104,6 @@ sequenceDiagram
 - **Independent Scaling**: Each service scales based on its workload
 - **Easy Extension**: New services can subscribe to existing events
 
-## 🌟 Why Apache Kafka?
-
-### Enterprise-Grade Event Streaming
-
-Kafka provides the backbone for event-driven architectures with:
-
-#### **High Throughput**
-- Handles millions of events per second
-- Linear scalability across cluster nodes
-- Efficient storage and network utilization
-
-#### **Durability & Reliability**
-- Persistent storage with configurable retention
-- Replication across multiple brokers
-- Guaranteed delivery with proper configuration
-
-#### **Real-Time Processing**
-- Low-latency event delivery (sub-millisecond)
-- Stream processing capabilities
-- Complex event processing patterns
-
-#### **Ecosystem Integration**
-- Connectors for databases, systems, and cloud services
-- Stream processing frameworks (Kafka Streams, KSQL)
-- Monitoring and management tools
-
 ## 🏢 Real-World Use Cases
 
 ### 1. **E-Commerce Platforms**
@@ -192,31 +169,6 @@ flowchart TD
     style C fill:#4ecdc4
     style G fill:#ffe66d
 ```
-
-## 🚀 Evolution Path
-
-### Phase 1: Proof of Concept
-- Start with one key business process
-- Implement basic event flow
-- Validate benefits and challenges
-
-### Phase 2: Core Business Events
-- Expand to critical business processes
-- Establish event schema standards
-- Implement monitoring and alerting
-
-### Phase 3: Platform Maturity
-- Event-driven by default
-- Advanced stream processing
-- Real-time analytics and AI/ML integration
-
-## 💡 Key Takeaways
-
-1. **Events Enable Scalability**: Loose coupling allows independent scaling
-2. **Resilience Through Isolation**: Service failures don't cascade
-3. **Business Alignment**: Events reflect real business activities
-4. **Future Flexibility**: Easy to add new capabilities
-5. **Kafka is Production-Ready**: Enterprise-grade platform for events
 
 ## 🔄 Common Patterns
 
