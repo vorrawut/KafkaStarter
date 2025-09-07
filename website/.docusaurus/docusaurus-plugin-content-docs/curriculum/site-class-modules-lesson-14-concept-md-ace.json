@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_14/concept",
-  "title": "Concept",
-  "description": "Kafka Streams API Introduction - Real-time Stream Processing",
+  "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
+  "description": "🎯 Objective",
   "source": "@site/../class/modules/lesson_14/concept.md",
   "sourceDirName": "modules/lesson_14",
   "slug": "/modules/lesson_14/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Request-Reply Patterns with Kafka",
+    "title": "Workshop: Hybrid REST + Kafka Architecture",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_13/"
   },
   "next": {
-    "title": "Workshop: Kafka Streams API Introduction",
+    "title": "Workshop: Request-Reply Patterns with Kafka",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_14/"
   }
 }

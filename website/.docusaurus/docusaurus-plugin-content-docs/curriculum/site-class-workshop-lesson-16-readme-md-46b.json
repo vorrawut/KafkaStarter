@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_16/README",
-  "title": "Workshop: Local State Stores & Fault Tolerance",
+  "title": "Workshop: Windowing, Joins & Stateful Operations",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_16/README.md",
   "sourceDirName": "workshop/lesson_16",

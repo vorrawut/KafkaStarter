@@ -424,7 +424,7 @@ After completing this workshop, you'll understand:
 
 Ready for **Phase 2: Building Resilient Messaging Patterns**? 
 
-Continue with [Lesson 7: Consumer Groups & Load Balancing](../lesson_7/concept.md) to learn advanced consumer patterns, scaling strategies, and fault-tolerant message processing.
+Continue with [Lesson 7: Consumer Groups & Load Balancing](../lesson_8/concept.md) to learn advanced consumer patterns, scaling strategies, and fault-tolerant message processing.
 
 ---
 

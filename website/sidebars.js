@@ -36,7 +36,7 @@ const sidebars = {
           label: "Lesson 3: First Producer/Consumer",
           items: [
             "modules/lesson_3/concept",
-            "modules/lesson_3/workshop_3",
+            "modules/lesson_3/workshop",
             "workshop/lesson_3/README",
           ],
         },
@@ -45,26 +45,35 @@ const sidebars = {
           label: "Lesson 4: Topics & Partitions",
           items: [
             "modules/lesson_4/concept",
-            "modules/lesson_4/workshop_4",
+            "modules/lesson_4/workshop",
             "workshop/lesson_4/README",
           ],
         },
         {
           type: "category",
-          label: "Lesson 5: Schema Registry",
+          label: "Lesson 5: Kafka in Spring boot",
           items: [
             "modules/lesson_5/concept",
-            "modules/lesson_5/workshop_5",
+            "modules/lesson_5/workshop",
             "workshop/lesson_5/README",
           ],
         },
         {
           type: "category",
-          label: "Lesson 6: Development Tools",
+          label: "Lesson 6: Schema Registry",
           items: [
             "modules/lesson_6/concept",
-            "modules/lesson_6/workshop_6",
+            "modules/lesson_6/workshop",
             "workshop/lesson_6/README",
+          ],
+        },
+        {
+          type: "category",
+          label: "Lesson 7: Development Tools",
+          items: [
+            "modules/lesson_7/concept",
+            "modules/lesson_7/workshop",
+            "workshop/lesson_7/README",
           ],
         },
       ],
@@ -76,42 +85,41 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Lesson 7: Consumer Groups",
-          items: ["modules/lesson_7/concept", "workshop/lesson_7/README"],
-        },
-        {
-          type: "category",
-          label: "Lesson 8: Error Handling & DLT",
+          label: "Lesson 8: Consumer Groups",
           items: ["modules/lesson_8/concept", "workshop/lesson_8/README"],
         },
         {
           type: "category",
-          label: "Lesson 9: Exactly-Once Processing",
+          label: "Lesson 9: Error Handling & DLT",
+          items: ["modules/lesson_9/concept", "workshop/lesson_9/README"],
+        },
+        {
+          type: "category",
+          label: "Lesson 10: Exactly-Once Processing",
           items: [
-            "modules/lesson_9/concept",
-            "modules/lesson_9/workshop_9",
-            "workshop/lesson_9/README",
+            "modules/lesson_10/concept",
+            "workshop/lesson_10/README",
           ],
         },
         {
           type: "category",
-          label: "Lesson 10: Message Transformation",
-          items: ["modules/lesson_10/concept", "workshop/lesson_10/README"],
-        },
-        {
-          type: "category",
-          label: "Lesson 11: Fan-out Notifications",
+          label: "Lesson 11: Message Transformation",
           items: ["modules/lesson_11/concept", "workshop/lesson_11/README"],
         },
         {
           type: "category",
-          label: "Lesson 12: Hybrid REST + Kafka",
+          label: "Lesson 12: Fan-out Notifications",
           items: ["modules/lesson_12/concept", "workshop/lesson_12/README"],
         },
         {
           type: "category",
-          label: "Lesson 13: Request-Reply Pattern",
+          label: "Lesson 13: Hybrid REST + Kafka",
           items: ["modules/lesson_13/concept", "workshop/lesson_13/README"],
+        },
+        {
+          type: "category",
+          label: "Lesson 14: Request-Reply Pattern",
+          items: ["modules/lesson_14/concept", "workshop/lesson_14/README"],
         },
       ],
     },
@@ -122,23 +130,23 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Lesson 14: Kafka Streams Intro",
-          items: ["modules/lesson_14/concept", "workshop/lesson_14/README"],
-        },
-        {
-          type: "category",
-          label: "Lesson 15: Windowing & Joins",
+          label: "Lesson 15: Kafka Streams Intro",
           items: ["modules/lesson_15/concept", "workshop/lesson_15/README"],
         },
         {
           type: "category",
-          label: "Lesson 16: State Stores",
+          label: "Lesson 16: Windowing & Joins",
           items: ["modules/lesson_16/concept", "workshop/lesson_16/README"],
         },
         {
           type: "category",
-          label: "Lesson 17: Real-time Dashboard",
+          label: "Lesson 17: State Stores",
           items: ["modules/lesson_17/concept", "workshop/lesson_17/README"],
+        },
+        {
+          type: "category",
+          label: "Lesson 18: Real-time Dashboard",
+          items: ["modules/lesson_18/concept", "workshop/lesson_18/README"],
         },
       ],
     },
@@ -149,18 +157,18 @@ const sidebars = {
       items: [
         {
           type: "category",
-          label: "Lesson 18: Security & ACLs",
-          items: ["modules/lesson_18/concept", "workshop/lesson_18/README"],
-        },
-        {
-          type: "category",
-          label: "Lesson 19: Monitoring & Metrics",
+          label: "Lesson 19: Security & ACLs",
           items: ["modules/lesson_19/concept", "workshop/lesson_19/README"],
         },
         {
           type: "category",
-          label: "Lesson 20: Deployment & Scaling",
+          label: "Lesson 20: Monitoring & Metrics",
           items: ["modules/lesson_20/concept", "workshop/lesson_20/README"],
+        },
+        {
+          type: "category",
+          label: "Lesson 21: Deployment & Scaling",
+          items: ["modules/lesson_21/concept", "workshop/lesson_21/README"],
         },
       ],
     },

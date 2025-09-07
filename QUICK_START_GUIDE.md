@@ -38,7 +38,7 @@ Begin with [Lesson 1: Why Kafka?](class/modules/lesson_1/concept.md)
 ### 🎓 **For Complete Beginners**
 1. **Read**: [Why Kafka?](class/modules/lesson_1/concept.md)
 2. **Setup**: [Kafka Environment](class/modules/lesson_2/concept.md)
-3. **Code**: [First Producer/Consumer](class/modules/lesson_3/workshop_3.md)
+3. **Code**: [First Producer/Consumer](class/modules/lesson_3/workshop)
 4. **Progress**: Follow [Curriculum Guide](class/CURRICULUM_GUIDE.md)
 
 ### 🚀 **For Experienced Developers**

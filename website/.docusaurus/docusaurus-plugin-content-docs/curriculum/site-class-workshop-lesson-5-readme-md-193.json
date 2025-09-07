@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_5/README",
-  "title": "Workshop: Schema Registry & Evolution",
+  "title": "Workshop: Topics, Partitions & Offsets",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_5/README.md",
   "sourceDirName": "workshop/lesson_5",
@@ -15,7 +15,7 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop"
   },
   "next": {
     "title": "Concept",

@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-transformation-lesson10
+    name: kafka-manual-ack-lesson9
 
-  # Kafka configuration for Lesson 10 - Message Transformation & Filtering
+  # Kafka configuration for Lesson 9 - Manual Acknowledgment & Idempotent Consumers
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -11,16 +11,18 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
-    
+      # TODO: Configure idempotent producer settings
+      
     consumer:
-      group-id: lesson10-transformation-group
+      group-id: lesson9-manual-ack-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure consumer settings for transformation patterns
+      # TODO: Configure manual acknowledgment settings
+      # TODO: Configure session timeout and heartbeat for manual ack
 
 server:
-  port: 8090
+  port: 8089
 
 logging:
   level:

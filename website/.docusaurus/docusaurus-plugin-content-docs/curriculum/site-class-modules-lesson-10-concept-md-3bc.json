@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_10/concept",
   "title": "Concept",
-  "description": "Message Transformation & Filtering - Building Data Processing Pipelines",
+  "description": "Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
   "source": "@site/../class/modules/lesson_10/concept.md",
   "sourceDirName": "modules/lesson_10",
   "slug": "/modules/lesson_10/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
+    "title": "Workshop: Error Handling & Dead Letter Topics",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_9/"
   },
   "next": {
-    "title": "Workshop: Message Transformation & Filtering",
+    "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_10/"
   }
 }

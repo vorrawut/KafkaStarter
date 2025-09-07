@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_10/README",
-  "title": "Workshop: Message Transformation & Filtering",
+  "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_10/README.md",
   "sourceDirName": "workshop/lesson_10",

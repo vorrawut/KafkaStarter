@@ -1,28 +1,31 @@
 spring:
   application:
-    name: kafka-streams-lesson15
+    name: kafka-streams-lesson14
 
-  # Kafka configuration for Lesson 15 - Windowing & Joins
+  # Kafka configuration for Lesson 14
   kafka:
     bootstrap-servers: localhost:9092
     
+    # Producer configuration
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
     
+    # Consumer configuration  
     consumer:
-      group-id: lesson15-consumer-group
+      group-id: lesson14-consumer-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
       properties:
         spring.json.trusted.packages: "com.learning.KafkaStarter.model"
     
+    # Kafka Streams configuration
     streams:
-      application-id: lesson15-windowing-joins-app
-      state-dir: /tmp/kafka-streams/lesson15
+      application-id: lesson14-streams-app
+      state-dir: /tmp/kafka-streams/lesson14
       replication-factor: 1
       default:
         key:
@@ -31,20 +34,24 @@ spring:
           serde: org.springframework.kafka.support.serializer.JsonSerde
       properties:
         processing.guarantee: exactly_once_v2
-        commit.interval.ms: 5000
-        cache.max.bytes.buffering: 2097152  # 2MB
-        num.stream.threads: 3
+        commit.interval.ms: 1000
+        cache.max.bytes.buffering: 1048576  # 1MB
+        num.stream.threads: 2
 
+# Server configuration
 server:
-  port: 8092
+  port: 8091
 
+# Logging configuration
 logging:
   level:
     com.learning.KafkaStarter: DEBUG
     org.apache.kafka.streams: INFO
+    org.springframework.kafka: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
+# Actuator configuration
 management:
   endpoints:
     web:

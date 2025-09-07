@@ -1,443 +1,539 @@
-# Workshop: Consumer Groups & Load Balancing
+# Workshop: Development Tools & Testing Framework
 
 ## 🎯 Objective
-Master Kafka consumer groups for scalable, fault-tolerant message processing. Learn partition assignment strategies, rebalancing mechanisms, and how to design consumer applications that scale horizontally.
+Master essential Kafka development tools, debugging techniques, testing strategies, and monitoring setups for productive and reliable Kafka application development.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Consumer Group Configuration
-Configure consumer groups in `config/ConsumerGroupConfig.kt`
+### Task 1: Kafka CLI Mastery
+Practice CLI operations in `cli/KafkaCliOperations.kt`
 
-### Task 2: Multi-Consumer Implementation
-Build scalable consumers in `consumer/ScalableOrderConsumer.kt`
+### Task 2: Testing Framework
+Build comprehensive testing in `testing/KafkaTestFramework.kt`
 
-### Task 3: Partition Assignment Strategies
-Implement assignment strategies in `assignment/PartitionAssignmentManager.kt`
+### Task 3: Debugging Tools
+Implement debugging utilities in `debugging/KafkaDebugger.kt`
 
-### Task 4: Rebalancing Handling
-Handle rebalancing gracefully in `rebalancing/RebalanceListener.kt`
+### Task 4: Development Monitoring
+Set up dev monitoring in `monitoring/DevMonitoring.kt`
 
-### Task 5: Load Balancing Analysis
-Analyze consumer performance in `analysis/LoadBalancingAnalyzer.kt`
+### Task 5: Performance Profiling
+Create profiling tools in `profiling/PerformanceProfiler.kt`
 
-## 🏗️ Consumer Group Architecture
+## 🛠️ Development Toolkit Architecture
 ```mermaid
 graph TB
-    subgraph "Kafka Topic: order-events (6 partitions)"
-        P0[Partition 0<br/>Orders: 1, 7, 13...]
-        P1[Partition 1<br/>Orders: 2, 8, 14...]
-        P2[Partition 2<br/>Orders: 3, 9, 15...]
-        P3[Partition 3<br/>Orders: 4, 10, 16...]
-        P4[Partition 4<br/>Orders: 5, 11, 17...]
-        P5[Partition 5<br/>Orders: 6, 12, 18...]
+    subgraph "Development Environment"
+        IDE[IntelliJ IDEA<br/>Kotlin Development]
+        CLI[Kafka CLI Tools<br/>Topic/Consumer Management]
+        UI[Kafka UI<br/>Visual Interface]
+        DEBUG[Debug Tools<br/>Message Inspector]
     end
     
-    subgraph "Consumer Group: order-processors"
-        C1[Consumer 1<br/>Processes P0, P1]
-        C2[Consumer 2<br/>Processes P2, P3]
-        C3[Consumer 3<br/>Processes P4, P5]
+    subgraph "Testing Framework"
+        UNIT[Unit Tests<br/>Business Logic]
+        INTEGRATION[Integration Tests<br/>Embedded Kafka]
+        CONTRACT[Contract Tests<br/>Schema Validation]
+        PERFORMANCE[Performance Tests<br/>Load Testing]
     end
     
-    subgraph "Consumer Group: analytics"
-        A1[Consumer 1<br/>Processes P0, P1, P2]
-        A2[Consumer 2<br/>Processes P3, P4, P5]
+    subgraph "Monitoring & Observability"
+        METRICS[Application Metrics<br/>Micrometer + Prometheus]
+        LOGS[Structured Logging<br/>JSON + Correlation IDs]
+        TRACES[Distributed Tracing<br/>Sleuth + Zipkin]
+        HEALTH[Health Checks<br/>Actuator Endpoints]
     end
     
-    P0 --> C1
-    P1 --> C1
-    P2 --> C2
-    P3 --> C2
-    P4 --> C3
-    P5 --> C3
+    subgraph "Kafka Infrastructure"
+        BROKER[Kafka Brokers]
+        ZK[Zookeeper]
+        SR[Schema Registry]
+        TOPICS[Topics & Partitions]
+    end
     
-    P0 --> A1
-    P1 --> A1
-    P2 --> A1
-    P3 --> A2
-    P4 --> A2
-    P5 --> A2
+    IDE --> CLI
+    CLI --> BROKER
+    UI --> BROKER
+    DEBUG --> BROKER
     
-    style C1 fill:#ff6b6b
-    style C2 fill:#4ecdc4
-    style C3 fill:#a8e6cf
-    style A1 fill:#ffe66d
-    style A2 fill:#ffa8e6
+    UNIT --> INTEGRATION
+    INTEGRATION --> CONTRACT
+    CONTRACT --> PERFORMANCE
+    
+    METRICS --> LOGS
+    LOGS --> TRACES
+    TRACES --> HEALTH
+    
+    INTEGRATION --> BROKER
+    METRICS --> BROKER
+    
+    style CLI fill:#ff6b6b
+    style INTEGRATION fill:#4ecdc4
+    style METRICS fill:#a8e6cf
+    style BROKER fill:#ffe66d
 ```
 
-## 🔄 Consumer Group Rebalancing
+## 🔧 Kafka CLI Mastery
+
+### Essential CLI Commands
+```mermaid
+graph TB
+    subgraph "Topic Management"
+        TC[kafka-topics<br/>Create, list, describe, delete]
+        CONFIG[kafka-configs<br/>View and modify configurations]
+        REASSIGN[kafka-reassign-partitions<br/>Partition reassignment]
+    end
+    
+    subgraph "Producer/Consumer Operations"
+        PROD[kafka-console-producer<br/>Send test messages]
+        CONS[kafka-console-consumer<br/>Read messages]
+        PERF[kafka-producer-perf-test<br/>Performance testing]
+    end
+    
+    subgraph "Consumer Group Management"
+        CG[kafka-consumer-groups<br/>List, describe, reset offsets]
+        LOG[kafka-run-class GetOffsetShell<br/>Check offsets]
+        RESET[kafka-consumer-groups --reset-offsets<br/>Offset management]
+    end
+    
+    subgraph "Cluster Operations"
+        BROKER[kafka-broker-api-versions<br/>Broker connectivity]
+        LEADER[kafka-leader-election<br/>Leadership management]
+        VERIFY[kafka-verifiable-producer/consumer<br/>End-to-end testing]
+    end
+    
+    TC --> CONFIG
+    CONFIG --> REASSIGN
+    
+    PROD --> CONS
+    CONS --> PERF
+    
+    CG --> LOG
+    LOG --> RESET
+    
+    BROKER --> LEADER
+    LEADER --> VERIFY
+    
+    style TC fill:#ff6b6b
+    style PROD fill:#4ecdc4
+    style CG fill:#a8e6cf
+    style BROKER fill:#ffe66d
+```
+
+### CLI Automation Scripts
+```bash
+#!/bin/bash
+# Topic management helper
+create_topic() {
+    local topic_name=$1
+    local partitions=${2:-3}
+    local replication=${3:-1}
+    
+    kafka-topics --create \
+        --topic "$topic_name" \
+        --partitions "$partitions" \
+        --replication-factor "$replication" \
+        --bootstrap-server localhost:9092
+}
+
+# Consumer group monitoring
+monitor_consumer_lag() {
+    local group_id=$1
+    
+    while true; do
+        echo "=== Consumer Group Lag: $(date) ==="
+        kafka-consumer-groups --bootstrap-server localhost:9092 \
+            --group "$group_id" --describe
+        echo ""
+        sleep 10
+    done
+}
+
+# Performance testing
+test_producer_performance() {
+    local topic=$1
+    local num_records=${2:-10000}
+    local record_size=${3:-1024}
+    
+    kafka-producer-perf-test \
+        --topic "$topic" \
+        --num-records "$num_records" \
+        --record-size "$record_size" \
+        --throughput -1 \
+        --producer-props bootstrap.servers=localhost:9092
+}
+```
+
+## 🧪 Testing Framework
+
+### Testing Strategy Pyramid
+```mermaid
+graph TB
+    subgraph "Testing Pyramid"
+        E2E[End-to-End Tests<br/>Full system integration<br/>Slow, expensive, comprehensive]
+        INTEGRATION[Integration Tests<br/>Kafka + Spring Boot<br/>Medium speed, realistic]
+        UNIT[Unit Tests<br/>Business logic only<br/>Fast, isolated, focused]
+    end
+    
+    subgraph "Kafka-Specific Testing"
+        EMBEDDED[Embedded Kafka<br/>@EmbeddedKafka annotation]
+        TESTCONTAINERS[TestContainers<br/>Docker-based testing]
+        TOPOLOGY[Topology Testing<br/>Kafka Streams validation]
+        SCHEMA[Schema Testing<br/>Avro/Protobuf validation]
+    end
+    
+    subgraph "Test Data Management"
+        FIXTURES[Test Fixtures<br/>Predefined test data]
+        BUILDERS[Test Builders<br/>Fluent test data creation]
+        FACTORIES[Test Factories<br/>Random test data generation]
+    end
+    
+    UNIT --> INTEGRATION
+    INTEGRATION --> E2E
+    
+    INTEGRATION --> EMBEDDED
+    INTEGRATION --> TESTCONTAINERS
+    
+    EMBEDDED --> TOPOLOGY
+    TESTCONTAINERS --> SCHEMA
+    
+    TOPOLOGY --> FIXTURES
+    SCHEMA --> BUILDERS
+    FIXTURES --> FACTORIES
+    
+    style E2E fill:#ff6b6b
+    style INTEGRATION fill:#4ecdc4
+    style UNIT fill:#a8e6cf
+    style EMBEDDED fill:#ffe66d
+```
+
+### Test Implementation Patterns
+```kotlin
+@SpringBootTest
+@EmbeddedKafka(partitions = 1, topics = ["test-topic"])
+class KafkaIntegrationTest {
+    
+    @Autowired
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
+    
+    @Autowired
+    private lateinit var userEventService: UserEventService
+    
+    @Test
+    fun `should process user registration event end-to-end`() {
+        // Given
+        val testEvent = UserEvent(
+            eventId = "test-123",
+            eventType = "USER_REGISTERED",
+            userId = "user-456",
+            username = "testuser",
+            email = "test@example.com"
+        )
+        
+        // When
+        kafkaTemplate.send("user-events", testEvent.userId, testEvent)
+        
+        // Then
+        await().atMost(5, SECONDS).untilAsserted {
+            val processedEvent = userEventService.getProcessedEvent(testEvent.eventId)
+            assertThat(processedEvent).isNotNull
+            assertThat(processedEvent.status).isEqualTo("PROCESSED")
+        }
+    }
+}
+```
+
+## 🔍 Debugging Tools
+
+### Message Flow Debugging
 ```mermaid
 sequenceDiagram
-    participant C1 as Consumer 1
-    participant C2 as Consumer 2
-    participant C3 as Consumer 3
-    participant GC as Group Coordinator
-    participant K as Kafka
+    participant Dev as Developer
+    participant Debug as Debug Tool
+    participant Producer as Producer App
+    participant Kafka as Kafka Broker
+    participant Consumer as Consumer App
     
-    Note over C1,K: Normal Operation - 3 consumers, 6 partitions
-    C1->>K: Process P0, P1
-    C2->>K: Process P2, P3
-    C3->>K: Process P4, P5
+    Dev->>Debug: Start message tracing
+    Debug->>Producer: Intercept outgoing messages
+    Producer->>Kafka: Send message with trace ID
+    Debug->>Kafka: Monitor topic for traced messages
+    Kafka->>Consumer: Deliver message
+    Debug->>Consumer: Intercept incoming messages
+    Consumer->>Debug: Processing result
+    Debug->>Dev: Complete message flow trace
     
-    Note over C1,K: Consumer 3 Fails
-    C3->>GC: HeartBeat Timeout
-    GC->>C1: Rebalance Triggered
-    GC->>C2: Rebalance Triggered
-    
-    Note over C1,K: Partition Reassignment
-    C1->>GC: Join Group
-    C2->>GC: Join Group
-    GC->>C1: Assign P0, P1, P2
-    GC->>C2: Assign P3, P4, P5
-    
-    Note over C1,K: Resume Processing
-    C1->>K: Process P0, P1, P2
-    C2->>K: Process P3, P4, P5
+    Note over Debug: Correlation ID tracking
+    Note over Debug: Timing measurements
+    Note over Debug: Error detection
 ```
 
-## 🎯 Key Concepts
-
-### **Consumer Groups**
-- **Logical grouping** of consumers for parallel processing
-- **Load balancing** - partitions distributed across group members
-- **Fault tolerance** - automatic rebalancing when consumers fail
-- **Scaling** - add/remove consumers without downtime
-
-### **Partition Assignment Strategies**
-
-#### **1. Range Assignment (Default)**
-```mermaid
-graph TB
-    subgraph "6 Partitions"
-        P0[P0] 
-        P1[P1]
-        P2[P2]
-        P3[P3]
-        P4[P4]
-        P5[P5]
-    end
+### Debug Tool Implementation
+```kotlin
+@Component
+class KafkaMessageTracer {
     
-    subgraph "3 Consumers - Range Assignment"
-        C1[Consumer 1<br/>Gets: P0, P1]
-        C2[Consumer 2<br/>Gets: P2, P3]
-        C3[Consumer 3<br/>Gets: P4, P5]
-    end
+    private val messageTraces = ConcurrentHashMap<String, MessageTrace>()
     
-    P0 --> C1
-    P1 --> C1
-    P2 --> C2
-    P3 --> C2
-    P4 --> C3
-    P5 --> C3
+    fun startTrace(correlationId: String): MessageTrace {
+        val trace = MessageTrace(
+            correlationId = correlationId,
+            startTime = System.currentTimeMillis(),
+            checkpoints = mutableListOf()
+        )
+        messageTraces[correlationId] = trace
+        return trace
+    }
     
-    style C1 fill:#ff6b6b
-    style C2 fill:#4ecdc4
-    style C3 fill:#a8e6cf
-```
-
-#### **2. Round-Robin Assignment**
-```mermaid
-graph TB
-    subgraph "6 Partitions"
-        P0[P0] 
-        P1[P1]
-        P2[P2]
-        P3[P3]
-        P4[P4]
-        P5[P5]
-    end
+    fun addCheckpoint(correlationId: String, checkpoint: String, metadata: Map<String, Any> = emptyMap()) {
+        messageTraces[correlationId]?.let { trace ->
+            trace.checkpoints.add(
+                TraceCheckpoint(
+                    timestamp = System.currentTimeMillis(),
+                    checkpoint = checkpoint,
+                    metadata = metadata
+                )
+            )
+        }
+    }
     
-    subgraph "3 Consumers - Round-Robin Assignment"
-        C1[Consumer 1<br/>Gets: P0, P3]
-        C2[Consumer 2<br/>Gets: P1, P4]
-        C3[Consumer 3<br/>Gets: P2, P5]
-    end
+    fun completeTrace(correlationId: String): MessageTrace? {
+        return messageTraces.remove(correlationId)?.apply {
+            endTime = System.currentTimeMillis()
+            duration = endTime - startTime
+        }
+    }
     
-    P0 --> C1
-    P3 --> C1
-    P1 --> C2
-    P4 --> C2
-    P2 --> C3
-    P5 --> C3
-    
-    style C1 fill:#ff6b6b
-    style C2 fill:#4ecdc4
-    style C3 fill:#a8e6cf
-```
-
-#### **3. Sticky Assignment**
-- **Minimizes movement** during rebalancing
-- **Preserves state** in stateful applications
-- **Better performance** for stream processing
-
-### **Rebalancing Triggers**
-- **Consumer joins** the group
-- **Consumer leaves** the group (graceful shutdown)
-- **Consumer fails** (heartbeat timeout)
-- **Topic metadata changes** (partition count increase)
-
-## ⚖️ Load Balancing Strategies
-
-### Even Distribution Analysis
-```mermaid
-graph TB
-    subgraph "Partition Load Distribution"
-        subgraph "Balanced Load"
-            BP0[P0: 1000 msg/min]
-            BP1[P1: 980 msg/min]
-            BP2[P2: 1020 msg/min]
-            GOOD[✅ Good Distribution<br/>Max variance: 4%]
-        end
-        
-        subgraph "Unbalanced Load"
-            UP0[P0: 100 msg/min]
-            UP1[P1: 2000 msg/min]
-            UP2[P2: 200 msg/min]
-            BAD[❌ Poor Distribution<br/>Hot partition detected]
-        end
-    end
-    
-    subgraph "Consumer Performance"
-        C1M[Consumer 1: 95% CPU]
-        C2M[Consumer 2: 45% CPU]
-        C3M[Consumer 3: 30% CPU]
-        UNEVEN[⚠️ Uneven Resource Usage]
-    end
-    
-    style GOOD fill:#4ecdc4
-    style BAD fill:#ff6b6b
-    style UNEVEN fill:#ffe66d
-```
-
-### Scaling Patterns
-```mermaid
-graph LR
-    subgraph "Scaling Up"
-        S1[1 Consumer<br/&gt;6 Partitions] --> S2[2 Consumers<br/&gt;3 Partitions Each]
-        S2 --> S3[3 Consumers<br/&gt;2 Partitions Each]
-        S3 --> S4[6 Consumers<br/&gt;1 Partition Each]
-    end
-    
-    subgraph "Scaling Down"
-        D1[6 Consumers] --> D2[3 Consumers]
-        D2 --> D3[2 Consumers]
-        D3 --> D4[1 Consumer]
-    end
-    
-    style S4 fill:#4ecdc4
-    style D1 fill:#ffe66d
+    fun getActiveTraces(): List<MessageTrace> {
+        return messageTraces.values.toList()
+    }
+}
 ```
 
 ## ✅ Success Criteria
-- [ ] Multiple consumers in same group process different partitions
-- [ ] Consumer failure triggers automatic rebalancing
-- [ ] Load is distributed evenly across consumers
-- [ ] Partition assignment strategy can be configured
-- [ ] Rebalancing is handled gracefully without message loss
-- [ ] Consumer lag monitoring shows balanced processing
-- [ ] Scaling up/down works without downtime
+- [ ] Can efficiently use Kafka CLI tools for all common operations
+- [ ] Comprehensive testing framework with unit, integration, and E2E tests
+- [ ] Debugging tools provide clear visibility into message flows
+- [ ] Development monitoring shows real-time application metrics
+- [ ] Performance profiling identifies bottlenecks and optimization opportunities
+- [ ] Error scenarios can be reproduced and debugged systematically
+- [ ] Code coverage meets team standards (&gt;80% for critical paths)
 
 ## 🚀 Getting Started
 
-### 1. Start Multiple Consumer Instances
-```bash
-# Terminal 1 - Start first consumer
-./gradlew bootRun --args="--consumer.instance=1"
-
-# Terminal 2 - Start second consumer  
-./gradlew bootRun --args="--consumer.instance=2"
-
-# Terminal 3 - Start third consumer
-./gradlew bootRun --args="--consumer.instance=3"
-```
-
-### 2. Generate Test Load
-```bash
-# Generate orders to see load distribution
-curl -X POST http://localhost:8090/api/orders/generate \
-  -H "Content-Type: application/json" \
-  -d '{"count": 1000, "ratePerSecond": 50}'
-```
-
-### 3. Monitor Consumer Groups
-```bash
-# Check consumer group status
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group order-processors --describe
-
-# Monitor consumer lag
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group order-processors --describe --verbose
-```
-
-## 🔧 Consumer Group Configuration
-
-### Basic Configuration
+### 1. Set Up Testing Framework
 ```kotlin
-@Configuration
-class ConsumerGroupConfig {
+@TestConfiguration
+class KafkaTestConfig {
     
     @Bean
-    fun orderProcessorConsumerFactory(): ConsumerFactory<String, OrderEvent> {
-        val props = mapOf(
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
-            ConsumerConfig.GROUP_ID_CONFIG to "order-processors",
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to JsonDeserializer::class.java,
-            
-            // Consumer group specific settings
-            ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG to "org.apache.kafka.clients.consumer.RangeAssignor",
-            ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG to 30000,
-            ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG to 3000,
-            ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG to 300000,
-            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 500
+    @Primary
+    fun testKafkaTemplate(): KafkaTemplate<String, Any> {
+        val producerFactory = DefaultKafkaProducerFactory<String, Any>(
+            mapOf(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
+                ProducerConfig.ACKS_CONFIG to "all",
+                ProducerConfig.RETRIES_CONFIG to 0,
+                ProducerConfig.BATCH_SIZE_CONFIG to 1
+            )
         )
         
-        return DefaultKafkaConsumerFactory(props)
+        return KafkaTemplate(producerFactory)
     }
-}
-```
-
-### Advanced Rebalancing Configuration
-```kotlin
-@KafkaListener(
-    topics = ["order-events"],
-    groupId = "order-processors",
-    containerFactory = "orderProcessorListenerFactory"
-)
-fun processOrder(
-    @Payload order: OrderEvent,
-    @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
-    consumer: Consumer<String, OrderEvent>
-) {
-    logger.info("Processing order ${order.orderId} from partition $partition")
     
-    try {
-        // Process the order
-        orderProcessingService.processOrder(order)
-        
-        // Manual commit after successful processing
-        consumer.commitSync()
-        
-    } catch (e: Exception) {
-        logger.error("Failed to process order ${order.orderId}", e)
-        // Don't commit - message will be retried
+    @Bean
+    fun testListener(): CountDownLatch {
+        return CountDownLatch(1)
     }
 }
 ```
 
-## 📊 Monitoring & Observability
+### 2. Practice CLI Operations
+```bash
+# Create development topic
+kafka-topics --create --topic dev-events \
+  --partitions 3 --replication-factor 1 \
+  --bootstrap-server localhost:9092
 
-### Consumer Group Metrics
+# Send test messages
+echo "test-key:test-message" | kafka-console-producer \
+  --topic dev-events --bootstrap-server localhost:9092 \
+  --property "parse.key=true" --property "key.separator=:"
+
+# Monitor messages
+kafka-console-consumer --topic dev-events \
+  --from-beginning --bootstrap-server localhost:9092 \
+  --property print.key=true
+
+# Check consumer group
+kafka-consumer-groups --bootstrap-server localhost:9092 \
+  --group dev-group --describe
+```
+
+### 3. Set Up Development Monitoring
+```yaml
+# application-dev.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: kafka-starter
+      environment: development
+
+logging:
+  level:
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"
+```
+
+## 📊 Performance Profiling
+
+### Performance Metrics Dashboard
 ```mermaid
 graph TB
-    subgraph "Key Metrics to Monitor"
-        M1[Consumer Lag<br/>Per Partition]
-        M2[Processing Rate<br/>Messages/sec]
-        M3[Rebalance Frequency<br/>Events/hour]
-        M4[Partition Assignment<br/>Balance]
-        M5[Heartbeat Failures<br/>Count]
-        M6[Commit Success Rate<br/>Percentage]
+    subgraph "Application Metrics"
+        THROUGHPUT[Message Throughput<br/>messages/second]
+        LATENCY[Processing Latency<br/&gt;95th percentile]
+        ERROR_RATE[Error Rate<br/>errors/minute]
+        MEMORY[Memory Usage<br/>heap utilization]
     end
     
-    subgraph "Alerting Thresholds"
-        A1[Lag > 1000 messages]
-        A2[Processing rate < 80% capacity]
-        A3[Rebalance > 5/hour]
-        A4[Assignment imbalance > 20%]
-        A5[Heartbeat failures > 0]
-        A6[Commit success < 99%]
+    subgraph "Kafka Metrics"
+        PRODUCER_RATE[Producer Rate<br/>records/second]
+        CONSUMER_LAG[Consumer Lag<br/>messages behind]
+        BATCH_SIZE[Batch Size<br/>records/batch]
+        COMMIT_RATE[Commit Rate<br/>commits/second]
     end
     
-    M1 --> A1
-    M2 --> A2
-    M3 --> A3
-    M4 --> A4
-    M5 --> A5
-    M6 --> A6
+    subgraph "System Metrics"
+        CPU[CPU Usage<br/>percentage]
+        DISK_IO[Disk I/O<br/>read/write rates]
+        NETWORK[Network I/O<br/>bytes in/out]
+        GC[Garbage Collection<br/>pause times]
+    end
     
-    style A1 fill:#ff6b6b
-    style A3 fill:#ff6b6b
-    style A5 fill:#ff6b6b
+    subgraph "Business Metrics"
+        ORDER_RATE[Order Processing Rate<br/>orders/minute]
+        USER_EVENTS[User Event Rate<br/>events/minute]
+        REVENUE[Revenue Impact<br/>from processing delays]
+        SLA[SLA Compliance<br/>% within targets]
+    end
+    
+    THROUGHPUT --> PRODUCER_RATE
+    LATENCY --> CONSUMER_LAG
+    ERROR_RATE --> COMMIT_RATE
+    
+    CPU --> THROUGHPUT
+    MEMORY --> LATENCY
+    DISK_IO --> BATCH_SIZE
+    
+    ORDER_RATE --> THROUGHPUT
+    USER_EVENTS --> PRODUCER_RATE
+    
+    style THROUGHPUT fill:#4ecdc4
+    style LATENCY fill:#ffe66d
+    style ERROR_RATE fill:#ff6b6b
+    style SLA fill:#a8e6cf
 ```
 
-### Health Check Implementation
+### Automated Performance Testing
 ```kotlin
 @Component
-class ConsumerGroupHealthIndicator : HealthIndicator {
+class PerformanceProfiler {
     
-    override fun health(): Health {
-        val groupId = "order-processors"
-        val maxAcceptableLag = 1000L
+    fun profileProducerPerformance(
+        topicName: String,
+        messageCount: Int,
+        messageSize: Int
+    ): ProducerPerformanceResult {
         
-        return try {
-            val consumerGroupInfo = getConsumerGroupInfo(groupId)
-            val totalLag = consumerGroupInfo.partitions.sumOf { it.lag }
-            val avgLag = totalLag / consumerGroupInfo.partitions.size
-            
-            if (avgLag <= maxAcceptableLag) {
-                Health.up()
-                    .withDetail("consumerGroup", groupId)
-                    .withDetail("totalLag", totalLag)
-                    .withDetail("averageLag", avgLag)
-                    .withDetail("activeConsumers", consumerGroupInfo.activeMembers)
-                    .build()
-            } else {
-                Health.down()
-                    .withDetail("reason", "High consumer lag detected")
-                    .withDetail("averageLag", avgLag)
-                    .withDetail("threshold", maxAcceptableLag)
-                    .build()
-            }
-        } catch (e: Exception) {
-            Health.down(e).build()
+        val startTime = System.currentTimeMillis()
+        val futures = mutableListOf<CompletableFuture<SendResult<String, ByteArray>>>()
+        
+        // Generate test data
+        val testMessage = ByteArray(messageSize) { it.toByte() }
+        
+        // Send messages and collect futures
+        repeat(messageCount) { index ->
+            val future = kafkaTemplate.send(topicName, "key-$index", testMessage)
+            futures.add(future)
         }
+        
+        // Wait for all sends to complete
+        CompletableFuture.allOf(*futures.toTypedArray()).get()
+        
+        val endTime = System.currentTimeMillis()
+        val duration = endTime - startTime
+        
+        return ProducerPerformanceResult(
+            messageCount = messageCount,
+            messageSize = messageSize,
+            durationMs = duration,
+            throughputMsgsPerSec = (messageCount * 1000.0) / duration,
+            throughputMBPerSec = (messageCount * messageSize * 1000.0) / (duration * 1024 * 1024)
+        )
     }
 }
 ```
 
 ## 🎯 Best Practices
 
-### Consumer Group Design
-- **Right-size your groups** - match consumer count to partition count
-- **Plan for failures** - expect consumers to fail and design accordingly
-- **Monitor rebalancing** - frequent rebalances indicate problems
-- **Handle duplicates** - design idempotent consumers
+### Development Workflow
+- **Use version control** for all configuration and test data
+- **Automate repetitive tasks** with scripts and aliases
+- **Test early and often** with embedded Kafka for fast feedback
+- **Monitor continuously** even in development environments
 
-### Performance Optimization
-- **Batch processing** - process multiple messages together when possible
-- **Async processing** - use async patterns for I/O intensive operations
-- **Partition affinity** - consider sticky assignment for stateful processing
-- **Resource monitoring** - watch CPU, memory, and network usage
+### Testing Strategy
+- **Start with unit tests** for business logic
+- **Use integration tests** for Kafka interactions
+- **Add contract tests** for schema validation
+- **Include performance tests** for throughput requirements
 
-### Scaling Guidelines
-- **Scale gradually** - add/remove one consumer at a time
-- **Monitor during scaling** - watch for rebalancing storms
-- **Test scaling scenarios** - practice scaling operations
-- **Automate scaling** - use metrics-based auto-scaling when appropriate
+### Debugging Approach
+- **Use correlation IDs** to trace messages across services
+- **Log structured data** with consistent formatting
+- **Monitor key metrics** to identify issues quickly
+- **Reproduce issues** in controlled test environments
 
 ## 🔍 Troubleshooting
 
-### Common Issues
-1. **Frequent rebalancing** - Check heartbeat/session timeout configuration
-2. **Uneven load** - Verify partition assignment strategy and message key distribution
-3. **Consumer lag** - Scale up consumers or optimize processing logic
-4. **Processing failures** - Implement proper error handling and retry logic
+### Common Development Issues
+1. **Slow tests** - Use @DirtiesContext sparingly, prefer test slices
+2. **Flaky tests** - Add proper wait conditions and timeouts
+3. **Memory leaks** - Monitor test execution and clean up resources
+4. **Port conflicts** - Use random ports or test containers
 
 ### Debug Commands
 ```bash
-# Detailed consumer group info
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group order-processors --describe --verbose
+# Check if Kafka is running
+kafka-broker-api-versions --bootstrap-server localhost:9092
 
-# Reset consumer group offsets
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group order-processors --reset-offsets --to-earliest \
-  --topic order-events --execute
+# Debug consumer issues
+kafka-console-consumer --topic your-topic \
+  --bootstrap-server localhost:9092 \
+  --property print.headers=true \
+  --property print.timestamp=true
 
-# Monitor partition assignment
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group order-processors --describe --members --verbose
+# Monitor JVM metrics
+jcmd <pid> VM.info
+jstack <pid>
 ```
 
 ## 🚀 Next Steps
-Consumer groups mastered? Time to handle failures gracefully! Move to [Lesson 8: Error Handling & Dead Letter Topics](../lesson_8/README.md) to learn robust error handling strategies.
+Development tools mastered? Time to scale with consumer groups! Move to [Lesson 7: Consumer Groups & Load Balancing](../lesson_8/README.md) to learn parallel processing patterns.

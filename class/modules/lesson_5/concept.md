@@ -527,7 +527,7 @@ class SchemaRegistryHealthIndicator(
 
 ## 🚀 **What's Next?**
 
-With structured data mastery complete, you're ready for [Lesson 6: Development Tools](../lesson_6/concept.md), where you'll learn debugging, testing, and monitoring tools for Kafka applications.
+With structured data mastery complete, you're ready for [Lesson 6: Development Tools](../lesson_7/concept.md), where you'll learn debugging, testing, and monitoring tools for Kafka applications.
 
 ---
 

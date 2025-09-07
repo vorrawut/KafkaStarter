@@ -1,768 +1,723 @@
-# Concept
-
-## Kafka Streams API Introduction - Real-time Stream Processing
+# Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka
 
 ## 🎯 Objective
 
-Master the Kafka Streams API to build real-time stream processing applications. Learn to create stream topologies, perform transformations, and build stateful processing pipelines that can handle millions of events with low latency and fault tolerance.
+Master advanced request-reply patterns using Kafka for synchronous communication in distributed systems. Learn to implement reliable, scalable request-response flows while maintaining the benefits of Kafka's durability and fault tolerance.
 
-## 🌊 **Kafka Streams: Real-time Processing Revolution**
+## 🔄 **Request-Reply Pattern: When Synchronous Meets Kafka**
 
-Kafka Streams transforms your applications from simple message consumers into powerful stream processors that can perform real-time analytics, transformations, and aggregations.
+Sometimes you need the durability and scalability of Kafka with the immediacy of synchronous communication.
 
 ```mermaid
 graph LR
-    subgraph "Traditional Consumer vs Kafka Streams"
-        subgraph "Traditional Consumer"
-            INPUT1[Input Topic]
-            CONSUMER[Consumer]
-            LOGIC[Business Logic]
-            OUTPUT1[External System]
+    subgraph "Request-Reply Flow"
+        CLIENT[Client]
+        API[API Gateway]
+        
+        subgraph "Kafka Infrastructure"
+            REQ_TOPIC[Request Topic]
+            REPLY_TOPIC[Reply Topic]
         end
         
-        subgraph "Kafka Streams Application"
-            INPUT2[Input Topic]
-            TOPOLOGY[Stream Topology]
-            
-            subgraph "Stream Operations"
-                FILTER[Filter]
-                MAP[Map/Transform]
-                AGGREGATE[Aggregate]
-                JOIN[Join]
-            end
-            
-            OUTPUT2[Output Topic]
-            STATE[Local State Store]
+        PROCESSOR[Request Processor]
+        EXTERNAL[External Service]
+        
+        subgraph "Correlation Tracking"
+            CORRELATION[Correlation Store]
+            TIMEOUT[Timeout Handler]
         end
     end
     
-    INPUT1 --> CONSUMER
-    CONSUMER --> LOGIC
-    LOGIC --> OUTPUT1
+    CLIENT -->|1. Request| API
+    API -->|2. Publish with correlation ID| REQ_TOPIC
+    API -->|3. Wait for reply| CORRELATION
     
-    INPUT2 --> TOPOLOGY
-    TOPOLOGY --> FILTER
-    FILTER --> MAP
-    MAP --> AGGREGATE
-    AGGREGATE --> JOIN
-    JOIN --> OUTPUT2
+    REQ_TOPIC -->|4. Process| PROCESSOR
+    PROCESSOR -->|5. Call external| EXTERNAL
+    EXTERNAL -->|6. Response| PROCESSOR
+    PROCESSOR -->|7. Publish reply| REPLY_TOPIC
     
-    AGGREGATE -.-> STATE
-    JOIN -.-> STATE
+    REPLY_TOPIC -->|8. Match correlation| CORRELATION
+    CORRELATION -->|9. Return response| API
+    API -->|10. Response| CLIENT
     
-    style TOPOLOGY fill:#e3f2fd
-    style FILTER fill:#e8f5e8
-    style AGGREGATE fill:#fff3e0
-    style STATE fill:#f3e5f5
+    TIMEOUT -->|Handle timeouts| CORRELATION
+    
+    style REQ_TOPIC fill:#e3f2fd
+    style REPLY_TOPIC fill:#e8f5e8
+    style CORRELATION fill:#fff3e0
 ```
 
-**Key Advantages of Kafka Streams:**
-- ✅ **Event-by-event processing** with millisecond latency
-- ✅ **Exactly-once semantics** for data consistency
-- ✅ **Fault tolerance** with automatic recovery
-- ✅ **Horizontal scaling** across multiple instances
-- ✅ **No external dependencies** - just your application + Kafka
+**When to use Request-Reply with Kafka:**
+- ✅ **Cross-service queries** requiring real-time responses
+- ✅ **Load balancing** across multiple processors
+- ✅ **Audit trail** for all requests and responses
+- ✅ **Fault tolerance** with message durability
 
-## 🏗️ **Stream Processing Fundamentals**
+## 🔧 **Basic Request-Reply Implementation**
 
-### 1. **Core Concepts: Streams and Tables**
+### 1. **Request-Reply Service Foundation**
 
 ```kotlin
-// Stream: Unbounded sequence of events
-// Table: Snapshot of latest values (changelog stream)
-
-data class UserEvent(
-    val userId: String,
-    val eventType: String,
-    val timestamp: Long,
-    val data: Map<String, Any>
+data class RequestMessage<T>(
+    val correlationId: String,
+    val replyTo: String,
+    val payload: T,
+    val timestamp: Instant,
+    val timeoutMs: Long = 30000,
+    val metadata: Map<String, String> = emptyMap()
 )
 
-data class UserProfile(
-    val userId: String,
-    val name: String,
-    val email: String,
-    val lastSeen: Long,
-    val preferences: Map<String, String>
+data class ReplyMessage<T>(
+    val correlationId: String,
+    val success: Boolean,
+    val payload: T? = null,
+    val error: String? = null,
+    val timestamp: Instant,
+    val processingTimeMs: Long? = null
 )
 
-// Stream: Continuous flow of user events
-// user-events: UserEvent("user1", "LOGIN", 123456), UserEvent("user1", "CLICK", 123457), ...
+interface RequestReplyService {
+    fun <REQ, RESP> sendRequest(
+        requestTopic: String,
+        request: REQ,
+        responseType: Class<RESP>,
+        timeoutMs: Long = 30000
+    ): CompletableFuture<RESP>
+}
 
-// Table: Current state of user profiles  
-// user-profiles: "user1" -> UserProfile("user1", "John", "john@example.com", 123457, {...})
-```
-
-### 2. **Basic Stream Topology**
-
-```kotlin
 @Component
-class UserActivityStreamProcessor {
+class KafkaRequestReplyService : RequestReplyService {
     
     @Autowired
-    private lateinit var streamBuilderFactoryBean: StreamBuilderFactoryBean
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
     
-    @Bean
-    fun userActivityTopology(): Topology {
-        val builder = StreamsBuilder()
+    private val pendingRequests = ConcurrentHashMap<String, PendingRequest<*>>()
+    
+    data class PendingRequest<T>(
+        val future: CompletableFuture<T>,
+        val responseType: Class<T>,
+        val startTime: Instant,
+        val timeoutMs: Long
+    )
+    
+    override fun <REQ, RESP> sendRequest(
+        requestTopic: String,
+        request: REQ,
+        responseType: Class<RESP>,
+        timeoutMs: Long
+    ): CompletableFuture<RESP> {
         
-        // 1. Source: Read from input topic
-        val userEvents: KStream<String, UserEvent> = builder.stream(
-            "user-events",
-            Consumed.with(Serdes.String(), JsonSerde(UserEvent::class.java))
+        val correlationId = UUID.randomUUID().toString()
+        val replyTopic = "replies" // Single reply topic with correlation routing
+        
+        val future = CompletableFuture<RESP>()
+        
+        // Store pending request
+        pendingRequests[correlationId] = PendingRequest(
+            future = future as CompletableFuture<Any>,
+            responseType = responseType as Class<Any>,
+            startTime = Instant.now(),
+            timeoutMs = timeoutMs
         )
         
-        // 2. Filter: Only process login events
-        val loginEvents = userEvents.filter { key, event ->
-            event.eventType == "LOGIN"
-        }
+        // Set up timeout
+        scheduleTimeout(correlationId, timeoutMs)
         
-        // 3. Transform: Enrich with additional data
-        val enrichedEvents = loginEvents.mapValues { event ->
-            EnrichedUserEvent(
-                userId = event.userId,
-                eventType = event.eventType,
-                timestamp = event.timestamp,
-                originalData = event.data,
-                enrichedData = mapOf(
-                    "loginTime" to formatTimestamp(event.timestamp),
-                    "deviceType" to detectDeviceType(event.data),
-                    "location" to extractLocation(event.data)
-                )
-            )
-        }
-        
-        // 4. Sink: Write to output topic
-        enrichedEvents.to(
-            "user-logins-enriched",
-            Produced.with(Serdes.String(), JsonSerde(EnrichedUserEvent::class.java))
+        // Create and send request message
+        val requestMessage = RequestMessage(
+            correlationId = correlationId,
+            replyTo = replyTopic,
+            payload = request,
+            timestamp = Instant.now(),
+            timeoutMs = timeoutMs
         )
         
-        return builder.build()
-    }
-}
-```
-
-### 3. **Stream Configuration**
-
-```kotlin
-@Configuration
-@EnableKafkaStreams
-class KafkaStreamsConfig {
-    
-    @Bean(name = [KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME])
-    fun streamsConfig(): KafkaStreamsConfiguration {
-        val props = HashMap<String, Any>()
-        
-        // Basic configuration
-        props[StreamsConfig.APPLICATION_ID_CONFIG] = "user-activity-processor"
-        props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
-        
-        // Serialization
-        props[StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG] = Serdes.String()::class.java
-        props[StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG] = JsonSerde::class.java
-        
-        // Processing guarantees
-        props[StreamsConfig.PROCESSING_GUARANTEE_CONFIG] = StreamsConfig.EXACTLY_ONCE_V2
-        
-        // Performance tuning
-        props[StreamsConfig.NUM_STREAM_THREADS_CONFIG] = 2
-        props[StreamsConfig.COMMIT_INTERVAL_MS_CONFIG] = 1000 // 1 second
-        props[StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG] = 1024 * 1024 // 1MB
-        
-        // State store configuration
-        props[StreamsConfig.STATE_DIR_CONFIG] = "/tmp/kafka-streams"
-        
-        // Error handling
-        props[StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG] = 
-            LogAndContinueExceptionHandler::class.java
-        
-        return KafkaStreamsConfiguration(props)
-    }
-}
-```
-
-## 🔄 **Stream Operations and Transformations**
-
-### 1. **Stateless Transformations**
-
-```kotlin
-@Component
-class StatelessTransformations {
-    
-    fun buildStatelessTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val orderEvents: KStream<String, OrderEvent> = builder.stream("order-events")
-        
-        // 1. FILTER: Remove test orders
-        val realOrders = orderEvents.filter { key, order ->
-            !order.customerId.startsWith("test_") && order.amount > 0
-        }
-        
-        // 2. MAP: Transform each record
-        val orderSummaries = realOrders.map { key, order ->
-            KeyValue(
-                order.customerId, // New key: customer ID
-                OrderSummary(
-                    orderId = order.orderId,
-                    customerId = order.customerId,
-                    amount = order.amount,
-                    itemCount = order.items.size,
-                    category = categorizeOrder(order),
-                    timestamp = order.timestamp
-                )
-            )
-        }
-        
-        // 3. MAPVALUES: Transform only values (more efficient)
-        val enrichedSummaries = orderSummaries.mapValues { summary ->
-            summary.copy(
-                taxAmount = calculateTax(summary.amount),
-                shippingCost = calculateShipping(summary),
-                totalAmount = summary.amount + calculateTax(summary.amount) + calculateShipping(summary)
-            )
-        }
-        
-        // 4. FLATMAP: One-to-many transformation
-        val orderItems: KStream<String, OrderItem> = realOrders.flatMap { key, order ->
-            order.items.map { item ->
-                KeyValue(
-                    "${order.orderId}-${item.productId}",
-                    OrderItem(
-                        orderId = order.orderId,
-                        productId = item.productId,
-                        quantity = item.quantity,
-                        price = item.price,
-                        customerId = order.customerId
-                    )
-                )
-            }
-        }
-        
-        // 5. SELECTKEY: Choose new key
-        val productSales = orderItems.selectKey { key, item ->
-            item.productId // Re-key by product ID
-        }
-        
-        // Output streams
-        enrichedSummaries.to("order-summaries")
-        productSales.to("product-sales")
-        
-        return builder.build()
-    }
-}
-```
-
-### 2. **Branching and Routing**
-
-```kotlin
-@Component  
-class StreamRouting {
-    
-    fun buildRoutingTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val transactions: KStream<String, Transaction> = builder.stream("transactions")
-        
-        // Branch based on transaction amount
-        val branches = transactions.branch(
-            Named.`as`("high-value"),
-            Predicate { key, transaction -> transaction.amount > 10000 },
-            
-            Named.`as`("medium-value"), 
-            Predicate { key, transaction -> transaction.amount > 1000 },
-            
-            Named.`as`("low-value"),
-            Predicate { key, transaction -> true } // Catch all remaining
-        )
-        
-        // Process high-value transactions
-        branches["high-value"]!!
-            .mapValues { transaction ->
-                transaction.copy(
-                    flagged = true,
-                    reviewRequired = true,
-                    priority = "HIGH"
-                )
-            }
-            .to("high-value-transactions")
-        
-        // Process medium-value transactions
-        branches["medium-value"]!!
-            .filter { key, transaction -> 
-                !isSuspiciousPattern(transaction) 
-            }
-            .to("standard-transactions")
-        
-        // Process low-value transactions
-        branches["low-value"]!!
-            .mapValues { transaction ->
-                transaction.copy(priority = "LOW")
-            }
-            .to("low-priority-transactions")
-        
-        return builder.build()
-    }
-}
-```
-
-### 3. **Stream-Stream Operations**
-
-```kotlin
-@Component
-class StreamJoining {
-    
-    fun buildJoinTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val userEvents: KStream<String, UserEvent> = builder.stream("user-events")
-        val sessionEvents: KStream<String, SessionEvent> = builder.stream("session-events")
-        
-        // Inner Join: Match events that occur within a time window
-        val joinedEvents = userEvents.join(
-            sessionEvents,
-            { userEvent, sessionEvent ->
-                UserSessionEvent(
-                    userId = userEvent.userId,
-                    sessionId = sessionEvent.sessionId,
-                    eventType = userEvent.eventType,
-                    sessionData = sessionEvent.data,
-                    joinTimestamp = System.currentTimeMillis()
-                )
-            },
-            JoinWindows.of(Duration.ofMinutes(5)), // 5-minute window
-            StreamJoined.with(Serdes.String(), userEventSerde, sessionEventSerde)
-        )
-        
-        // Left Join: Keep all user events, add session data if available
-        val leftJoinedEvents = userEvents.leftJoin(
-            sessionEvents,
-            { userEvent, sessionEvent ->
-                UserSessionEvent(
-                    userId = userEvent.userId,
-                    sessionId = sessionEvent?.sessionId,
-                    eventType = userEvent.eventType,
-                    sessionData = sessionEvent?.data ?: emptyMap(),
-                    joinTimestamp = System.currentTimeMillis()
-                )
-            },
-            JoinWindows.of(Duration.ofMinutes(5)),
-            StreamJoined.with(Serdes.String(), userEventSerde, sessionEventSerde)
-        )
-        
-        joinedEvents.to("user-session-events")
-        
-        return builder.build()
-    }
-}
-```
-
-## 📊 **Aggregations and Windowing**
-
-### 1. **Simple Aggregations**
-
-```kotlin
-@Component
-class StreamAggregations {
-    
-    fun buildAggregationTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val orderEvents: KStream<String, OrderEvent> = builder.stream("order-events")
-        
-        // Group by customer ID for aggregation
-        val ordersByCustomer = orderEvents
-            .selectKey { key, order -> order.customerId }
-            .groupByKey(Grouped.with(Serdes.String(), orderEventSerde))
-        
-        // 1. COUNT: Number of orders per customer
-        val orderCounts: KTable<String, Long> = ordersByCustomer.count(
-            Named.`as`("order-counts"),
-            Materialized.`as`<String, Long, KeyValueStore<Bytes, ByteArray>>("order-counts-store")
-                .withKeySerde(Serdes.String())
-                .withValueSerde(Serdes.Long())
-        )
-        
-        // 2. AGGREGATE: Total amount per customer
-        val customerTotals: KTable<String, CustomerTotal> = ordersByCustomer.aggregate(
-            { CustomerTotal() }, // Initial value
-            { customerId, order, aggregate ->
-                aggregate.copy(
-                    customerId = customerId,
-                    totalAmount = aggregate.totalAmount + order.amount,
-                    orderCount = aggregate.orderCount + 1,
-                    lastOrderTime = maxOf(aggregate.lastOrderTime, order.timestamp),
-                    averageOrderValue = (aggregate.totalAmount + order.amount) / (aggregate.orderCount + 1)
-                )
-            },
-            Named.`as`("customer-totals"),
-            Materialized.`as`<String, CustomerTotal, KeyValueStore<Bytes, ByteArray>>("customer-totals-store")
-                .withKeySerde(Serdes.String())
-                .withValueSerde(JsonSerde(CustomerTotal::class.java))
-        )
-        
-        // 3. REDUCE: Find highest order amount per customer
-        val maxOrders: KTable<String, OrderEvent> = ordersByCustomer.reduce(
-            { order1, order2 ->
-                if (order1.amount > order2.amount) order1 else order2
-            },
-            Named.`as`("max-orders"),
-            Materialized.`as`<String, OrderEvent, KeyValueStore<Bytes, ByteArray>>("max-orders-store")
-                .withKeySerde(Serdes.String())
-                .withValueSerde(orderEventSerde)
-        )
-        
-        // Output aggregation results
-        orderCounts.toStream().to("customer-order-counts")
-        customerTotals.toStream().to("customer-totals")
-        maxOrders.toStream().to("customer-max-orders")
-        
-        return builder.build()
-    }
-}
-```
-
-### 2. **Time-Windowed Aggregations**
-
-```kotlin
-@Component
-class WindowedAggregations {
-    
-    fun buildWindowedTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val pageViews: KStream<String, PageViewEvent> = builder.stream("page-views")
-        
-        // Group by page for windowed aggregation
-        val pageViewsByPage = pageViews
-            .selectKey { key, event -> event.pageUrl }
-            .groupByKey(Grouped.with(Serdes.String(), pageViewEventSerde))
-        
-        // 1. TUMBLING WINDOW: Non-overlapping windows
-        val hourlyPageViews = pageViewsByPage
-            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
-            .count(
-                Named.`as`("hourly-page-views"),
-                Materialized.`as`<String, Long, WindowStore<Bytes, ByteArray>>("hourly-views-store")
-            )
-        
-        // 2. HOPPING WINDOW: Overlapping windows
-        val slidingPageViews = pageViewsByPage
-            .windowedBy(
-                TimeWindows.of(Duration.ofHours(1))
-                    .advanceBy(Duration.ofMinutes(15)) // New window every 15 minutes
-            )
-            .count(Named.`as`("sliding-page-views"))
-        
-        // 3. SESSION WINDOW: Based on inactivity gaps
-        val sessionPageViews = pageViewsByPage
-            .windowedBy(SessionWindows.with(Duration.ofMinutes(30))) // 30-minute inactivity gap
-            .aggregate(
-                { PageViewSession() },
-                { pageUrl, event, session ->
-                    session.copy(
-                        pageUrl = pageUrl,
-                        viewCount = session.viewCount + 1,
-                        totalDuration = session.totalDuration + event.duration,
-                        lastViewTime = maxOf(session.lastViewTime, event.timestamp)
-                    )
-                },
-                { session1, session2 -> // Merger for session windows
-                    session1.copy(
-                        viewCount = session1.viewCount + session2.viewCount,
-                        totalDuration = session1.totalDuration + session2.totalDuration,
-                        lastViewTime = maxOf(session1.lastViewTime, session2.lastViewTime)
-                    )
-                },
-                Named.`as`("session-page-views"),
-                Materialized.with(Serdes.String(), JsonSerde(PageViewSession::class.java))
-            )
-        
-        // Convert windowed results to streams for output
-        hourlyPageViews
-            .toStream { windowedKey, value ->
-                "${windowedKey.key()}-${windowedKey.window().start()}-${windowedKey.window().end()}"
-            }
-            .mapValues { count ->
-                WindowedCount(
-                    key = "",
-                    count = count,
-                    windowStart = 0L,
-                    windowEnd = 0L
-                )
-            }
-            .to("hourly-page-view-counts")
-        
-        return builder.build()
-    }
-}
-```
-
-## 🗃️ **State Stores and Interactive Queries**
-
-### 1. **Custom State Store Operations**
-
-```kotlin
-@Component
-class StateStoreOperations {
-    
-    @Autowired
-    private lateinit var kafkaStreams: KafkaStreams
-    
-    fun buildStatefulTopology(): Topology {
-        val builder = StreamsBuilder()
-        
-        val userEvents: KStream<String, UserEvent> = builder.stream("user-events")
-        
-        // Create custom state store
-        val userProfileStore = Stores.keyValueStoreBuilder(
-            Stores.persistentKeyValueStore("user-profiles"),
-            Serdes.String(),
-            JsonSerde(UserProfile::class.java)
-        )
-        
-        builder.addStateStore(userProfileStore)
-        
-        // Process events with state store access
-        val enrichedEvents = userEvents.transform(
-            TransformerSupplier {
-                object : Transformer<String, UserEvent, KeyValue<String, EnrichedUserEvent>> {
-                    private lateinit var stateStore: KeyValueStore<String, UserProfile>
-                    private lateinit var context: ProcessorContext
-                    
-                    override fun init(context: ProcessorContext) {
-                        this.context = context
-                        this.stateStore = context.getStateStore("user-profiles")
-                    }
-                    
-                    override fun transform(key: String, event: UserEvent): KeyValue<String, EnrichedUserEvent>? {
-                        // Get current user profile from state store
-                        val currentProfile = stateStore.get(event.userId) ?: UserProfile(
-                            userId = event.userId,
-                            eventCount = 0,
-                            lastSeen = 0,
-                            preferences = emptyMap()
-                        )
-                        
-                        // Update profile based on event
-                        val updatedProfile = currentProfile.copy(
-                            eventCount = currentProfile.eventCount + 1,
-                            lastSeen = event.timestamp,
-                            preferences = mergePreferences(currentProfile.preferences, event.data)
-                        )
-                        
-                        // Save updated profile
-                        stateStore.put(event.userId, updatedProfile)
-                        
-                        // Create enriched event
-                        val enrichedEvent = EnrichedUserEvent(
-                            userId = event.userId,
-                            eventType = event.eventType,
-                            timestamp = event.timestamp,
-                            originalData = event.data,
-                            enrichedData = mapOf(
-                                "totalEvents" to updatedProfile.eventCount,
-                                "daysSinceFirstSeen" to calculateDaysSince(updatedProfile.firstSeen),
-                                "userCategory" to categorizeUser(updatedProfile)
-                            )
-                        )
-                        
-                        return KeyValue(key, enrichedEvent)
-                    }
-                    
-                    override fun close() {
-                        // Cleanup if needed
+        try {
+            kafkaTemplate.send(requestTopic, correlationId, requestMessage)
+                .whenComplete { result, exception ->
+                    if (exception != null) {
+                        removePendingRequest(correlationId, "Failed to send request: ${exception.message}")
                     }
                 }
-            },
-            "user-profiles"
-        )
-        
-        enrichedEvents.to("enriched-user-events")
-        
-        return builder.build()
-    }
-    
-    // Interactive Query API
-    fun getUserProfile(userId: String): UserProfile? {
-        val store = kafkaStreams.store(
-            StoreQueryParameters.fromNameAndType(
-                "user-profiles",
-                QueryableStoreTypes.keyValueStore<String, UserProfile>()
-            )
-        )
-        return store.get(userId)
-    }
-    
-    fun getAllUserProfiles(): List<UserProfile> {
-        val store = kafkaStreams.store(
-            StoreQueryParameters.fromNameAndType(
-                "user-profiles", 
-                QueryableStoreTypes.keyValueStore<String, UserProfile>()
-            )
-        )
-        
-        val profiles = mutableListOf<UserProfile>()
-        store.all().use { iterator ->
-            while (iterator.hasNext()) {
-                profiles.add(iterator.next().value)
-            }
+        } catch (e: Exception) {
+            removePendingRequest(correlationId, "Failed to send request: ${e.message}")
         }
-        return profiles
-    }
-}
-```
-
-### 2. **REST API for Interactive Queries**
-
-```kotlin
-@RestController
-@RequestMapping("/api/streams")
-class StreamsQueryController {
-    
-    @Autowired
-    private lateinit var stateStoreOperations: StateStoreOperations
-    
-    @GetMapping("/users/{userId}/profile")
-    fun getUserProfile(@PathVariable userId: String): ResponseEntity<UserProfile> {
-        val profile = stateStoreOperations.getUserProfile(userId)
-        return if (profile != null) {
-            ResponseEntity.ok(profile)
-        } else {
-            ResponseEntity.notFound().build()
-        }
-    }
-    
-    @GetMapping("/users/profiles")
-    fun getAllUserProfiles(
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "50") size: Int
-    ): ResponseEntity<List<UserProfile>> {
-        val allProfiles = stateStoreOperations.getAllUserProfiles()
-        val startIndex = page * size
-        val endIndex = minOf(startIndex + size, allProfiles.size)
         
-        return if (startIndex < allProfiles.size) {
-            ResponseEntity.ok(allProfiles.subList(startIndex, endIndex))
-        } else {
-            ResponseEntity.ok(emptyList())
-        }
+        return future
     }
     
-    @GetMapping("/metrics/customer-totals/{customerId}")
-    fun getCustomerTotals(@PathVariable customerId: String): ResponseEntity<CustomerTotal> {
-        // Query windowed store for customer totals
-        val store = kafkaStreams.store(
-            StoreQueryParameters.fromNameAndType(
-                "customer-totals-store",
-                QueryableStoreTypes.keyValueStore<String, CustomerTotal>()
-            )
-        )
+    @KafkaListener(topics = ["replies"])
+    fun handleReply(@Payload replyMessage: ReplyMessage<Any>) {
+        val correlationId = replyMessage.correlationId
+        val pendingRequest = pendingRequests.remove(correlationId)
         
-        val total = store.get(customerId)
-        return if (total != null) {
-            ResponseEntity.ok(total)
-        } else {
-            ResponseEntity.notFound().build()
-        }
-    }
-}
-```
-
-## 📊 **Monitoring and Observability**
-
-### 1. **Streams Metrics Collection**
-
-```kotlin
-@Component
-class StreamsMetricsCollector {
-    
-    @Autowired
-    private lateinit var kafkaStreams: KafkaStreams
-    
-    @Scheduled(fixedRate = 30000) // Every 30 seconds
-    fun collectStreamMetrics() {
-        val metrics = kafkaStreams.metrics()
-        
-        metrics.forEach { (metricName, metric) ->
-            when (metricName.name()) {
-                "process-rate" -> {
-                    Metrics.globalRegistry.gauge(
-                        "kafka.streams.process.rate",
-                        Tags.of(Tag.of("thread", metricName.tags()["thread-id"] ?: "unknown")),
-                        metric.metricValue() as Double
+        if (pendingRequest != null) {
+            try {
+                if (replyMessage.success && replyMessage.payload != null) {
+                    // Type-safe deserialization
+                    val typedPayload = objectMapper.convertValue(
+                        replyMessage.payload,
+                        pendingRequest.responseType
+                    )
+                    pendingRequest.future.complete(typedPayload)
+                } else {
+                    pendingRequest.future.completeExceptionally(
+                        RuntimeException(replyMessage.error ?: "Unknown error")
                     )
                 }
                 
-                "process-latency-avg" -> {
-                    Metrics.globalRegistry.gauge(
-                        "kafka.streams.process.latency.avg",
-                        Tags.of(Tag.of("thread", metricName.tags()["thread-id"] ?: "unknown")),
-                        metric.metricValue() as Double
-                    )
-                }
+                // Record metrics
+                val duration = Duration.between(pendingRequest.startTime, Instant.now())
+                recordRequestReplyMetrics(correlationId, duration, replyMessage.success)
                 
-                "commit-rate" -> {
-                    Metrics.globalRegistry.gauge(
-                        "kafka.streams.commit.rate",
-                        metric.metricValue() as Double
-                    )
+            } catch (e: Exception) {
+                pendingRequest.future.completeExceptionally(
+                    RuntimeException("Failed to process reply: ${e.message}")
+                )
+            }
+        } else {
+            logger.warn("Received reply for unknown correlation ID: $correlationId")
+        }
+    }
+    
+    private fun scheduleTimeout(correlationId: String, timeoutMs: Long) {
+        CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute {
+            removePendingRequest(correlationId, "Request timeout after ${timeoutMs}ms")
+        }
+    }
+    
+    private fun removePendingRequest(correlationId: String, errorMessage: String) {
+        val pendingRequest = pendingRequests.remove(correlationId)
+        pendingRequest?.future?.completeExceptionally(TimeoutException(errorMessage))
+    }
+}
+```
+
+### 2. **Request Processor Implementation**
+
+```kotlin
+@Component
+class UserServiceRequestProcessor {
+    
+    @Autowired
+    private lateinit var userService: UserService
+    
+    @Autowired
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
+    
+    @KafkaListener(topics = ["user-service-requests"])
+    fun processUserRequest(
+        @Payload requestMessage: RequestMessage<Map<String, Any>>,
+        acknowledgment: Acknowledgment
+    ) {
+        val startTime = Instant.now()
+        
+        try {
+            val requestType = requestMessage.metadata["requestType"] ?: "unknown"
+            val response = when (requestType) {
+                "GET_USER_PROFILE" -> handleGetUserProfile(requestMessage.payload)
+                "VALIDATE_USER" -> handleValidateUser(requestMessage.payload)
+                "UPDATE_USER_PREFERENCES" -> handleUpdateUserPreferences(requestMessage.payload)
+                "GET_USER_ORDERS" -> handleGetUserOrders(requestMessage.payload)
+                else -> throw IllegalArgumentException("Unknown request type: $requestType")
+            }
+            
+            // Send successful reply
+            sendReply(requestMessage, response, startTime)
+            acknowledgment.acknowledge()
+            
+        } catch (e: Exception) {
+            // Send error reply
+            sendErrorReply(requestMessage, e, startTime)
+            acknowledgment.acknowledge()
+        }
+    }
+    
+    private fun handleGetUserProfile(payload: Map<String, Any>): UserProfile {
+        val userId = payload["userId"] as? String 
+            ?: throw IllegalArgumentException("Missing userId")
+        
+        return userService.getUserProfile(userId)
+            ?: throw IllegalArgumentException("User not found: $userId")
+    }
+    
+    private fun handleValidateUser(payload: Map<String, Any>): ValidationResult {
+        val email = payload["email"] as? String
+            ?: throw IllegalArgumentException("Missing email")
+        val password = payload["password"] as? String
+            ?: throw IllegalArgumentException("Missing password")
+        
+        return userService.validateCredentials(email, password)
+    }
+    
+    private fun handleUpdateUserPreferences(payload: Map<String, Any>): UpdateResult {
+        val userId = payload["userId"] as? String
+            ?: throw IllegalArgumentException("Missing userId")
+        val preferences = payload["preferences"] as? Map<String, Any>
+            ?: throw IllegalArgumentException("Missing preferences")
+        
+        return userService.updatePreferences(userId, preferences)
+    }
+    
+    private fun handleGetUserOrders(payload: Map<String, Any>): List<Order> {
+        val userId = payload["userId"] as? String
+            ?: throw IllegalArgumentException("Missing userId")
+        val limit = (payload["limit"] as? Number)?.toInt() ?: 10
+        
+        return userService.getUserOrders(userId, limit)
+    }
+    
+    private fun sendReply(
+        requestMessage: RequestMessage<Map<String, Any>>,
+        response: Any,
+        startTime: Instant
+    ) {
+        val processingTime = Duration.between(startTime, Instant.now()).toMillis()
+        
+        val replyMessage = ReplyMessage(
+            correlationId = requestMessage.correlationId,
+            success = true,
+            payload = response,
+            timestamp = Instant.now(),
+            processingTimeMs = processingTime
+        )
+        
+        kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, replyMessage)
+    }
+    
+    private fun sendErrorReply(
+        requestMessage: RequestMessage<Map<String, Any>>,
+        exception: Exception,
+        startTime: Instant
+    ) {
+        val processingTime = Duration.between(startTime, Instant.now()).toMillis()
+        
+        val replyMessage = ReplyMessage<Any>(
+            correlationId = requestMessage.correlationId,
+            success = false,
+            error = exception.message,
+            timestamp = Instant.now(),
+            processingTimeMs = processingTime
+        )
+        
+        kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, replyMessage)
+    }
+}
+```
+
+## 🏗️ **Advanced Request-Reply Patterns**
+
+### Correlation ID Lifecycle & Timeout Handling
+
+Understanding how correlation IDs work and how timeouts are handled is crucial for reliable request-reply implementations.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant RequestReplyService as Request-Reply Service
+    participant KafkaProducer as Kafka Producer
+    participant RequestTopic as Request Topic
+    participant ProcessorA as Processor A
+    participant ReplyTopic as Reply Topic
+    participant KafkaConsumer as Kafka Consumer
+    participant TimeoutHandler as Timeout Handler
+    
+    Note over Client, TimeoutHandler: Successful Request-Reply Flow
+    
+    Client->>RequestReplyService: sendRequest(data)
+    RequestReplyService->>RequestReplyService: Generate correlationId: "req-123"
+    RequestReplyService->>RequestReplyService: Create CompletableFuture
+    RequestReplyService->>RequestReplyService: Store in pendingRequests map
+    RequestReplyService->>KafkaProducer: Send request with correlationId
+    KafkaProducer->>RequestTopic: Publish request message
+    
+    RequestTopic->>ProcessorA: Consume request (req-123)
+    ProcessorA->>ProcessorA: Process request
+    ProcessorA->>ReplyTopic: Publish reply with correlationId
+    
+    ReplyTopic->>KafkaConsumer: Consume reply (req-123)
+    KafkaConsumer->>RequestReplyService: Handle reply with correlationId
+    RequestReplyService->>RequestReplyService: Find pending request (req-123)
+    RequestReplyService->>RequestReplyService: Complete CompletableFuture
+    RequestReplyService->>Client: Return response
+    
+    Note over Client, TimeoutHandler: Timeout Scenario
+    
+    Client->>RequestReplyService: sendRequest(data2)
+    RequestReplyService->>RequestReplyService: Generate correlationId: "req-456"
+    RequestReplyService->>KafkaProducer: Send request
+    KafkaProducer->>RequestTopic: Publish request
+    
+    Note over ProcessorA: No response received
+    
+    TimeoutHandler->>RequestReplyService: Check expired requests
+    RequestReplyService->>RequestReplyService: Find expired request (req-456)
+    RequestReplyService->>RequestReplyService: Complete with TimeoutException
+    RequestReplyService->>Client: Throw TimeoutException
+```
+
+### 1. **Multi-Step Request Processing**
+
+```kotlin
+@Component
+class MultiStepRequestProcessor {
+    
+    @KafkaListener(topics = ["complex-requests"])
+    fun processComplexRequest(
+        @Payload requestMessage: RequestMessage<OrderValidationRequest>,
+        acknowledgment: Acknowledgment
+    ) {
+        val correlationId = requestMessage.correlationId
+        
+        try {
+            val request = requestMessage.payload
+            
+            // Step 1: Validate customer
+            val customerValidation = validateCustomer(request.customerId)
+            if (!customerValidation.valid) {
+                sendErrorReply(requestMessage, "Customer validation failed: ${customerValidation.reason}")
+                acknowledgment.acknowledge()
+                return
+            }
+            
+            // Step 2: Check inventory
+            val inventoryCheck = checkInventory(request.items)
+            if (!inventoryCheck.allAvailable) {
+                sendErrorReply(requestMessage, "Inventory check failed: ${inventoryCheck.missingItems}")
+                acknowledgment.acknowledge()
+                return
+            }
+            
+            // Step 3: Validate payment method
+            val paymentValidation = validatePaymentMethod(request.paymentMethod)
+            if (!paymentValidation.valid) {
+                sendErrorReply(requestMessage, "Payment validation failed: ${paymentValidation.reason}")
+                acknowledgment.acknowledge()
+                return
+            }
+            
+            // Step 4: Calculate pricing
+            val pricing = calculatePricing(request.items, request.customerId)
+            
+            // Step 5: Compile response
+            val response = OrderValidationResponse(
+                valid = true,
+                orderId = UUID.randomUUID().toString(),
+                totalAmount = pricing.total,
+                discounts = pricing.discounts,
+                estimatedDelivery = calculateDeliveryDate(request.shippingAddress),
+                validationSteps = listOf(
+                    "Customer validated",
+                    "Inventory available",
+                    "Payment method valid",
+                    "Pricing calculated"
+                )
+            )
+            
+            sendSuccessReply(requestMessage, response)
+            acknowledgment.acknowledge()
+            
+        } catch (e: Exception) {
+            sendErrorReply(requestMessage, "Processing failed: ${e.message}")
+            acknowledgment.acknowledge()
+        }
+    }
+}
+```
+
+### 2. **Request Aggregation Pattern**
+
+```kotlin
+@Component
+class RequestAggregationProcessor {
+    
+    private val aggregationRequests = ConcurrentHashMap<String, AggregationContext>()
+    
+    data class AggregationContext(
+        val originalRequest: RequestMessage<DataAggregationRequest>,
+        val subRequests: Set<String>,
+        val responses: MutableMap<String, Any>,
+        val startTime: Instant
+    )
+    
+    @KafkaListener(topics = ["aggregation-requests"])
+    fun processAggregationRequest(
+        @Payload requestMessage: RequestMessage<DataAggregationRequest>,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            val request = requestMessage.payload
+            val subRequestIds = mutableSetOf<String>()
+            
+            // Create sub-requests for different data sources
+            if (request.includeUserData) {
+                val subRequestId = sendSubRequest("user-data-requests", mapOf(
+                    "userId" to request.userId,
+                    "correlationId" to requestMessage.correlationId
+                ))
+                subRequestIds.add(subRequestId)
+            }
+            
+            if (request.includeOrderHistory) {
+                val subRequestId = sendSubRequest("order-history-requests", mapOf(
+                    "userId" to request.userId,
+                    "limit" to request.orderHistoryLimit,
+                    "correlationId" to requestMessage.correlationId
+                ))
+                subRequestIds.add(subRequestId)
+            }
+            
+            if (request.includePreferences) {
+                val subRequestId = sendSubRequest("preference-requests", mapOf(
+                    "userId" to request.userId,
+                    "correlationId" to requestMessage.correlationId
+                ))
+                subRequestIds.add(subRequestId)
+            }
+            
+            // Store aggregation context
+            aggregationRequests[requestMessage.correlationId] = AggregationContext(
+                originalRequest = requestMessage,
+                subRequests = subRequestIds,
+                responses = ConcurrentHashMap(),
+                startTime = Instant.now()
+            )
+            
+            // Set up timeout for aggregation
+            scheduleAggregationTimeout(requestMessage.correlationId, requestMessage.timeoutMs)
+            
+            acknowledgment.acknowledge()
+            
+        } catch (e: Exception) {
+            sendErrorReply(requestMessage, "Failed to initiate aggregation: ${e.message}")
+            acknowledgment.acknowledge()
+        }
+    }
+    
+    @KafkaListener(topics = ["aggregation-sub-replies"])
+    fun handleSubReply(
+        @Payload subReply: SubRequestReply,
+        acknowledgment: Acknowledgment
+    ) {
+        val context = aggregationRequests[subReply.parentCorrelationId]
+        
+        if (context != null) {
+            // Store sub-response
+            context.responses[subReply.subRequestId] = subReply.data
+            
+            // Check if all sub-requests are complete
+            if (context.responses.size == context.subRequests.size) {
+                // All responses received - compile and send final response
+                val aggregatedResponse = compileAggregatedResponse(context)
+                sendSuccessReply(context.originalRequest, aggregatedResponse)
+                
+                // Clean up
+                aggregationRequests.remove(subReply.parentCorrelationId)
+            }
+        }
+        
+        acknowledgment.acknowledge()
+    }
+    
+    private fun compileAggregatedResponse(context: AggregationContext): AggregatedDataResponse {
+        return AggregatedDataResponse(
+            userId = context.originalRequest.payload.userId,
+            userData = context.responses["user-data"],
+            orderHistory = context.responses["order-history"] as? List<*>,
+            preferences = context.responses["preferences"] as? Map<*, *>,
+            aggregationTime = Duration.between(context.startTime, Instant.now()).toMillis()
+        )
+    }
+}
+```
+
+### 3. **Request Priority and Load Balancing**
+
+```kotlin
+@Component
+class PriorityRequestProcessor {
+    
+    @KafkaListener(
+        topics = ["high-priority-requests"],
+        concurrency = "5"
+    )
+    fun processHighPriorityRequest(
+        @Payload requestMessage: RequestMessage<Any>,
+        acknowledgment: Acknowledgment
+    ) {
+        processWithPriority(requestMessage, Priority.HIGH)
+        acknowledgment.acknowledge()
+    }
+    
+    @KafkaListener(
+        topics = ["normal-priority-requests"],
+        concurrency = "3"
+    )
+    fun processNormalPriorityRequest(
+        @Payload requestMessage: RequestMessage<Any>,
+        acknowledgment: Acknowledgment
+    ) {
+        processWithPriority(requestMessage, Priority.NORMAL)
+        acknowledgment.acknowledge()
+    }
+    
+    @KafkaListener(
+        topics = ["low-priority-requests"],
+        concurrency = "1"
+    )
+    fun processLowPriorityRequest(
+        @Payload requestMessage: RequestMessage<Any>,
+        acknowledgment: Acknowledgment
+    ) {
+        processWithPriority(requestMessage, Priority.LOW)
+        acknowledgment.acknowledge()
+    }
+    
+    private fun processWithPriority(
+        requestMessage: RequestMessage<Any>,
+        priority: Priority
+    ) {
+        val startTime = Instant.now()
+        
+        try {
+            // Add artificial delay for low priority requests during high load
+            if (priority == Priority.LOW && isSystemUnderHighLoad()) {
+                Thread.sleep(1000) // 1 second delay
+            }
+            
+            val response = processRequest(requestMessage.payload)
+            sendSuccessReply(requestMessage, response)
+            
+            // Record priority-specific metrics
+            recordPriorityMetrics(priority, Duration.between(startTime, Instant.now()), true)
+            
+        } catch (e: Exception) {
+            sendErrorReply(requestMessage, e.message ?: "Processing failed")
+            recordPriorityMetrics(priority, Duration.between(startTime, Instant.now()), false)
+        }
+    }
+}
+```
+
+## 📊 **Advanced Monitoring and Circuit Breaking**
+
+### 1. **Request-Reply Circuit Breaker**
+
+```kotlin
+@Component
+class RequestReplyCircuitBreaker {
+    
+    private val circuitBreakers = ConcurrentHashMap<String, CircuitBreaker>()
+    
+    fun <T> executeWithCircuitBreaker(
+        serviceName: String,
+        request: () -> CompletableFuture<T>
+    ): CompletableFuture<T> {
+        
+        val circuitBreaker = circuitBreakers.computeIfAbsent(serviceName) {
+            CircuitBreaker.ofDefaults(serviceName).apply {
+                eventPublisher.onStateTransition { event ->
+                    logger.info("Circuit breaker $serviceName state transition: ${event.stateTransition}")
+                    
+                    when (event.stateTransition.toState) {
+                        CircuitBreaker.State.OPEN -> {
+                            alertService.sendAlert("Circuit breaker OPEN for service: $serviceName")
+                        }
+                        CircuitBreaker.State.HALF_OPEN -> {
+                            logger.info("Circuit breaker HALF_OPEN for service: $serviceName - testing...")
+                        }
+                        CircuitBreaker.State.CLOSED -> {
+                            logger.info("Circuit breaker CLOSED for service: $serviceName - service recovered")
+                        }
+                    }
                 }
             }
         }
+        
+        return circuitBreaker.executeCompletionStage { request() }.toCompletableFuture()
     }
+}
+```
+
+### 2. **Request-Reply Analytics**
+
+```kotlin
+@Component
+class RequestReplyAnalytics {
     
     @EventListener
-    fun handleStreamStateChange(event: KafkaStreams.StateListener) {
-        when (event.newState()) {
-            KafkaStreams.State.RUNNING -> {
-                logger.info("Kafka Streams application is running")
-                Metrics.globalRegistry.gauge("kafka.streams.state", 1.0)
-            }
-            KafkaStreams.State.ERROR -> {
-                logger.error("Kafka Streams application encountered an error")
-                Metrics.globalRegistry.gauge("kafka.streams.state", -1.0)
-            }
-            else -> {
-                logger.info("Kafka Streams state changed to: ${event.newState()}")
-                Metrics.globalRegistry.gauge("kafka.streams.state", 0.0)
-            }
+    fun handleRequestReplyEvent(event: RequestReplyEvent) {
+        // Record detailed metrics
+        when (event.type) {
+            EventType.REQUEST_SENT -> recordRequestSent(event)
+            EventType.REPLY_RECEIVED -> recordReplyReceived(event)
+            EventType.REQUEST_TIMEOUT -> recordRequestTimeout(event)
+            EventType.REQUEST_FAILED -> recordRequestFailed(event)
         }
+    }
+    
+    @Scheduled(fixedRate = 60000) // Every minute
+    fun generatePerformanceReport() {
+        val report = RequestReplyPerformanceReport(
+            totalRequests = getTotalRequestCount(),
+            successRate = getSuccessRate(),
+            averageResponseTime = getAverageResponseTime(),
+            timeoutRate = getTimeoutRate(),
+            topSlowServices = getTopSlowServices(),
+            circuitBreakerStatus = getCircuitBreakerStatus()
+        )
+        
+        logger.info("Request-Reply Performance Report: $report")
+        
+        // Store report for trending analysis
+        performanceReportRepository.save(report)
     }
 }
 ```
 
 ## ✅ **Best Practices Summary**
 
-### 🏗️ **Topology Design**
-- **Start simple** with basic transformations before adding complexity
-- **Design for scalability** with proper key selection for parallelism
-- **Use appropriate serdes** for performance and compatibility
-- **Handle null values** and malformed data gracefully
+### 🔄 **Request-Reply Design**
+- **Use sparingly** - prefer pure async patterns when possible
+- **Set reasonable timeouts** based on expected processing time
+- **Implement proper correlation ID management** to avoid memory leaks
+- **Design for idempotency** in request processors
 
-### 🔧 **Performance Optimization**
-- **Choose appropriate windowing** based on use case requirements
-- **Optimize state store configuration** for your data access patterns
-- **Monitor lag and throughput** to identify bottlenecks
-- **Scale instances** based on partition count and processing load
+### 🏗️ **Scalability Patterns**
+- **Use priority queues** for different request types
+- **Implement load balancing** across multiple processors
+- **Monitor queue depths** and processing times
+- **Scale processors independently** based on load
 
-### 🛡️ **Fault Tolerance**
-- **Configure exactly-once semantics** for critical applications
-- **Implement proper error handling** with deserialization exception handlers
-- **Design for reprocessing** with idempotent operations
-- **Monitor and alert** on stream application health
+### 🔧 **Fault Tolerance**
+- **Implement circuit breakers** for external service calls
+- **Handle timeouts gracefully** with meaningful error messages
+- **Provide fallback responses** when appropriate
+- **Monitor failure patterns** to identify systemic issues
 
-### 📊 **State Management**
-- **Design state stores efficiently** with appropriate key schemes
-- **Implement cleanup policies** for long-running applications
-- **Use interactive queries** for real-time state access
-- **Consider state store backup** and recovery strategies
+### 📊 **Operational Excellence**
+- **Track request-reply metrics** including success rates and timing
+- **Monitor correlation ID cleanup** to prevent memory leaks
+- **Implement proper logging** with correlation tracking
+- **Set up alerts** for high failure rates or slow responses
+
+## 🎉 **Phase 2 Complete!**
+
+**Congratulations!** You've completed **Phase 2: Building Resilient Messaging Patterns** with mastery of:
+
+✅ **Consumer Groups & Load Balancing** (Lesson 7)  
+✅ **Retry Strategies & Dead Letter Topics** (Lesson 8)  
+✅ **Manual Acknowledgment & Idempotent Consumers** (Lesson 9)  
+✅ **Message Transformation & Filtering** (Lesson 10)  
+✅ **Fan-out Pattern & Notification Systems** (Lesson 11)  
+✅ **Kafka-Triggered REST & Command APIs** (Lesson 12)  
+✅ **Request-Reply Patterns** (Lesson 13)  
 
 ## 🚀 **What's Next?**
 
-You've mastered the fundamentals of Kafka Streams! Next, dive deeper into advanced stream processing with [Lesson 15: Windowing, Joins & Stateful Operations](../lesson_15/concept.md), where you'll learn complex temporal patterns, multi-stream joins, and sophisticated aggregation strategies.
+Ready for **Phase 3: Kafka Streams, State & Aggregation**? Begin with [Lesson 14: Kafka Streams API Introduction](../lesson_15/concept.md) to learn stream processing, real-time aggregations, and stateful computations that transform how you process data.
 
 ---
 
-*Kafka Streams unlocks the full power of real-time stream processing. With these fundamentals, you can build applications that process millions of events with low latency while maintaining fault tolerance and exactly-once guarantees.*
+*Request-reply patterns complete your toolkit for building sophisticated distributed systems. Combined with the other resilient messaging patterns, you can now architect systems that are both responsive and fault-tolerant, handling any communication requirement with confidence.*

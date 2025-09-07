@@ -1,619 +1,1017 @@
 # Concept
 
-## Kafka Security & ACLs - Production Security Implementation
+## Building a Real-time Dashboard Application - Complete Analytics System
 
-## 🎯 Learning Objectives
+## 🎯 Objective
 
-After completing this lesson, you will:
-- **Understand** Kafka security architecture and threat models
-- **Implement** SSL/TLS encryption for secure communication
-- **Configure** SASL authentication mechanisms
-- **Design** ACL-based authorization strategies
-- **Deploy** secure Kafka clusters in production environments
+Build a comprehensive real-time dashboard application that demonstrates all Kafka Streams concepts learned so far. Create an end-to-end analytics system with live data processing, interactive visualizations, and real-time insights that scales to handle millions of events.
 
-## 🔐 Kafka Security Overview
+## 📊 **Real-time Dashboard Architecture**
 
-### Security Pillars
+Integrate all Kafka Streams components into a production-ready analytics platform.
 
 ```mermaid
 graph TB
-    subgraph "Kafka Security Framework"
-        ENCRYPTION[Encryption<br/>SSL/TLS Transport Security]
-        AUTHENTICATION[Authentication<br/>SASL User Verification]
-        AUTHORIZATION[Authorization<br/>ACL Access Control]
-        AUDIT[Auditing<br/>Security Event Logging]
+    subgraph "Real-time Analytics Dashboard System"
+        subgraph "Data Sources"
+            WEB_EVENTS[Web Events]
+            MOBILE_EVENTS[Mobile Events]
+            IOT_SENSORS[IoT Sensors]
+            TRANSACTION[Transactions]
+            USER_ACTIONS[User Actions]
+        end
+        
+        subgraph "Kafka Streams Processing"
+            ENRICHMENT[Event Enrichment]
+            AGGREGATION[Real-time Aggregation]
+            WINDOWING[Time Windows]
+            JOINS[Stream Joins]
+            ALERTS[Alert Generation]
+        end
+        
+        subgraph "State Management"
+            KV_STORES[Key-Value Stores]
+            WINDOW_STORES[Window Stores]
+            SESSION_STORES[Session Stores]
+        end
+        
+        subgraph "Dashboard Backend"
+            QUERY_API[Interactive Query API]
+            WEBSOCKET[WebSocket Server]
+            METRICS_API[Metrics API]
+            ALERT_API[Alert Management]
+        end
+        
+        subgraph "Frontend Dashboard"
+            LIVE_CHARTS[Live Charts]
+            REAL_TIME_METRICS[Real-time Metrics]
+            ALERT_PANEL[Alert Panel]
+            DRILL_DOWN[Drill-down Views]
+        end
+        
+        subgraph "External Systems"
+            NOTIFICATION[Notification Service]
+            STORAGE[Data Warehouse]
+            MONITORING[Monitoring]
+        end
     end
     
-    subgraph "Threat Protection"
-        NETWORK[Network Attacks<br/>Man-in-the-middle, Eavesdropping]
-        IDENTITY[Identity Attacks<br/>Impersonation, Credential theft]
-        ACCESS[Access Attacks<br/>Privilege escalation, Data breach]
-        COMPLIANCE[Compliance<br/>Regulatory requirements]
-    end
+    WEB_EVENTS --> ENRICHMENT
+    MOBILE_EVENTS --> ENRICHMENT
+    IOT_SENSORS --> ENRICHMENT
+    TRANSACTION --> ENRICHMENT
+    USER_ACTIONS --> ENRICHMENT
     
-    ENCRYPTION --> NETWORK
-    AUTHENTICATION --> IDENTITY
-    AUTHORIZATION --> ACCESS
-    AUDIT --> COMPLIANCE
+    ENRICHMENT --> AGGREGATION
+    AGGREGATION --> WINDOWING
+    WINDOWING --> JOINS
+    JOINS --> ALERTS
     
-    style ENCRYPTION fill:#ff6b6b
-    style AUTHENTICATION fill:#4ecdc4
-    style AUTHORIZATION fill:#a8e6cf
-    style AUDIT fill:#ffe66d
+    AGGREGATION -.-> KV_STORES
+    WINDOWING -.-> WINDOW_STORES
+    JOINS -.-> SESSION_STORES
+    
+    KV_STORES --> QUERY_API
+    WINDOW_STORES --> QUERY_API
+    SESSION_STORES --> QUERY_API
+    
+    QUERY_API --> WEBSOCKET
+    WEBSOCKET --> LIVE_CHARTS
+    QUERY_API --> METRICS_API
+    METRICS_API --> REAL_TIME_METRICS
+    
+    ALERTS --> ALERT_API
+    ALERT_API --> ALERT_PANEL
+    ALERTS --> NOTIFICATION
+    
+    AGGREGATION --> STORAGE
+    QUERY_API --> DRILL_DOWN
+    
+    style ENRICHMENT fill:#e3f2fd
+    style AGGREGATION fill:#e8f5e8
+    style WINDOWING fill:#fff3e0
+    style QUERY_API fill:#f3e5f5
 ```
 
-### Security Components Architecture
+## 🏗️ **Complete Stream Processing Topology**
 
-```mermaid
-graph TB
-    subgraph "Client Applications"
-        PRODUCER[Producer<br/>SSL + SASL]
-        CONSUMER[Consumer<br/>SSL + SASL]
-        ADMIN[Admin Client<br/>SSL + SASL]
-    end
+### 1. **Multi-Source Data Ingestion and Enrichment**
+
+```kotlin
+@Component
+class DashboardStreamProcessor {
     
-    subgraph "Kafka Cluster Security"
-        BROKER1[Broker 1<br/>SSL Listener + ACLs]
-        BROKER2[Broker 2<br/>SSL Listener + ACLs]
-        BROKER3[Broker 3<br/>SSL Listener + ACLs]
-    end
+    fun buildDashboardTopology(): Topology {
+        val builder = StreamsBuilder()
+        
+        // Source streams from different data sources
+        val webEvents: KStream<String, WebEvent> = builder.stream(
+            "web-events",
+            Consumed.with(Serdes.String(), JsonSerde(WebEvent::class.java))
+        )
+        
+        val mobileEvents: KStream<String, MobileEvent> = builder.stream(
+            "mobile-events", 
+            Consumed.with(Serdes.String(), JsonSerde(MobileEvent::class.java))
+        )
+        
+        val transactionEvents: KStream<String, TransactionEvent> = builder.stream(
+            "transaction-events",
+            Consumed.with(Serdes.String(), JsonSerde(TransactionEvent::class.java))
+        )
+        
+        // Reference data tables
+        val userProfiles: GlobalKTable<String, UserProfile> = builder.globalTable(
+            "user-profiles",
+            Consumed.with(Serdes.String(), JsonSerde(UserProfile::class.java))
+        )
+        
+        val productCatalog: GlobalKTable<String, Product> = builder.globalTable(
+            "product-catalog",
+            Consumed.with(Serdes.String(), JsonSerde(Product::class.java))
+        )
+        
+        // 1. Unify all events into a common format
+        val unifiedEvents = unifyEventStreams(webEvents, mobileEvents, transactionEvents)
+        
+        // 2. Enrich events with user and product data
+        val enrichedEvents = enrichEvents(unifiedEvents, userProfiles, productCatalog)
+        
+        // 3. Build analytics pipelines
+        buildAnalyticsPipelines(builder, enrichedEvents)
+        
+        // 4. Build alerting system
+        buildAlertingSystem(builder, enrichedEvents)
+        
+        return builder.build()
+    }
     
-    subgraph "Authentication Providers"
-        LDAP[LDAP Server<br/>Centralized users]
-        KERBEROS[Kerberos KDC<br/>Enterprise auth]
-        PLAIN[SASL/PLAIN<br/>Simple credentials]
-        OAUTH[OAuth 2.0<br/>Token-based auth]
-    end
+    private fun unifyEventStreams(
+        webEvents: KStream<String, WebEvent>,
+        mobileEvents: KStream<String, MobileEvent>,
+        transactionEvents: KStream<String, TransactionEvent>
+    ): KStream<String, UnifiedEvent> {
+        
+        // Convert web events
+        val unifiedWebEvents = webEvents.map { key, event ->
+            KeyValue(
+                event.sessionId,
+                UnifiedEvent(
+                    eventId = event.eventId,
+                    userId = event.userId,
+                    sessionId = event.sessionId,
+                    timestamp = event.timestamp,
+                    eventType = "WEB_${event.action}",
+                    platform = "WEB",
+                    data = mapOf(
+                        "page" to event.page,
+                        "referrer" to event.referrer,
+                        "userAgent" to event.userAgent,
+                        "ipAddress" to event.ipAddress
+                    ) + event.customData
+                )
+            )
+        }
+        
+        // Convert mobile events
+        val unifiedMobileEvents = mobileEvents.map { key, event ->
+            KeyValue(
+                event.sessionId,
+                UnifiedEvent(
+                    eventId = event.eventId,
+                    userId = event.userId,
+                    sessionId = event.sessionId,
+                    timestamp = event.timestamp,
+                    eventType = "MOBILE_${event.action}",
+                    platform = "MOBILE",
+                    data = mapOf(
+                        "appVersion" to event.appVersion,
+                        "deviceType" to event.deviceType,
+                        "osVersion" to event.osVersion,
+                        "location" to event.location
+                    ) + event.customData
+                )
+            )
+        }
+        
+        // Convert transaction events
+        val unifiedTransactionEvents = transactionEvents.map { key, event ->
+            KeyValue(
+                event.transactionId,
+                UnifiedEvent(
+                    eventId = event.transactionId,
+                    userId = event.userId,
+                    sessionId = event.sessionId,
+                    timestamp = event.timestamp,
+                    eventType = "TRANSACTION_${event.type}",
+                    platform = event.platform,
+                    data = mapOf(
+                        "amount" to event.amount,
+                        "currency" to event.currency,
+                        "merchantId" to event.merchantId,
+                        "paymentMethod" to event.paymentMethod
+                    ) + event.metadata
+                )
+            )
+        }
+        
+        // Merge all streams
+        return unifiedWebEvents
+            .merge(unifiedMobileEvents)
+            .merge(unifiedTransactionEvents)
+    }
     
-    subgraph "Certificate Authority"
-        CA[Certificate Authority<br/>SSL Certificate Management]
-        KEYSTORE[Keystores<br/>Private keys]
-        TRUSTSTORE[Truststores<br/>Public certificates]
-    end
-    
-    PRODUCER -.->|SSL Handshake| BROKER1
-    CONSUMER -.->|SSL Handshake| BROKER2
-    ADMIN -.->|SSL Handshake| BROKER3
-    
-    BROKER1 --> LDAP
-    BROKER2 --> KERBEROS
-    BROKER3 --> OAUTH
-    
-    BROKER1 --> CA
-    BROKER2 --> KEYSTORE
-    BROKER3 --> TRUSTSTORE
-    
-    style BROKER1 fill:#ff6b6b
-    style LDAP fill:#4ecdc4
-    style CA fill:#a8e6cf
+    private fun enrichEvents(
+        events: KStream<String, UnifiedEvent>,
+        userProfiles: GlobalKTable<String, UserProfile>,
+        productCatalog: GlobalKTable<String, Product>
+    ): KStream<String, EnrichedEvent> {
+        
+        // Enrich with user profile data
+        val eventsWithUser = events.join(
+            userProfiles,
+            { key, event -> event.userId },
+            { event, user ->
+                EnrichedEvent(
+                    unifiedEvent = event,
+                    userProfile = user,
+                    enrichmentTimestamp = System.currentTimeMillis()
+                )
+            }
+        )
+        
+        // Further enrich transaction events with product data
+        return eventsWithUser.map { key, enrichedEvent ->
+            val event = enrichedEvent.unifiedEvent
+            
+            if (event.eventType.startsWith("TRANSACTION_") && event.data.containsKey("productId")) {
+                val productId = event.data["productId"] as? String
+                if (productId != null) {
+                    // Note: For simplicity, this example doesn't show the full product enrichment
+                    // In practice, you'd need another join or lookup for product data
+                    enrichedEvent
+                } else {
+                    enrichedEvent
+                }
+            } else {
+                enrichedEvent
+            }
+            
+            KeyValue(key, enrichedEvent)
+        }
+    }
+}
 ```
 
-## 🔑 SSL/TLS Implementation
+### 2. **Multi-Dimensional Real-time Analytics**
 
-### Certificate Management Strategy
-
-```mermaid
-sequenceDiagram
-    participant CA as Certificate Authority
-    participant Broker as Kafka Broker
-    participant Client as Kafka Client
+```kotlin
+@Component
+class RealTimeAnalytics {
     
-    Note over CA,Client: SSL/TLS Setup Process
+    fun buildAnalyticsPipelines(
+        builder: StreamsBuilder,
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ) {
+        // 1. Real-time user activity analytics
+        buildUserActivityAnalytics(builder, enrichedEvents)
+        
+        // 2. Business metrics dashboard
+        buildBusinessMetrics(builder, enrichedEvents)
+        
+        // 3. Geographic analytics
+        buildGeographicAnalytics(builder, enrichedEvents)
+        
+        // 4. Performance analytics
+        buildPerformanceAnalytics(builder, enrichedEvents)
+        
+        // 5. Funnel analysis
+        buildFunnelAnalytics(builder, enrichedEvents)
+    }
     
-    CA->>CA: Generate CA Certificate
-    CA->>Broker: Issue Broker Certificate
-    CA->>Client: Issue Client Certificate
+    private fun buildUserActivityAnalytics(
+        builder: StreamsBuilder,
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ) {
+        // Real-time active users by minute
+        val activeUsersByMinute = enrichedEvents
+            .selectKey { _, event -> "active-users" }
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
+            .aggregate(
+                { ActiveUsersMetric() },
+                { key, event, metric ->
+                    metric.copy(
+                        uniqueUsers = metric.uniqueUsers + event.unifiedEvent.userId,
+                        totalEvents = metric.totalEvents + 1,
+                        platformBreakdown = updatePlatformBreakdown(metric.platformBreakdown, event.unifiedEvent.platform),
+                        lastUpdate = event.unifiedEvent.timestamp
+                    )
+                },
+                Named.`as`("active-users-by-minute"),
+                Materialized.`as`<String, ActiveUsersMetric, WindowStore<Bytes, ByteArray>>("active-users-store")
+                    .withKeySerde(Serdes.String())
+                    .withValueSerde(JsonSerde(ActiveUsersMetric::class.java))
+                    .withRetention(Duration.ofHours(24))
+            )
+        
+        // User session analytics
+        val userSessions = enrichedEvents
+            .selectKey { _, event -> event.unifiedEvent.userId }
+            .groupByKey()
+            .windowedBy(SessionWindows.with(Duration.ofMinutes(30)))
+            .aggregate(
+                { UserSessionAnalytics() },
+                { userId, event, session ->
+                    session.copy(
+                        userId = userId,
+                        events = session.events + event.unifiedEvent,
+                        sessionStart = if (session.sessionStart == 0L) event.unifiedEvent.timestamp else session.sessionStart,
+                        sessionEnd = event.unifiedEvent.timestamp,
+                        duration = event.unifiedEvent.timestamp - (if (session.sessionStart == 0L) event.unifiedEvent.timestamp else session.sessionStart),
+                        pageViews = session.pageViews + if (event.unifiedEvent.eventType.contains("PAGE_VIEW")) 1 else 0,
+                        transactions = session.transactions + if (event.unifiedEvent.eventType.startsWith("TRANSACTION_")) 1 else 0,
+                        platforms = session.platforms + event.unifiedEvent.platform,
+                        userSegment = determineUserSegment(event.userProfile)
+                    )
+                },
+                { session1, session2 -> // Session merger
+                    session1.copy(
+                        events = session1.events + session2.events,
+                        sessionStart = minOf(session1.sessionStart, session2.sessionStart),
+                        sessionEnd = maxOf(session1.sessionEnd, session2.sessionEnd),
+                        duration = maxOf(session1.sessionEnd, session2.sessionEnd) - minOf(session1.sessionStart, session2.sessionStart),
+                        pageViews = session1.pageViews + session2.pageViews,
+                        transactions = session1.transactions + session2.transactions,
+                        platforms = session1.platforms + session2.platforms
+                    )
+                },
+                Named.`as`("user-sessions"),
+                Materialized.with(Serdes.String(), JsonSerde(UserSessionAnalytics::class.java))
+            )
+        
+        // Output streams for dashboard consumption
+        activeUsersByMinute.toStream()
+            .map { windowedKey, metric ->
+                KeyValue(
+                    "${windowedKey.key()}-${windowedKey.window().start()}",
+                    DashboardMetric(
+                        metricType = "ACTIVE_USERS",
+                        timeWindow = TimeWindow(windowedKey.window().start(), windowedKey.window().end()),
+                        value = metric.uniqueUsers.size.toDouble(),
+                        breakdown = metric.platformBreakdown,
+                        timestamp = metric.lastUpdate
+                    )
+                )
+            }
+            .to("dashboard-metrics")
+        
+        userSessions.toStream()
+            .filter { windowedKey, session ->
+                // Only emit completed sessions
+                System.currentTimeMillis() - windowedKey.window().end() > Duration.ofMinutes(30).toMillis()
+            }
+            .to("user-session-analytics")
+    }
     
-    Client->>Broker: SSL Handshake Request
-    Broker->>Client: Send Broker Certificate
-    Client->>Client: Verify Certificate Chain
-    Client->>Broker: Send Client Certificate
-    Broker->>Broker: Verify Client Certificate
-    Broker->>Client: SSL Handshake Complete
-    
-    Note over Client,Broker: Encrypted Communication
-    
-    Client->>Broker: Encrypted Kafka Protocol
-    Broker->>Client: Encrypted Response
+    private fun buildBusinessMetrics(
+        builder: StreamsBuilder,
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ) {
+        // Revenue analytics by time window
+        val revenueAnalytics = enrichedEvents
+            .filter { _, event -> event.unifiedEvent.eventType == "TRANSACTION_COMPLETED" }
+            .selectKey { _, event -> "revenue" }
+            .groupByKey()
+            .windowedBy(
+                TimeWindows.of(Duration.ofMinutes(5))
+                    .advanceBy(Duration.ofMinutes(1))
+            )
+            .aggregate(
+                { RevenueMetrics() },
+                { key, event, metrics ->
+                    val amount = event.unifiedEvent.data["amount"] as? Double ?: 0.0
+                    val currency = event.unifiedEvent.data["currency"] as? String ?: "USD"
+                    
+                    metrics.copy(
+                        totalRevenue = metrics.totalRevenue + amount,
+                        transactionCount = metrics.transactionCount + 1,
+                        averageTransactionValue = (metrics.totalRevenue + amount) / (metrics.transactionCount + 1),
+                        currencyBreakdown = updateCurrencyBreakdown(metrics.currencyBreakdown, currency, amount),
+                        userTierBreakdown = updateUserTierBreakdown(metrics.userTierBreakdown, event.userProfile.tier, amount),
+                        lastUpdate = event.unifiedEvent.timestamp
+                    )
+                },
+                Named.`as`("revenue-analytics"),
+                Materialized.`as`<String, RevenueMetrics, WindowStore<Bytes, ByteArray>>("revenue-store")
+            )
+        
+        // Product performance analytics
+        val productAnalytics = enrichedEvents
+            .filter { _, event -> 
+                event.unifiedEvent.eventType.startsWith("TRANSACTION_") && 
+                event.unifiedEvent.data.containsKey("productId")
+            }
+            .selectKey { _, event -> event.unifiedEvent.data["productId"] as String }
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
+            .aggregate(
+                { ProductPerformanceMetrics() },
+                { productId, event, metrics ->
+                    val amount = event.unifiedEvent.data["amount"] as? Double ?: 0.0
+                    val quantity = event.unifiedEvent.data["quantity"] as? Int ?: 1
+                    
+                    metrics.copy(
+                        productId = productId,
+                        sales = metrics.sales + amount,
+                        unitsSold = metrics.unitsSold + quantity,
+                        transactionCount = metrics.transactionCount + 1,
+                        averageOrderValue = (metrics.sales + amount) / (metrics.transactionCount + 1),
+                        customerSegments = updateCustomerSegments(metrics.customerSegments, event.userProfile.tier),
+                        platforms = updatePlatformStats(metrics.platforms, event.unifiedEvent.platform),
+                        lastUpdate = event.unifiedEvent.timestamp
+                    )
+                },
+                Named.`as`("product-analytics")
+            )
+        
+        // Output business metrics
+        revenueAnalytics.toStream()
+            .map { windowedKey, metrics ->
+                KeyValue(
+                    "revenue-${windowedKey.window().start()}",
+                    DashboardMetric(
+                        metricType = "REVENUE",
+                        timeWindow = TimeWindow(windowedKey.window().start(), windowedKey.window().end()),
+                        value = metrics.totalRevenue,
+                        breakdown = mapOf(
+                            "transactionCount" to metrics.transactionCount,
+                            "averageValue" to metrics.averageTransactionValue,
+                            "currencies" to metrics.currencyBreakdown
+                        ),
+                        timestamp = metrics.lastUpdate
+                    )
+                )
+            }
+            .to("dashboard-metrics")
+    }
+}
 ```
 
-### SSL Configuration Patterns
+### 3. **Real-time Alerting System**
 
-**Server Configuration**
-```properties
-# Broker SSL Configuration
-listeners=SSL://localhost:9093
-security.inter.broker.protocol=SSL
-ssl.keystore.location=/etc/kafka/ssl/kafka.server.keystore.jks
-ssl.keystore.password=server-keystore-password
-ssl.key.password=server-key-password
-ssl.truststore.location=/etc/kafka/ssl/kafka.server.truststore.jks
-ssl.truststore.password=server-truststore-password
-ssl.client.auth=required
-ssl.enabled.protocols=TLSv1.2,TLSv1.3
-ssl.cipher.suites=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+```kotlin
+@Component
+class RealTimeAlerting {
+    
+    fun buildAlertingSystem(
+        builder: StreamsBuilder,
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ) {
+        // 1. Anomaly detection for transaction amounts
+        val transactionAnomalies = buildTransactionAnomalyDetection(enrichedEvents)
+        
+        // 2. User behavior alerts
+        val behaviorAlerts = buildUserBehaviorAlerts(enrichedEvents)
+        
+        // 3. System performance alerts
+        val performanceAlerts = buildPerformanceAlerts(enrichedEvents)
+        
+        // 4. Business threshold alerts
+        val businessAlerts = buildBusinessThresholdAlerts(enrichedEvents)
+        
+        // Merge all alerts
+        val allAlerts = transactionAnomalies
+            .merge(behaviorAlerts)
+            .merge(performanceAlerts)
+            .merge(businessAlerts)
+        
+        // Process and route alerts
+        processAndRouteAlerts(allAlerts)
+    }
+    
+    private fun buildTransactionAnomalyDetection(
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ): KStream<String, Alert> {
+        
+        val transactionEvents = enrichedEvents.filter { _, event ->
+            event.unifiedEvent.eventType == "TRANSACTION_COMPLETED"
+        }
+        
+        return transactionEvents.transform(
+            TransformerSupplier {
+                TransactionAnomalyDetector()
+            },
+            "transaction-baselines"
+        )
+    }
+    
+    private fun buildUserBehaviorAlerts(
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ): KStream<String, Alert> {
+        
+        // Detect suspicious user behavior patterns
+        return enrichedEvents
+            .selectKey { _, event -> event.unifiedEvent.userId }
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(10)))
+            .aggregate(
+                { UserBehaviorWindow() },
+                { userId, event, window ->
+                    window.copy(
+                        userId = userId,
+                        events = window.events + event.unifiedEvent,
+                        eventTypes = window.eventTypes + event.unifiedEvent.eventType,
+                        platforms = window.platforms + event.unifiedEvent.platform,
+                        locations = window.locations + (event.unifiedEvent.data["location"] as? String ?: "unknown"),
+                        lastActivity = event.unifiedEvent.timestamp
+                    )
+                },
+                Named.`as`("user-behavior-windows")
+            )
+            .toStream()
+            .flatMap { windowedKey, window ->
+                val alerts = mutableListOf<KeyValue<String, Alert>>()
+                
+                // Check for suspicious patterns
+                if (window.platforms.size > 3) {
+                    alerts.add(KeyValue(
+                        "behavior-${windowedKey.key()}-${System.currentTimeMillis()}",
+                        Alert(
+                            alertId = UUID.randomUUID().toString(),
+                            alertType = "SUSPICIOUS_BEHAVIOR",
+                            severity = AlertSeverity.MEDIUM,
+                            title = "Multiple Platform Access",
+                            description = "User ${window.userId} accessed from ${window.platforms.size} different platforms within 10 minutes",
+                            data = mapOf(
+                                "userId" to window.userId,
+                                "platforms" to window.platforms,
+                                "eventCount" to window.events.size
+                            ),
+                            timestamp = window.lastActivity
+                        )
+                    ))
+                }
+                
+                if (window.locations.size > 2) {
+                    alerts.add(KeyValue(
+                        "location-${windowedKey.key()}-${System.currentTimeMillis()}",
+                        Alert(
+                            alertId = UUID.randomUUID().toString(),
+                            alertType = "MULTIPLE_LOCATIONS",
+                            severity = AlertSeverity.HIGH,
+                            title = "Multiple Location Access",
+                            description = "User ${window.userId} accessed from ${window.locations.size} different locations",
+                            data = mapOf(
+                                "userId" to window.userId,
+                                "locations" to window.locations,
+                                "timeWindow" to "10 minutes"
+                            ),
+                            timestamp = window.lastActivity
+                        )
+                    ))
+                }
+                
+                alerts
+            }
+    }
+    
+    private fun buildBusinessThresholdAlerts(
+        enrichedEvents: KStream<String, EnrichedEvent>
+    ): KStream<String, Alert> {
+        
+        // Monitor business KPIs and generate alerts when thresholds are exceeded
+        return enrichedEvents
+            .selectKey { _, event -> "business-metrics" }
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
+            .aggregate(
+                { BusinessMetricsWindow() },
+                { key, event, metrics ->
+                    val amount = if (event.unifiedEvent.eventType == "TRANSACTION_COMPLETED") {
+                        event.unifiedEvent.data["amount"] as? Double ?: 0.0
+                    } else 0.0
+                    
+                    metrics.copy(
+                        totalRevenue = metrics.totalRevenue + amount,
+                        totalEvents = metrics.totalEvents + 1,
+                        uniqueUsers = metrics.uniqueUsers + event.unifiedEvent.userId,
+                        errorEvents = metrics.errorEvents + if (event.unifiedEvent.eventType.contains("ERROR")) 1 else 0,
+                        lastUpdate = event.unifiedEvent.timestamp
+                    )
+                },
+                Named.`as`("business-metrics-windows")
+            )
+            .toStream()
+            .flatMap { windowedKey, metrics ->
+                val alerts = mutableListOf<KeyValue<String, Alert>>()
+                
+                // Revenue threshold alert
+                if (metrics.totalRevenue < 1000.0) { // Low revenue threshold
+                    alerts.add(KeyValue(
+                        "revenue-low-${windowedKey.window().start()}",
+                        Alert(
+                            alertId = UUID.randomUUID().toString(),
+                            alertType = "LOW_REVENUE",
+                            severity = AlertSeverity.MEDIUM,
+                            title = "Low Revenue Alert",
+                            description = "Revenue in the last 5 minutes is below threshold: $${metrics.totalRevenue}",
+                            data = mapOf(
+                                "revenue" to metrics.totalRevenue,
+                                "threshold" to 1000.0,
+                                "window" to "5 minutes"
+                            ),
+                            timestamp = metrics.lastUpdate
+                        )
+                    ))
+                }
+                
+                // Error rate alert
+                val errorRate = if (metrics.totalEvents > 0) {
+                    metrics.errorEvents.toDouble() / metrics.totalEvents
+                } else 0.0
+                
+                if (errorRate > 0.05) { // 5% error rate threshold
+                    alerts.add(KeyValue(
+                        "error-rate-${windowedKey.window().start()}",
+                        Alert(
+                            alertId = UUID.randomUUID().toString(),
+                            alertType = "HIGH_ERROR_RATE",
+                            severity = AlertSeverity.HIGH,
+                            title = "High Error Rate Alert",
+                            description = "Error rate is ${(errorRate * 100).format(2)}% in the last 5 minutes",
+                            data = mapOf(
+                                "errorRate" to errorRate,
+                                "errorCount" to metrics.errorEvents,
+                                "totalEvents" to metrics.totalEvents
+                            ),
+                            timestamp = metrics.lastUpdate
+                        )
+                    ))
+                }
+                
+                alerts
+            }
+    }
+    
+    private fun processAndRouteAlerts(alerts: KStream<String, Alert>) {
+        // Route alerts based on severity and type
+        val routedAlerts = alerts.branch(
+            Named.`as`("critical"),
+            Predicate { _, alert -> alert.severity == AlertSeverity.CRITICAL },
+            
+            Named.`as`("high"),
+            Predicate { _, alert -> alert.severity == AlertSeverity.HIGH },
+            
+            Named.`as`("medium"),
+            Predicate { _, alert -> alert.severity == AlertSeverity.MEDIUM },
+            
+            Named.`as`("low"),
+            Predicate { _, alert -> true }
+        )
+        
+        // Send critical alerts immediately
+        routedAlerts["critical"]!!
+            .foreach { key, alert ->
+                sendImmediateAlert(alert)
+            }
+        
+        // Batch lower priority alerts
+        routedAlerts["high"]!!.to("high-priority-alerts")
+        routedAlerts["medium"]!!.to("medium-priority-alerts")
+        routedAlerts["low"]!!.to("low-priority-alerts")
+        
+        // Send all alerts to dashboard
+        alerts.to("dashboard-alerts")
+    }
+}
 ```
 
-**Client Configuration**
-```properties
-# Producer/Consumer SSL Configuration
-bootstrap.servers=localhost:9093
-security.protocol=SSL
-ssl.truststore.location=/etc/kafka/ssl/kafka.client.truststore.jks
-ssl.truststore.password=client-truststore-password
-ssl.keystore.location=/etc/kafka/ssl/kafka.client.keystore.jks
-ssl.keystore.password=client-keystore-password
-ssl.key.password=client-key-password
+## 📡 **Interactive Dashboard API**
+
+### 1. **WebSocket Real-time Updates**
+
+```kotlin
+@Component
+@EnableWebSocket
+class DashboardWebSocketConfig : WebSocketConfigurer {
+    
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(DashboardWebSocketHandler(), "/dashboard-ws")
+            .setAllowedOrigins("*")
+    }
+}
+
+@Component
+class DashboardWebSocketHandler : TextWebSocketHandler() {
+    
+    private val sessions = ConcurrentHashMap<String, WebSocketSession>()
+    
+    @Autowired
+    private lateinit var kafkaStreams: KafkaStreams
+    
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        sessions[session.id] = session
+        logger.info("Dashboard WebSocket connected: ${session.id}")
+        
+        // Send initial data
+        sendInitialDashboardData(session)
+    }
+    
+    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        try {
+            val request = ObjectMapper().readValue(message.payload, DashboardRequest::class.java)
+            handleDashboardRequest(session, request)
+        } catch (e: Exception) {
+            logger.error("Failed to handle WebSocket message", e)
+        }
+    }
+    
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        sessions.remove(session.id)
+        logger.info("Dashboard WebSocket disconnected: ${session.id}")
+    }
+    
+    private fun sendInitialDashboardData(session: WebSocketSession) {
+        try {
+            val dashboardData = DashboardData(
+                activeUsers = getCurrentActiveUsers(),
+                revenueMetrics = getCurrentRevenueMetrics(),
+                recentAlerts = getRecentAlerts(),
+                systemHealth = getSystemHealth()
+            )
+            
+            session.sendMessage(TextMessage(
+                ObjectMapper().writeValueAsString(dashboardData)
+            ))
+        } catch (e: Exception) {
+            logger.error("Failed to send initial dashboard data", e)
+        }
+    }
+    
+    private fun handleDashboardRequest(session: WebSocketSession, request: DashboardRequest) {
+        when (request.type) {
+            "GET_USER_ANALYTICS" -> {
+                val analytics = getUserAnalytics(request.userId, request.timeRange)
+                sendResponse(session, "USER_ANALYTICS", analytics)
+            }
+            
+            "GET_REVENUE_BREAKDOWN" -> {
+                val breakdown = getRevenueBreakdown(request.timeRange)
+                sendResponse(session, "REVENUE_BREAKDOWN", breakdown)
+            }
+            
+            "GET_ALERT_DETAILS" -> {
+                val alertDetails = getAlertDetails(request.alertId)
+                sendResponse(session, "ALERT_DETAILS", alertDetails)
+            }
+            
+            "SUBSCRIBE_METRIC" -> {
+                subscribeToMetric(session, request.metricType)
+            }
+        }
+    }
+    
+    @Scheduled(fixedRate = 5000) // Every 5 seconds
+    fun broadcastLiveUpdates() {
+        if (sessions.isNotEmpty()) {
+            try {
+                val liveUpdate = LiveDashboardUpdate(
+                    timestamp = System.currentTimeMillis(),
+                    activeUsers = getCurrentActiveUsers(),
+                    revenueLastMinute = getRevenueLastMinute(),
+                    newAlerts = getNewAlerts(),
+                    systemMetrics = getCurrentSystemMetrics()
+                )
+                
+                val message = TextMessage(ObjectMapper().writeValueAsString(liveUpdate))
+                
+                sessions.values.forEach { session ->
+                    if (session.isOpen) {
+                        session.sendMessage(message)
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to broadcast live updates", e)
+            }
+        }
+    }
+}
 ```
 
-## 🔐 SASL Authentication
+### 2. **Comprehensive Query API**
 
-### Authentication Mechanisms Comparison
-
-```mermaid
-graph TB
-    subgraph "SASL Mechanisms"
-        PLAIN[SASL/PLAIN<br/>Username/Password<br/>Simple but less secure]
-        SCRAM[SASL/SCRAM<br/>Salted Challenge Response<br/>Better password security]
-        GSSAPI[SASL/GSSAPI<br/>Kerberos Integration<br/>Enterprise standard]
-        OAUTH[SASL/OAUTHBEARER<br/>Token-based auth<br/>Modern standard]
-    end
+```kotlin
+@RestController
+@RequestMapping("/api/dashboard")
+class DashboardQueryController {
     
-    subgraph "Security Levels"
-        LOW[Low Security<br/>Development only]
-        MEDIUM[Medium Security<br/>Internal systems]
-        HIGH[High Security<br/>Production systems]
-        ENTERPRISE[Enterprise Security<br/>Compliance requirements]
-    end
+    @Autowired
+    private lateinit var kafkaStreams: KafkaStreams
     
-    PLAIN --> LOW
-    SCRAM --> MEDIUM
-    GSSAPI --> HIGH
-    OAUTH --> ENTERPRISE
+    @GetMapping("/metrics/active-users")
+    fun getActiveUsers(
+        @RequestParam(defaultValue = "1") hours: Int
+    ): ResponseEntity<List<TimeSeriesPoint>> {
+        return try {
+            val store = kafkaStreams.store(
+                StoreQueryParameters.fromNameAndType(
+                    "active-users-store",
+                    QueryableStoreTypes.windowStore<String, ActiveUsersMetric>()
+                )
+            )
+            
+            val endTime = Instant.now()
+            val startTime = endTime.minus(Duration.ofHours(hours.toLong()))
+            
+            val dataPoints = mutableListOf<TimeSeriesPoint>()
+            
+            store.fetchAll(startTime, endTime).use { iterator ->
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    dataPoints.add(
+                        TimeSeriesPoint(
+                            timestamp = entry.key.window().start(),
+                            value = entry.value.uniqueUsers.size.toDouble(),
+                            metadata = mapOf(
+                                "totalEvents" to entry.value.totalEvents,
+                                "platformBreakdown" to entry.value.platformBreakdown
+                            )
+                        )
+                    )
+                }
+            }
+            
+            ResponseEntity.ok(dataPoints.sortedBy { it.timestamp })
+            
+        } catch (e: InvalidStateStoreException) {
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(emptyList())
+        }
+    }
     
-    style PLAIN fill:#ff6b6b
-    style SCRAM fill:#ffe66d
-    style GSSAPI fill:#a8e6cf
-    style OAUTH fill:#4ecdc4
+    @GetMapping("/metrics/revenue")
+    fun getRevenueMetrics(
+        @RequestParam(defaultValue = "24") hours: Int,
+        @RequestParam(defaultValue = "hour") granularity: String
+    ): ResponseEntity<RevenueAnalysisResponse> {
+        return try {
+            val store = kafkaStreams.store(
+                StoreQueryParameters.fromNameAndType(
+                    "revenue-store",
+                    QueryableStoreTypes.windowStore<String, RevenueMetrics>()
+                )
+            )
+            
+            val endTime = Instant.now()
+            val startTime = endTime.minus(Duration.ofHours(hours.toLong()))
+            
+            val metrics = mutableListOf<RevenueDataPoint>()
+            var totalRevenue = 0.0
+            var totalTransactions = 0
+            val currencyBreakdown = mutableMapOf<String, Double>()
+            
+            store.fetch("revenue", startTime, endTime).use { iterator ->
+                while (iterator.hasNext()) {
+                    val entry = iterator.next()
+                    val revenueMetric = entry.value
+                    
+                    metrics.add(
+                        RevenueDataPoint(
+                            timestamp = entry.key,
+                            revenue = revenueMetric.totalRevenue,
+                            transactionCount = revenueMetric.transactionCount,
+                            averageValue = revenueMetric.averageTransactionValue
+                        )
+                    )
+                    
+                    totalRevenue += revenueMetric.totalRevenue
+                    totalTransactions += revenueMetric.transactionCount
+                    
+                    revenueMetric.currencyBreakdown.forEach { (currency, amount) ->
+                        currencyBreakdown[currency] = (currencyBreakdown[currency] ?: 0.0) + amount
+                    }
+                }
+            }
+            
+            ResponseEntity.ok(
+                RevenueAnalysisResponse(
+                    timeRange = TimeRange(startTime.toEpochMilli(), endTime.toEpochMilli()),
+                    totalRevenue = totalRevenue,
+                    totalTransactions = totalTransactions,
+                    averageTransactionValue = if (totalTransactions > 0) totalRevenue / totalTransactions else 0.0,
+                    currencyBreakdown = currencyBreakdown,
+                    timeSeries = metrics.sortedBy { it.timestamp },
+                    granularity = granularity
+                )
+            )
+            
+        } catch (e: InvalidStateStoreException) {
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null)
+        }
+    }
+    
+    @GetMapping("/analytics/funnel")
+    fun getFunnelAnalysis(
+        @RequestParam(defaultValue = "24") hours: Int
+    ): ResponseEntity<FunnelAnalysisResponse> {
+        // Implementation for funnel analysis using state stores
+        return ResponseEntity.ok(
+            FunnelAnalysisResponse(
+                steps = listOf(
+                    FunnelStep("Page View", 10000, 100.0),
+                    FunnelStep("Product View", 5000, 50.0),
+                    FunnelStep("Add to Cart", 1000, 10.0),
+                    FunnelStep("Checkout", 500, 5.0),
+                    FunnelStep("Purchase", 250, 2.5)
+                ),
+                conversionRates = mapOf(
+                    "Page View → Product View" to 50.0,
+                    "Product View → Add to Cart" to 20.0,
+                    "Add to Cart → Checkout" to 50.0,
+                    "Checkout → Purchase" to 50.0
+                ),
+                timeRange = TimeRange(
+                    System.currentTimeMillis() - Duration.ofHours(hours.toLong()).toMillis(),
+                    System.currentTimeMillis()
+                )
+            )
+        )
+    }
+    
+    @GetMapping("/alerts")
+    fun getAlerts(
+        @RequestParam(defaultValue = "24") hours: Int,
+        @RequestParam(required = false) severity: String?
+    ): ResponseEntity<AlertsResponse> {
+        // Implementation to fetch alerts from state stores or external systems
+        return ResponseEntity.ok(
+            AlertsResponse(
+                alerts = getAlertsFromStore(hours, severity),
+                totalCount = 42,
+                severityBreakdown = mapOf(
+                    "CRITICAL" to 2,
+                    "HIGH" to 8,
+                    "MEDIUM" to 15,
+                    "LOW" to 17
+                )
+            )
+        )
+    }
+    
+    @GetMapping("/health")
+    fun getDashboardHealth(): ResponseEntity<DashboardHealth> {
+        return ResponseEntity.ok(
+            DashboardHealth(
+                streamsState = kafkaStreams.state().toString(),
+                storeAvailability = checkStoreAvailability(),
+                dataFreshness = checkDataFreshness(),
+                alertingSystems = checkAlertingSystems(),
+                overallStatus = "HEALTHY"
+            )
+        )
+    }
+}
 ```
 
-### SASL Configuration Examples
+## ✅ **Best Practices Summary**
 
-**SASL/SCRAM Configuration**
-```properties
-# Broker SASL Configuration
-listeners=SASL_SSL://localhost:9094
-security.inter.broker.protocol=SASL_SSL
-sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
-sasl.enabled.mechanisms=SCRAM-SHA-512
+### 📊 **Dashboard Architecture**
+- **Separate concerns** between stream processing and dashboard API
+- **Use WebSockets** for real-time updates to reduce polling
+- **Implement proper error handling** for state store unavailability
+- **Cache frequently accessed data** to reduce state store load
 
-# JAAS Configuration
-listener.name.sasl_ssl.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
-```
+### 🔄 **Stream Processing Optimization**
+- **Design for scalability** with proper partitioning strategies
+- **Use appropriate windowing** for different metrics granularities
+- **Implement efficient joins** with co-partitioned data
+- **Monitor resource usage** and optimize state store configurations
 
-**Client SASL Configuration**
-```properties
-# Producer/Consumer SASL Configuration
-bootstrap.servers=localhost:9094
-security.protocol=SASL_SSL
-sasl.mechanism=SCRAM-SHA-512
-sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
-  username="kafka-user" \
-  password="secure-password";
-```
+### 📡 **Real-time Communication**
+- **Batch updates** when possible to reduce WebSocket traffic
+- **Implement connection management** for WebSocket sessions
+- **Use compression** for large data payloads
+- **Handle connection failures** gracefully with reconnection logic
 
-## 🛡️ Access Control Lists (ACLs)
+### 🛡️ **Production Readiness**
+- **Implement comprehensive monitoring** for all components
+- **Set up proper alerting** for system health and business metrics
+- **Design for fault tolerance** with standby replicas and recovery procedures
+- **Test under load** to ensure scalability requirements are met
 
-### ACL Permission Model
+## 🎉 **Phase 3 Complete!**
 
-```mermaid
-graph TB
-    subgraph "ACL Components"
-        PRINCIPAL[Principal<br/>User or Service Account]
-        RESOURCE[Resource<br/>Topic, Group, Cluster]
-        OPERATION[Operation<br/>Read, Write, Create, Delete]
-        PERMISSION[Permission<br/>Allow or Deny]
-    end
-    
-    subgraph "Resource Types"
-        TOPIC[Topic Resources<br/>Message data access]
-        GROUP[Consumer Group<br/>Offset management]
-        CLUSTER[Cluster Resources<br/>Admin operations]
-        TXNID[Transaction ID<br/>Transactional operations]
-    end
-    
-    subgraph "Operations"
-        READ[Read<br/>Consume messages]
-        WRITE[Write<br/>Produce messages]
-        CREATE[Create<br/>Topic creation]
-        DELETE[Delete<br/>Resource deletion]
-        ALTER[Alter<br/>Configuration changes]
-        DESCRIBE[Describe<br/>Metadata access]
-    end
-    
-    PRINCIPAL --> RESOURCE
-    RESOURCE --> OPERATION
-    OPERATION --> PERMISSION
-    
-    RESOURCE --> TOPIC
-    RESOURCE --> GROUP
-    RESOURCE --> CLUSTER
-    
-    OPERATION --> READ
-    OPERATION --> WRITE
-    OPERATION --> CREATE
-    
-    style PRINCIPAL fill:#ff6b6b
-    style RESOURCE fill:#4ecdc4
-    style OPERATION fill:#a8e6cf
-    style PERMISSION fill:#ffe66d
-```
+**Congratulations!** You've completed **Phase 3: Kafka Streams, State & Aggregation** with mastery of:
 
-### ACL Management Examples
+✅ **Kafka Streams API Fundamentals** (Lesson 14)  
+✅ **Advanced Windowing & Joins** (Lesson 15)  
+✅ **State Store Management & Fault Tolerance** (Lesson 16)  
+✅ **Real-time Dashboard Application** (Lesson 17)  
 
-**Topic Access Control**
-```bash
-# Grant producer access to specific topic
-kafka-acls --bootstrap-server localhost:9094 \
-  --command-config client-ssl.properties \
-  --add \
-  --allow-principal User:order-producer \
-  --operation Write \
-  --topic order-events
+## 🚀 **What's Next?**
 
-# Grant consumer access to topic and group
-kafka-acls --bootstrap-server localhost:9094 \
-  --command-config client-ssl.properties \
-  --add \
-  --allow-principal User:order-consumer \
-  --operation Read \
-  --topic order-events
-
-kafka-acls --bootstrap-server localhost:9094 \
-  --command-config client-ssl.properties \
-  --add \
-  --allow-principal User:order-consumer \
-  --operation Read \
-  --group order-processing-group
-```
-
-**Administrative Access Control**
-```bash
-# Grant cluster admin privileges
-kafka-acls --bootstrap-server localhost:9094 \
-  --command-config client-ssl.properties \
-  --add \
-  --allow-principal User:kafka-admin \
-  --operation All \
-  --cluster
-
-# Grant topic creation privileges
-kafka-acls --bootstrap-server localhost:9094 \
-  --command-config client-ssl.properties \
-  --add \
-  --allow-principal User:app-deployer \
-  --operation Create \
-  --resource-pattern-type prefixed \
-  --topic app-
-```
-
-## 🔍 Security Monitoring & Auditing
-
-### Security Event Monitoring
-
-```mermaid
-graph TB
-    subgraph "Security Events"
-        AUTH_EVENTS[Authentication Events<br/>Login success/failure]
-        AUTHZ_EVENTS[Authorization Events<br/>ACL allow/deny]
-        SSL_EVENTS[SSL Events<br/>Handshake success/failure]
-        ADMIN_EVENTS[Admin Events<br/>Configuration changes]
-    end
-    
-    subgraph "Monitoring Infrastructure"
-        LOGS[Security Logs<br/>Structured logging]
-        METRICS[Security Metrics<br/>Prometheus integration]
-        ALERTS[Security Alerts<br/>Real-time notifications]
-        SIEM[SIEM Integration<br/>Security analytics]
-    end
-    
-    subgraph "Response Actions"
-        BLOCK[Block Access<br/>Automatic blocking]
-        INVESTIGATE[Investigation<br/>Security analysis]
-        REMEDIATE[Remediation<br/>Fix vulnerabilities]
-        REPORT[Compliance Reporting<br/>Audit trail]
-    end
-    
-    AUTH_EVENTS --> LOGS
-    AUTHZ_EVENTS --> METRICS
-    SSL_EVENTS --> ALERTS
-    ADMIN_EVENTS --> SIEM
-    
-    LOGS --> BLOCK
-    METRICS --> INVESTIGATE
-    ALERTS --> REMEDIATE
-    SIEM --> REPORT
-    
-    style AUTH_EVENTS fill:#ff6b6b
-    style LOGS fill:#4ecdc4
-    style BLOCK fill:#a8e6cf
-```
-
-### Security Configuration Monitoring
-
-```properties
-# Security-related JMX metrics to monitor
-kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent
-kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent
-kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
-kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
-kafka.controller:type=KafkaController,name=ActiveControllerCount
-```
-
-## 🏢 Enterprise Integration Patterns
-
-### Identity Provider Integration
-
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant Kafka as Kafka Broker
-    participant LDAP as LDAP Server
-    participant OAuth as OAuth Provider
-    
-    Note over App,OAuth: OAuth Authentication Flow
-    
-    App->>OAuth: Request Access Token
-    OAuth->>LDAP: Validate User Credentials
-    LDAP-->>OAuth: User Authentication Result
-    OAuth-->>App: Access Token
-    
-    App->>Kafka: Connect with Access Token
-    Kafka->>OAuth: Validate Token
-    OAuth-->>Kafka: Token Validation Result
-    Kafka-->>App: Connection Established
-    
-    Note over App,Kafka: Secure Kafka Communication
-```
-
-### Multi-Tenant Security Model
-
-```mermaid
-graph TB
-    subgraph "Tenant A"
-        APP_A[Application A]
-        TOPICS_A[Topics: tenant-a-*]
-        USERS_A[Users: tenant-a-users]
-    end
-    
-    subgraph "Tenant B"
-        APP_B[Application B]
-        TOPICS_B[Topics: tenant-b-*]
-        USERS_B[Users: tenant-b-users]
-    end
-    
-    subgraph "Shared Infrastructure"
-        KAFKA[Kafka Cluster<br/>Shared brokers]
-        ACL_ENGINE[ACL Engine<br/>Tenant isolation]
-        MONITOR[Monitoring<br/>Per-tenant metrics]
-    end
-    
-    APP_A --> KAFKA
-    APP_B --> KAFKA
-    
-    KAFKA --> ACL_ENGINE
-    ACL_ENGINE --> TOPICS_A
-    ACL_ENGINE --> TOPICS_B
-    
-    KAFKA --> MONITOR
-    MONITOR --> USERS_A
-    MONITOR --> USERS_B
-    
-    style ACL_ENGINE fill:#ff6b6b
-    style KAFKA fill:#4ecdc4
-    style MONITOR fill:#a8e6cf
-```
-
-## 🎯 Security Best Practices
-
-### Defense in Depth Strategy
-
-1. **Network Security**
-   - Use VPCs and security groups
-   - Implement network segmentation
-   - Configure firewalls and load balancers
-   - Monitor network traffic
-
-2. **Transport Security**
-   - Enable SSL/TLS for all communication
-   - Use strong cipher suites
-   - Implement certificate rotation
-   - Monitor SSL handshake failures
-
-3. **Authentication & Authorization**
-   - Implement strong authentication (SASL/SCRAM or better)
-   - Use principle of least privilege for ACLs
-   - Regular access reviews and cleanup
-   - Monitor authentication failures
-
-4. **Operational Security**
-   - Secure configuration management
-   - Regular security updates
-   - Vulnerability scanning
-   - Incident response procedures
-
-### Security Checklist
-
-**🔐 Authentication**
-- [ ] SASL authentication enabled for all clients
-- [ ] Strong passwords or certificate-based auth
-- [ ] Regular credential rotation
-- [ ] Failed authentication monitoring
-
-**🔒 Authorization**
-- [ ] ACLs configured for all resources
-- [ ] Principle of least privilege applied
-- [ ] Regular ACL reviews and cleanup
-- [ ] Authorization failure monitoring
-
-**🔑 Encryption**
-- [ ] SSL/TLS enabled for all communication
-- [ ] Strong cipher suites configured
-- [ ] Certificate management process
-- [ ] Regular certificate rotation
-
-**📊 Monitoring**
-- [ ] Security event logging enabled
-- [ ] Real-time security monitoring
-- [ ] Automated alerting for security events
-- [ ] Regular security audits
-
-## 🚀 Production Implementation
-
-### Secure Deployment Architecture
-
-```mermaid
-graph TB
-    subgraph "DMZ"
-        LB[Load Balancer<br/>SSL Termination]
-        PROXY[Kafka Proxy<br/>Authentication gateway]
-    end
-    
-    subgraph "Application Tier"
-        APP1[Application 1<br/>mTLS client]
-        APP2[Application 2<br/>mTLS client]
-        APP3[Application 3<br/>mTLS client]
-    end
-    
-    subgraph "Kafka Tier"
-        BROKER1[Broker 1<br/>SSL + SASL]
-        BROKER2[Broker 2<br/>SSL + SASL]
-        BROKER3[Broker 3<br/>SSL + SASL]
-    end
-    
-    subgraph "Management Tier"
-        MONITOR[Monitoring<br/>Security dashboards]
-        VAULT[Secret Vault<br/>Credential management]
-        CA[Certificate Authority<br/>PKI management]
-    end
-    
-    APP1 --> LB
-    APP2 --> LB
-    APP3 --> LB
-    
-    LB --> PROXY
-    PROXY --> BROKER1
-    PROXY --> BROKER2
-    PROXY --> BROKER3
-    
-    BROKER1 --> VAULT
-    BROKER2 --> VAULT
-    BROKER3 --> VAULT
-    
-    MONITOR --> BROKER1
-    CA --> BROKER1
-    
-    style LB fill:#ff6b6b
-    style PROXY fill:#4ecdc4
-    style VAULT fill:#a8e6cf
-    style CA fill:#ffe66d
-```
-
-### Security Automation
-
-**Certificate Automation**
-```bash
-#!/bin/bash
-# Automated certificate rotation script
-
-# Generate new certificates
-./generate-certificates.sh
-
-# Update keystores
-./update-keystores.sh
-
-# Rolling restart of brokers
-./rolling-restart.sh
-
-# Verify security health
-./security-health-check.sh
-```
-
-**ACL Management Automation**
-```yaml
-# GitOps-based ACL management
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kafka-acls
-data:
-  acls.yaml: |
-    users:
-      - name: order-service
-        topics:
-          - name: order-events
-            operations: [READ, WRITE]
-        groups:
-          - name: order-processing
-            operations: [READ]
-```
-
-## 📈 Security Metrics & KPIs
-
-### Key Security Metrics
-
-1. **Authentication Metrics**
-   - Authentication success rate (target: &gt;99.9%)
-   - Authentication failure rate (alert: &gt;1%)
-   - Authentication latency (target: &lt;100ms)
-
-2. **Authorization Metrics**
-   - ACL evaluation success rate (target: &gt;99.9%)
-   - Unauthorized access attempts (alert: &gt;0)
-   - ACL rule coverage (target: 100%)
-
-3. **Encryption Metrics**
-   - SSL handshake success rate (target: &gt;99.9%)
-   - SSL handshake latency (target: &lt;200ms)
-   - Certificate expiration monitoring (alert: &lt;30 days)
-
-4. **Security Health Metrics**
-   - Security configuration compliance (target: 100%)
-   - Vulnerability scan results (target: 0 high/critical)
-   - Security incident response time (target: &lt;1 hour)
-
-## 🔍 Troubleshooting Common Security Issues
-
-### SSL/TLS Issues
-- Certificate validation failures
-- Cipher suite mismatches
-- Certificate expiration
-- Trust store configuration errors
-
-### SASL Authentication Issues
-- Incorrect credentials or configuration
-- JAAS configuration problems
-- Kerberos ticket expiration
-- Network connectivity issues
-
-### ACL Authorization Issues
-- Missing or incorrect ACL rules
-- Principal name mismatches
-- Resource pattern matching errors
-- Permission inheritance problems
-
-## 🎯 Key Takeaways
-
-✅ **Comprehensive Security**: Implement defense in depth with encryption, authentication, and authorization  
-✅ **Enterprise Integration**: Seamlessly integrate with existing identity and security infrastructure  
-✅ **Operational Excellence**: Automate security processes and monitoring for production environments  
-✅ **Compliance Ready**: Meet regulatory requirements with proper auditing and access controls  
-✅ **Performance Aware**: Balance security with performance requirements  
-
-## 🚀 Next Steps
-
-Ready to implement production monitoring? Move to [Lesson 19: Observability & Monitoring](../lesson_19/concept) to learn comprehensive system observability.
+Ready for the final phase? Begin **Phase 4: Production & Scaling** with [Lesson 18: Kafka Security & ACLs](../lesson_19/concept.md) to learn how to secure and deploy Kafka systems in production environments.
 
 ---
 
-*Security is not a feature, it's a requirement. This lesson provides the foundation for building secure, compliant Kafka systems that protect your data and meet enterprise security standards.*
+*You've built a complete real-time analytics system! This comprehensive dashboard demonstrates the full power of Kafka Streams for building production-ready, scalable stream processing applications that provide instant insights from streaming data.*

@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_15/README",
-  "title": "Workshop: Windowing, Joins & Stateful Operations",
+  "title": "Workshop: Kafka Streams API Introduction",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_15/README.md",
   "sourceDirName": "workshop/lesson_15",

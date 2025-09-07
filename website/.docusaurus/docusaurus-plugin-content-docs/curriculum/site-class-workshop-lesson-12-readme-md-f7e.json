@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_12/README",
-  "title": "Workshop: Hybrid REST + Kafka Architecture",
+  "title": "Workshop: Fan-out Pattern & Notification Systems",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_12/README.md",
   "sourceDirName": "workshop/lesson_12",
@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/modules/lesson_12/concept"
   },
   "next": {
-    "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_13/concept"
   }
 }

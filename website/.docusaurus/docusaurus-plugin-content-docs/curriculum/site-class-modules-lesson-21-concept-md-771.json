@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_21/concept",
+  "title": "Concept",
+  "description": "Deployment & Scaling Best Practices - Production Excellence",
+  "source": "@site/../class/modules/lesson_21/concept.md",
+  "sourceDirName": "modules/lesson_21",
+  "slug": "/modules/lesson_21/concept",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_21/concept",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_21/concept.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Workshop: Observability & Monitoring",
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_20/"
+  },
+  "next": {
+    "title": "Workshop: Deployment & Scaling Best Practices",
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_21/"
+  }
+}

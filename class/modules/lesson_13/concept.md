@@ -1,723 +1,782 @@
-# Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka
+# Concept
+
+## Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture
 
 ## 🎯 Objective
 
-Master advanced request-reply patterns using Kafka for synchronous communication in distributed systems. Learn to implement reliable, scalable request-response flows while maintaining the benefits of Kafka's durability and fault tolerance.
+Master hybrid architectures that combine event-driven messaging with REST APIs, enabling systems that react to events while providing synchronous command interfaces. Learn to build resilient command-query patterns that leverage the best of both paradigms.
 
-## 🔄 **Request-Reply Pattern: When Synchronous Meets Kafka**
+## 🔗 **Hybrid Architecture: Best of Both Worlds**
 
-Sometimes you need the durability and scalability of Kafka with the immediacy of synchronous communication.
+Modern systems often need both asynchronous event processing and synchronous command execution. This lesson shows how to effectively combine these patterns.
 
 ```mermaid
-graph LR
-    subgraph "Request-Reply Flow"
-        CLIENT[Client]
-        API[API Gateway]
+graph TB
+    subgraph "Hybrid Event-Driven + REST Architecture"
+        CLIENT[Client Applications]
         
-        subgraph "Kafka Infrastructure"
-            REQ_TOPIC[Request Topic]
-            REPLY_TOPIC[Reply Topic]
+        subgraph "Command Layer (Synchronous)"
+            REST_API[REST Command API]
+            COMMAND_SERVICE[Command Service]
         end
         
-        PROCESSOR[Request Processor]
-        EXTERNAL[External Service]
+        subgraph "Event Layer (Asynchronous)"
+            KAFKA[Kafka Topics]
+            EVENT_CONSUMERS[Event Consumers]
+        end
         
-        subgraph "Correlation Tracking"
-            CORRELATION[Correlation Store]
-            TIMEOUT[Timeout Handler]
+        subgraph "External Services"
+            PAYMENT[Payment Gateway]
+            EMAIL[Email Service]
+            INVENTORY[Inventory Service]
+            AUDIT[Audit Service]
+        end
+        
+        subgraph "Data Layer"
+            DATABASE[(Database)]
+            CACHE[(Cache)]
         end
     end
     
-    CLIENT -->|1. Request| API
-    API -->|2. Publish with correlation ID| REQ_TOPIC
-    API -->|3. Wait for reply| CORRELATION
+    CLIENT --> REST_API
+    REST_API --> COMMAND_SERVICE
+    COMMAND_SERVICE --> KAFKA
+    COMMAND_SERVICE --> DATABASE
     
-    REQ_TOPIC -->|4. Process| PROCESSOR
-    PROCESSOR -->|5. Call external| EXTERNAL
-    EXTERNAL -->|6. Response| PROCESSOR
-    PROCESSOR -->|7. Publish reply| REPLY_TOPIC
+    KAFKA --> EVENT_CONSUMERS
+    EVENT_CONSUMERS --> PAYMENT
+    EVENT_CONSUMERS --> EMAIL
+    EVENT_CONSUMERS --> INVENTORY
+    EVENT_CONSUMERS --> AUDIT
+    EVENT_CONSUMERS --> DATABASE
+    EVENT_CONSUMERS --> CACHE
     
-    REPLY_TOPIC -->|8. Match correlation| CORRELATION
-    CORRELATION -->|9. Return response| API
-    API -->|10. Response| CLIENT
-    
-    TIMEOUT -->|Handle timeouts| CORRELATION
-    
-    style REQ_TOPIC fill:#e3f2fd
-    style REPLY_TOPIC fill:#e8f5e8
-    style CORRELATION fill:#fff3e0
+    style REST_API fill:#e3f2fd
+    style KAFKA fill:#e8f5e8
+    style EVENT_CONSUMERS fill:#fff3e0
 ```
 
-**When to use Request-Reply with Kafka:**
-- ✅ **Cross-service queries** requiring real-time responses
-- ✅ **Load balancing** across multiple processors
-- ✅ **Audit trail** for all requests and responses
-- ✅ **Fault tolerance** with message durability
+**Key Benefits:**
+- ✅ **Immediate responses** for urgent operations
+- ✅ **Asynchronous processing** for time-consuming tasks
+- ✅ **Better user experience** with responsive APIs
+- ✅ **Scalable background processing** with Kafka
 
-## 🔧 **Basic Request-Reply Implementation**
+## 🚀 **Command API with Event Publishing**
 
-### 1. **Request-Reply Service Foundation**
+### Request-Response Flow in Hybrid Architecture
+
+Understanding the temporal flow of requests, commands, and events is crucial for building reliable hybrid systems.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant REST_API as REST Command API
+    participant Command_Service as Command Service
+    participant Database
+    participant Kafka
+    participant Event_Consumer as Event Consumer
+    participant External_Service as External Service
+    
+    Note over Client, External_Service: Hybrid Request-Response Flow
+    
+    Client->>REST_API: POST /orders (Create Order)
+    REST_API->>Command_Service: Execute CreateOrderCommand
+    
+    Note over Command_Service: Synchronous Phase
+    Command_Service->>Database: Validate & Store Order
+    Database-->>Command_Service: Order Saved (ID: order-123)
+    Command_Service->>Kafka: Publish OrderCreatedEvent
+    Command_Service-->>REST_API: Command Result (200 OK)
+    REST_API-->>Client: HTTP 201 Created {orderId: "order-123"}
+    
+    Note over Kafka, External_Service: Asynchronous Phase
+    Kafka->>Event_Consumer: OrderCreatedEvent
+    Event_Consumer->>External_Service: Process Payment
+    External_Service-->>Event_Consumer: Payment Successful
+    Event_Consumer->>Kafka: Publish PaymentCompletedEvent
+    
+    Event_Consumer->>External_Service: Send Confirmation Email
+    Event_Consumer->>Database: Update Order Status
+    
+    Note over Client, External_Service: Client gets immediate response, processing continues async
+```
+
+### 1. **Command Pattern Implementation**
 
 ```kotlin
-data class RequestMessage<T>(
-    val correlationId: String,
-    val replyTo: String,
-    val payload: T,
-    val timestamp: Instant,
-    val timeoutMs: Long = 30000,
-    val metadata: Map<String, String> = emptyMap()
-)
-
-data class ReplyMessage<T>(
-    val correlationId: String,
-    val success: Boolean,
-    val payload: T? = null,
-    val error: String? = null,
-    val timestamp: Instant,
-    val processingTimeMs: Long? = null
-)
-
-interface RequestReplyService {
-    fun <REQ, RESP> sendRequest(
-        requestTopic: String,
-        request: REQ,
-        responseType: Class<RESP>,
-        timeoutMs: Long = 30000
-    ): CompletableFuture<RESP>
+// Command interface
+interface Command {
+    val commandId: String
+    val timestamp: Instant
+    val userId: String
 }
 
+// Specific command implementations
+data class CreateOrderCommand(
+    override val commandId: String = UUID.randomUUID().toString(),
+    override val timestamp: Instant = Instant.now(),
+    override val userId: String,
+    val customerId: String,
+    val items: List<OrderItem>,
+    val shippingAddress: Address,
+    val paymentMethod: PaymentMethod
+) : Command
+
+data class CancelOrderCommand(
+    override val commandId: String = UUID.randomUUID().toString(),
+    override val timestamp: Instant = Instant.now(),
+    override val userId: String,
+    val orderId: String,
+    val reason: String
+) : Command
+
+data class UpdateInventoryCommand(
+    override val commandId: String = UUID.randomUUID().toString(),
+    override val timestamp: Instant = Instant.now(),
+    override val userId: String,
+    val productId: String,
+    val quantityChange: Int,
+    val reason: String
+) : Command
+
+// Command handler interface
+interface CommandHandler<T : Command> {
+    fun handle(command: T): CommandResult
+    fun validate(command: T): ValidationResult
+}
+
+// Command result types
+data class CommandResult(
+    val success: Boolean,
+    val commandId: String,
+    val resultData: Map<String, Any> = emptyMap(),
+    val events: List<DomainEvent> = emptyList(),
+    val error: String? = null
+)
+
+data class ValidationResult(
+    val isValid: Boolean,
+    val errors: List<String> = emptyList()
+)
+```
+
+### 2. **REST API with Event Integration**
+
+```kotlin
+@RestController
+@RequestMapping("/api/orders")
+class OrderCommandController {
+    
+    @Autowired
+    private lateinit var orderCommandHandler: OrderCommandHandler
+    
+    @Autowired
+    private lateinit var eventPublisher: EventPublisher
+    
+    @PostMapping
+    fun createOrder(@RequestBody request: CreateOrderRequest): ResponseEntity<OrderResponse> {
+        try {
+            // 1. Create command from request
+            val command = CreateOrderCommand(
+                userId = getCurrentUserId(),
+                customerId = request.customerId,
+                items = request.items.map { it.toOrderItem() },
+                shippingAddress = request.shippingAddress,
+                paymentMethod = request.paymentMethod
+            )
+            
+            // 2. Validate command
+            val validation = orderCommandHandler.validate(command)
+            if (!validation.isValid) {
+                return ResponseEntity.badRequest().body(
+                    OrderResponse.error(validation.errors.joinToString(", "))
+                )
+            }
+            
+            // 3. Execute command synchronously (immediate response needed)
+            val result = orderCommandHandler.handle(command)
+            
+            if (result.success) {
+                // 4. Publish events asynchronously for background processing
+                result.events.forEach { event ->
+                    eventPublisher.publishEvent(event)
+                }
+                
+                // 5. Return immediate response
+                return ResponseEntity.ok(
+                    OrderResponse.success(
+                        orderId = result.resultData["orderId"] as String,
+                        status = "CREATED",
+                        message = "Order created successfully"
+                    )
+                )
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    OrderResponse.error(result.error ?: "Unknown error")
+                )
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to create order", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                OrderResponse.error("Failed to create order: ${e.message}")
+            )
+        }
+    }
+    
+    @PutMapping("/{orderId}/cancel")
+    fun cancelOrder(
+        @PathVariable orderId: String,
+        @RequestBody request: CancelOrderRequest
+    ): ResponseEntity<OrderResponse> {
+        try {
+            val command = CancelOrderCommand(
+                userId = getCurrentUserId(),
+                orderId = orderId,
+                reason = request.reason
+            )
+            
+            val result = orderCommandHandler.handle(command)
+            
+            if (result.success) {
+                // Publish cancellation events
+                result.events.forEach { event ->
+                    eventPublisher.publishEvent(event)
+                }
+                
+                return ResponseEntity.ok(
+                    OrderResponse.success(
+                        orderId = orderId,
+                        status = "CANCELLED",
+                        message = "Order cancelled successfully"
+                    )
+                )
+            } else {
+                return ResponseEntity.badRequest().body(
+                    OrderResponse.error(result.error ?: "Failed to cancel order")
+                )
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to cancel order $orderId", e)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                OrderResponse.error("Failed to cancel order")
+            )
+        }
+    }
+}
+```
+
+### 3. **Command Handler with Event Generation**
+
+```kotlin
 @Component
-class KafkaRequestReplyService : RequestReplyService {
+class OrderCommandHandler : CommandHandler<CreateOrderCommand> {
+    
+    @Autowired
+    private lateinit var orderRepository: OrderRepository
+    
+    @Autowired
+    private lateinit var inventoryService: InventoryService
+    
+    override fun validate(command: CreateOrderCommand): ValidationResult {
+        val errors = mutableListOf<String>()
+        
+        // Validate items
+        if (command.items.isEmpty()) {
+            errors.add("Order must contain at least one item")
+        }
+        
+        command.items.forEach { item ->
+            if (item.quantity <= 0) {
+                errors.add("Item quantity must be positive")
+            }
+            if (item.price <= 0) {
+                errors.add("Item price must be positive")
+            }
+        }
+        
+        // Validate customer
+        if (command.customerId.isBlank()) {
+            errors.add("Customer ID is required")
+        }
+        
+        // Validate address
+        if (command.shippingAddress.street.isBlank()) {
+            errors.add("Shipping address is required")
+        }
+        
+        return ValidationResult(errors.isEmpty(), errors)
+    }
+    
+    @Transactional
+    override fun handle(command: CreateOrderCommand): CommandResult {
+        try {
+            // 1. Check inventory availability (synchronous - needed for immediate response)
+            val inventoryCheck = inventoryService.checkAvailability(command.items)
+            if (!inventoryCheck.allAvailable) {
+                return CommandResult(
+                    success = false,
+                    commandId = command.commandId,
+                    error = "Insufficient inventory for items: ${inventoryCheck.unavailableItems}"
+                )
+            }
+            
+            // 2. Create order entity
+            val order = Order(
+                id = UUID.randomUUID().toString(),
+                customerId = command.customerId,
+                items = command.items,
+                status = OrderStatus.CREATED,
+                shippingAddress = command.shippingAddress,
+                paymentMethod = command.paymentMethod,
+                totalAmount = command.items.sumOf { it.price * it.quantity },
+                createdAt = command.timestamp,
+                createdBy = command.userId
+            )
+            
+            // 3. Save order (synchronous)
+            val savedOrder = orderRepository.save(order)
+            
+            // 4. Generate events for asynchronous processing
+            val events = listOf(
+                OrderCreatedEvent(
+                    orderId = savedOrder.id,
+                    customerId = savedOrder.customerId,
+                    items = savedOrder.items,
+                    totalAmount = savedOrder.totalAmount,
+                    timestamp = command.timestamp
+                ),
+                InventoryReservationRequestedEvent(
+                    orderId = savedOrder.id,
+                    items = savedOrder.items.map { 
+                        InventoryReservation(it.productId, it.quantity) 
+                    },
+                    timestamp = command.timestamp
+                ),
+                PaymentProcessingRequestedEvent(
+                    orderId = savedOrder.id,
+                    customerId = savedOrder.customerId,
+                    amount = savedOrder.totalAmount,
+                    paymentMethod = savedOrder.paymentMethod,
+                    timestamp = command.timestamp
+                )
+            )
+            
+            return CommandResult(
+                success = true,
+                commandId = command.commandId,
+                resultData = mapOf(
+                    "orderId" to savedOrder.id,
+                    "orderStatus" to savedOrder.status.name,
+                    "totalAmount" to savedOrder.totalAmount
+                ),
+                events = events
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Failed to handle CreateOrderCommand", e)
+            return CommandResult(
+                success = false,
+                commandId = command.commandId,
+                error = "Failed to create order: ${e.message}"
+            )
+        }
+    }
+}
+```
+
+## 🔄 **Event-Triggered Command Execution**
+
+### 1. **Event-Driven Command Processor**
+
+```kotlin
+@Component
+class EventTriggeredCommandProcessor {
+    
+    @Autowired
+    private lateinit var restTemplate: RestTemplate
+    
+    @Autowired
+    private lateinit var commandService: CommandService
+    
+    @KafkaListener(topics = ["payment-completed"])
+    fun handlePaymentCompleted(
+        @Payload event: PaymentCompletedEvent,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            // Payment completed -> trigger order fulfillment command
+            val fulfillmentCommand = CreateFulfillmentCommand(
+                orderId = event.orderId,
+                customerId = event.customerId,
+                items = event.orderItems,
+                priority = determineFulfillmentPriority(event)
+            )
+            
+            // Execute command via REST API call
+            val response = callFulfillmentAPI(fulfillmentCommand)
+            
+            if (response.success) {
+                logger.info("Fulfillment initiated for order ${event.orderId}")
+                acknowledgment.acknowledge()
+            } else {
+                logger.error("Failed to initiate fulfillment for order ${event.orderId}: ${response.error}")
+                // Don't acknowledge - will retry
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process payment completed event for order ${event.orderId}", e)
+        }
+    }
+    
+    @KafkaListener(topics = ["inventory-low"])
+    fun handleInventoryLow(
+        @Payload event: InventoryLowEvent,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            // Low inventory -> trigger restocking command
+            val restockCommand = CreateRestockCommand(
+                productId = event.productId,
+                currentQuantity = event.currentQuantity,
+                reorderLevel = event.reorderLevel,
+                suggestedQuantity = calculateRestockQuantity(event)
+            )
+            
+            // Execute via internal command service
+            val result = commandService.executeCommand(restockCommand)
+            
+            if (result.success) {
+                acknowledgment.acknowledge()
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process inventory low event for product ${event.productId}", e)
+        }
+    }
+    
+    private fun callFulfillmentAPI(command: CreateFulfillmentCommand): ApiResponse {
+        return try {
+            val response = restTemplate.postForObject(
+                "/api/fulfillment/orders",
+                command,
+                ApiResponse::class.java
+            )
+            response ?: ApiResponse(false, error = "No response from fulfillment API")
+        } catch (e: Exception) {
+            ApiResponse(false, error = "API call failed: ${e.message}")
+        }
+    }
+}
+```
+
+### 2. **Async Command Queue Processing**
+
+```kotlin
+@Component
+class AsyncCommandProcessor {
+    
+    @KafkaListener(topics = ["commands-async"])
+    fun processAsyncCommand(
+        @Payload commandMessage: CommandMessage,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            when (commandMessage.commandType) {
+                "SEND_MARKETING_EMAIL" -> {
+                    val command = deserializeCommand<SendMarketingEmailCommand>(commandMessage.payload)
+                    processMarketingEmailCommand(command)
+                }
+                
+                "UPDATE_CUSTOMER_PROFILE" -> {
+                    val command = deserializeCommand<UpdateCustomerProfileCommand>(commandMessage.payload)
+                    processCustomerProfileCommand(command)
+                }
+                
+                "GENERATE_REPORT" -> {
+                    val command = deserializeCommand<GenerateReportCommand>(commandMessage.payload)
+                    processReportGenerationCommand(command)
+                }
+                
+                else -> {
+                    logger.warn("Unknown command type: ${commandMessage.commandType}")
+                }
+            }
+            
+            acknowledgment.acknowledge()
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process async command: ${commandMessage.commandId}", e)
+        }
+    }
+    
+    @Async
+    private fun processMarketingEmailCommand(command: SendMarketingEmailCommand) {
+        // Long-running email processing
+        emailService.sendMarketingCampaign(
+            recipients = command.recipients,
+            template = command.template,
+            variables = command.variables
+        )
+        
+        // Publish completion event
+        eventPublisher.publishEvent(MarketingEmailSentEvent(
+            campaignId = command.campaignId,
+            recipientCount = command.recipients.size,
+            completedAt = Instant.now()
+        ))
+    }
+}
+```
+
+## 🔄 **Request-Reply Pattern with Kafka**
+
+### 1. **Synchronous Request-Reply Implementation**
+
+```kotlin
+@Component
+class KafkaRequestReplyService {
     
     @Autowired
     private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
     
-    private val pendingRequests = ConcurrentHashMap<String, PendingRequest<*>>()
+    @Autowired
+    private lateinit var replyConsumer: KafkaReplyConsumer
     
-    data class PendingRequest<T>(
-        val future: CompletableFuture<T>,
-        val responseType: Class<T>,
-        val startTime: Instant,
-        val timeoutMs: Long
-    )
-    
-    override fun <REQ, RESP> sendRequest(
+    fun <T> sendRequestAndWaitForReply(
         requestTopic: String,
-        request: REQ,
-        responseType: Class<RESP>,
-        timeoutMs: Long
-    ): CompletableFuture<RESP> {
-        
+        request: Any,
+        replyType: Class<T>,
+        timeoutMs: Long = 30000
+    ): T {
         val correlationId = UUID.randomUUID().toString()
-        val replyTopic = "replies" // Single reply topic with correlation routing
+        val replyTopic = "replies-${UUID.randomUUID()}"
         
-        val future = CompletableFuture<RESP>()
+        // Create temporary reply consumer
+        val replyFuture = replyConsumer.waitForReply<T>(correlationId, replyType, timeoutMs)
         
-        // Store pending request
-        pendingRequests[correlationId] = PendingRequest(
-            future = future as CompletableFuture<Any>,
-            responseType = responseType as Class<Any>,
-            startTime = Instant.now(),
-            timeoutMs = timeoutMs
-        )
-        
-        // Set up timeout
-        scheduleTimeout(correlationId, timeoutMs)
-        
-        // Create and send request message
-        val requestMessage = RequestMessage(
+        // Send request with reply-to information
+        val requestWithReply = RequestMessage(
             correlationId = correlationId,
             replyTo = replyTopic,
             payload = request,
-            timestamp = Instant.now(),
-            timeoutMs = timeoutMs
+            timestamp = Instant.now()
         )
         
-        try {
-            kafkaTemplate.send(requestTopic, correlationId, requestMessage)
-                .whenComplete { result, exception ->
-                    if (exception != null) {
-                        removePendingRequest(correlationId, "Failed to send request: ${exception.message}")
-                    }
-                }
-        } catch (e: Exception) {
-            removePendingRequest(correlationId, "Failed to send request: ${e.message}")
+        kafkaTemplate.send(requestTopic, correlationId, requestWithReply)
+        
+        // Wait for reply
+        return try {
+            replyFuture.get(timeoutMs, TimeUnit.MILLISECONDS)
+        } catch (e: TimeoutException) {
+            throw RuntimeException("Request timeout after ${timeoutMs}ms")
+        }
+    }
+}
+
+@Component
+class KafkaReplyConsumer {
+    
+    private val pendingReplies = ConcurrentHashMap<String, CompletableFuture<Any>>()
+    
+    fun <T> waitForReply(correlationId: String, replyType: Class<T>, timeoutMs: Long): CompletableFuture<T> {
+        val future = CompletableFuture<T>()
+        pendingReplies[correlationId] = future as CompletableFuture<Any>
+        
+        // Set timeout
+        CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute {
+            val pending = pendingReplies.remove(correlationId)
+            pending?.completeExceptionally(TimeoutException("Reply timeout"))
         }
         
         return future
     }
     
-    @KafkaListener(topics = ["replies"])
-    fun handleReply(@Payload replyMessage: ReplyMessage<Any>) {
-        val correlationId = replyMessage.correlationId
-        val pendingRequest = pendingRequests.remove(correlationId)
-        
-        if (pendingRequest != null) {
-            try {
-                if (replyMessage.success && replyMessage.payload != null) {
-                    // Type-safe deserialization
-                    val typedPayload = objectMapper.convertValue(
-                        replyMessage.payload,
-                        pendingRequest.responseType
-                    )
-                    pendingRequest.future.complete(typedPayload)
-                } else {
-                    pendingRequest.future.completeExceptionally(
-                        RuntimeException(replyMessage.error ?: "Unknown error")
-                    )
-                }
-                
-                // Record metrics
-                val duration = Duration.between(pendingRequest.startTime, Instant.now())
-                recordRequestReplyMetrics(correlationId, duration, replyMessage.success)
-                
-            } catch (e: Exception) {
-                pendingRequest.future.completeExceptionally(
-                    RuntimeException("Failed to process reply: ${e.message}")
-                )
+    @KafkaListener(topicPattern = "replies-.*")
+    fun handleReply(
+        @Payload reply: ReplyMessage,
+        @Header("correlationId") correlationId: String
+    ) {
+        val pendingReply = pendingReplies.remove(correlationId)
+        if (pendingReply != null) {
+            if (reply.success) {
+                pendingReply.complete(reply.payload)
+            } else {
+                pendingReply.completeExceptionally(RuntimeException(reply.error))
             }
-        } else {
-            logger.warn("Received reply for unknown correlation ID: $correlationId")
         }
-    }
-    
-    private fun scheduleTimeout(correlationId: String, timeoutMs: Long) {
-        CompletableFuture.delayedExecutor(timeoutMs, TimeUnit.MILLISECONDS).execute {
-            removePendingRequest(correlationId, "Request timeout after ${timeoutMs}ms")
-        }
-    }
-    
-    private fun removePendingRequest(correlationId: String, errorMessage: String) {
-        val pendingRequest = pendingRequests.remove(correlationId)
-        pendingRequest?.future?.completeExceptionally(TimeoutException(errorMessage))
     }
 }
 ```
 
-### 2. **Request Processor Implementation**
+### 2. **Request Processing Service**
 
 ```kotlin
 @Component
-class UserServiceRequestProcessor {
+class RequestProcessor {
     
-    @Autowired
-    private lateinit var userService: UserService
-    
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
-    
-    @KafkaListener(topics = ["user-service-requests"])
-    fun processUserRequest(
-        @Payload requestMessage: RequestMessage<Map<String, Any>>,
+    @KafkaListener(topics = ["price-calculation-requests"])
+    fun handlePriceCalculationRequest(
+        @Payload requestMessage: RequestMessage,
         acknowledgment: Acknowledgment
     ) {
-        val startTime = Instant.now()
-        
         try {
-            val requestType = requestMessage.metadata["requestType"] ?: "unknown"
-            val response = when (requestType) {
-                "GET_USER_PROFILE" -> handleGetUserProfile(requestMessage.payload)
-                "VALIDATE_USER" -> handleValidateUser(requestMessage.payload)
-                "UPDATE_USER_PREFERENCES" -> handleUpdateUserPreferences(requestMessage.payload)
-                "GET_USER_ORDERS" -> handleGetUserOrders(requestMessage.payload)
-                else -> throw IllegalArgumentException("Unknown request type: $requestType")
-            }
+            val request = requestMessage.payload as PriceCalculationRequest
             
-            // Send successful reply
-            sendReply(requestMessage, response, startTime)
+            // Process the request
+            val calculation = priceCalculationService.calculatePrice(
+                productId = request.productId,
+                quantity = request.quantity,
+                customerId = request.customerId,
+                promotionCodes = request.promotionCodes
+            )
+            
+            // Send reply
+            val reply = ReplyMessage(
+                correlationId = requestMessage.correlationId,
+                success = true,
+                payload = calculation,
+                timestamp = Instant.now()
+            )
+            
+            kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, reply)
             acknowledgment.acknowledge()
             
         } catch (e: Exception) {
             // Send error reply
-            sendErrorReply(requestMessage, e, startTime)
-            acknowledgment.acknowledge()
-        }
-    }
-    
-    private fun handleGetUserProfile(payload: Map<String, Any>): UserProfile {
-        val userId = payload["userId"] as? String 
-            ?: throw IllegalArgumentException("Missing userId")
-        
-        return userService.getUserProfile(userId)
-            ?: throw IllegalArgumentException("User not found: $userId")
-    }
-    
-    private fun handleValidateUser(payload: Map<String, Any>): ValidationResult {
-        val email = payload["email"] as? String
-            ?: throw IllegalArgumentException("Missing email")
-        val password = payload["password"] as? String
-            ?: throw IllegalArgumentException("Missing password")
-        
-        return userService.validateCredentials(email, password)
-    }
-    
-    private fun handleUpdateUserPreferences(payload: Map<String, Any>): UpdateResult {
-        val userId = payload["userId"] as? String
-            ?: throw IllegalArgumentException("Missing userId")
-        val preferences = payload["preferences"] as? Map<String, Any>
-            ?: throw IllegalArgumentException("Missing preferences")
-        
-        return userService.updatePreferences(userId, preferences)
-    }
-    
-    private fun handleGetUserOrders(payload: Map<String, Any>): List<Order> {
-        val userId = payload["userId"] as? String
-            ?: throw IllegalArgumentException("Missing userId")
-        val limit = (payload["limit"] as? Number)?.toInt() ?: 10
-        
-        return userService.getUserOrders(userId, limit)
-    }
-    
-    private fun sendReply(
-        requestMessage: RequestMessage<Map<String, Any>>,
-        response: Any,
-        startTime: Instant
-    ) {
-        val processingTime = Duration.between(startTime, Instant.now()).toMillis()
-        
-        val replyMessage = ReplyMessage(
-            correlationId = requestMessage.correlationId,
-            success = true,
-            payload = response,
-            timestamp = Instant.now(),
-            processingTimeMs = processingTime
-        )
-        
-        kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, replyMessage)
-    }
-    
-    private fun sendErrorReply(
-        requestMessage: RequestMessage<Map<String, Any>>,
-        exception: Exception,
-        startTime: Instant
-    ) {
-        val processingTime = Duration.between(startTime, Instant.now()).toMillis()
-        
-        val replyMessage = ReplyMessage<Any>(
-            correlationId = requestMessage.correlationId,
-            success = false,
-            error = exception.message,
-            timestamp = Instant.now(),
-            processingTimeMs = processingTime
-        )
-        
-        kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, replyMessage)
-    }
-}
-```
-
-## 🏗️ **Advanced Request-Reply Patterns**
-
-### Correlation ID Lifecycle & Timeout Handling
-
-Understanding how correlation IDs work and how timeouts are handled is crucial for reliable request-reply implementations.
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant RequestReplyService as Request-Reply Service
-    participant KafkaProducer as Kafka Producer
-    participant RequestTopic as Request Topic
-    participant ProcessorA as Processor A
-    participant ReplyTopic as Reply Topic
-    participant KafkaConsumer as Kafka Consumer
-    participant TimeoutHandler as Timeout Handler
-    
-    Note over Client, TimeoutHandler: Successful Request-Reply Flow
-    
-    Client->>RequestReplyService: sendRequest(data)
-    RequestReplyService->>RequestReplyService: Generate correlationId: "req-123"
-    RequestReplyService->>RequestReplyService: Create CompletableFuture
-    RequestReplyService->>RequestReplyService: Store in pendingRequests map
-    RequestReplyService->>KafkaProducer: Send request with correlationId
-    KafkaProducer->>RequestTopic: Publish request message
-    
-    RequestTopic->>ProcessorA: Consume request (req-123)
-    ProcessorA->>ProcessorA: Process request
-    ProcessorA->>ReplyTopic: Publish reply with correlationId
-    
-    ReplyTopic->>KafkaConsumer: Consume reply (req-123)
-    KafkaConsumer->>RequestReplyService: Handle reply with correlationId
-    RequestReplyService->>RequestReplyService: Find pending request (req-123)
-    RequestReplyService->>RequestReplyService: Complete CompletableFuture
-    RequestReplyService->>Client: Return response
-    
-    Note over Client, TimeoutHandler: Timeout Scenario
-    
-    Client->>RequestReplyService: sendRequest(data2)
-    RequestReplyService->>RequestReplyService: Generate correlationId: "req-456"
-    RequestReplyService->>KafkaProducer: Send request
-    KafkaProducer->>RequestTopic: Publish request
-    
-    Note over ProcessorA: No response received
-    
-    TimeoutHandler->>RequestReplyService: Check expired requests
-    RequestReplyService->>RequestReplyService: Find expired request (req-456)
-    RequestReplyService->>RequestReplyService: Complete with TimeoutException
-    RequestReplyService->>Client: Throw TimeoutException
-```
-
-### 1. **Multi-Step Request Processing**
-
-```kotlin
-@Component
-class MultiStepRequestProcessor {
-    
-    @KafkaListener(topics = ["complex-requests"])
-    fun processComplexRequest(
-        @Payload requestMessage: RequestMessage<OrderValidationRequest>,
-        acknowledgment: Acknowledgment
-    ) {
-        val correlationId = requestMessage.correlationId
-        
-        try {
-            val request = requestMessage.payload
-            
-            // Step 1: Validate customer
-            val customerValidation = validateCustomer(request.customerId)
-            if (!customerValidation.valid) {
-                sendErrorReply(requestMessage, "Customer validation failed: ${customerValidation.reason}")
-                acknowledgment.acknowledge()
-                return
-            }
-            
-            // Step 2: Check inventory
-            val inventoryCheck = checkInventory(request.items)
-            if (!inventoryCheck.allAvailable) {
-                sendErrorReply(requestMessage, "Inventory check failed: ${inventoryCheck.missingItems}")
-                acknowledgment.acknowledge()
-                return
-            }
-            
-            // Step 3: Validate payment method
-            val paymentValidation = validatePaymentMethod(request.paymentMethod)
-            if (!paymentValidation.valid) {
-                sendErrorReply(requestMessage, "Payment validation failed: ${paymentValidation.reason}")
-                acknowledgment.acknowledge()
-                return
-            }
-            
-            // Step 4: Calculate pricing
-            val pricing = calculatePricing(request.items, request.customerId)
-            
-            // Step 5: Compile response
-            val response = OrderValidationResponse(
-                valid = true,
-                orderId = UUID.randomUUID().toString(),
-                totalAmount = pricing.total,
-                discounts = pricing.discounts,
-                estimatedDelivery = calculateDeliveryDate(request.shippingAddress),
-                validationSteps = listOf(
-                    "Customer validated",
-                    "Inventory available",
-                    "Payment method valid",
-                    "Pricing calculated"
-                )
+            val errorReply = ReplyMessage(
+                correlationId = requestMessage.correlationId,
+                success = false,
+                error = e.message,
+                timestamp = Instant.now()
             )
             
-            sendSuccessReply(requestMessage, response)
-            acknowledgment.acknowledge()
-            
-        } catch (e: Exception) {
-            sendErrorReply(requestMessage, "Processing failed: ${e.message}")
+            kafkaTemplate.send(requestMessage.replyTo, requestMessage.correlationId, errorReply)
             acknowledgment.acknowledge()
         }
     }
 }
 ```
 
-### 2. **Request Aggregation Pattern**
+## 📊 **Monitoring Hybrid Architectures**
+
+### 1. **Command and Event Metrics**
 
 ```kotlin
 @Component
-class RequestAggregationProcessor {
+class HybridArchitectureMetrics {
     
-    private val aggregationRequests = ConcurrentHashMap<String, AggregationContext>()
+    private val commandCounter = Counter.builder("api.commands.executed")
+        .description("Count of API commands executed")
+        .register(Metrics.globalRegistry)
     
-    data class AggregationContext(
-        val originalRequest: RequestMessage<DataAggregationRequest>,
-        val subRequests: Set<String>,
-        val responses: MutableMap<String, Any>,
-        val startTime: Instant
-    )
+    private val eventCounter = Counter.builder("events.published")
+        .description("Count of events published")
+        .register(Metrics.globalRegistry)
     
-    @KafkaListener(topics = ["aggregation-requests"])
-    fun processAggregationRequest(
-        @Payload requestMessage: RequestMessage<DataAggregationRequest>,
-        acknowledgment: Acknowledgment
-    ) {
-        try {
-            val request = requestMessage.payload
-            val subRequestIds = mutableSetOf<String>()
-            
-            // Create sub-requests for different data sources
-            if (request.includeUserData) {
-                val subRequestId = sendSubRequest("user-data-requests", mapOf(
-                    "userId" to request.userId,
-                    "correlationId" to requestMessage.correlationId
-                ))
-                subRequestIds.add(subRequestId)
-            }
-            
-            if (request.includeOrderHistory) {
-                val subRequestId = sendSubRequest("order-history-requests", mapOf(
-                    "userId" to request.userId,
-                    "limit" to request.orderHistoryLimit,
-                    "correlationId" to requestMessage.correlationId
-                ))
-                subRequestIds.add(subRequestId)
-            }
-            
-            if (request.includePreferences) {
-                val subRequestId = sendSubRequest("preference-requests", mapOf(
-                    "userId" to request.userId,
-                    "correlationId" to requestMessage.correlationId
-                ))
-                subRequestIds.add(subRequestId)
-            }
-            
-            // Store aggregation context
-            aggregationRequests[requestMessage.correlationId] = AggregationContext(
-                originalRequest = requestMessage,
-                subRequests = subRequestIds,
-                responses = ConcurrentHashMap(),
-                startTime = Instant.now()
+    private val requestReplyTimer = Timer.builder("kafka.request.reply.time")
+        .description("Request-reply round trip time")
+        .register(Metrics.globalRegistry)
+    
+    fun recordCommand(commandType: String, success: Boolean, duration: Duration) {
+        commandCounter.increment(
+            Tags.of(
+                Tag.of("command_type", commandType),
+                Tag.of("status", if (success) "success" else "failure")
             )
-            
-            // Set up timeout for aggregation
-            scheduleAggregationTimeout(requestMessage.correlationId, requestMessage.timeoutMs)
-            
-            acknowledgment.acknowledge()
-            
-        } catch (e: Exception) {
-            sendErrorReply(requestMessage, "Failed to initiate aggregation: ${e.message}")
-            acknowledgment.acknowledge()
-        }
+        )
     }
     
-    @KafkaListener(topics = ["aggregation-sub-replies"])
-    fun handleSubReply(
-        @Payload subReply: SubRequestReply,
-        acknowledgment: Acknowledgment
-    ) {
-        val context = aggregationRequests[subReply.parentCorrelationId]
-        
-        if (context != null) {
-            // Store sub-response
-            context.responses[subReply.subRequestId] = subReply.data
-            
-            // Check if all sub-requests are complete
-            if (context.responses.size == context.subRequests.size) {
-                // All responses received - compile and send final response
-                val aggregatedResponse = compileAggregatedResponse(context)
-                sendSuccessReply(context.originalRequest, aggregatedResponse)
-                
-                // Clean up
-                aggregationRequests.remove(subReply.parentCorrelationId)
-            }
-        }
-        
-        acknowledgment.acknowledge()
+    fun recordEvent(eventType: String, consumerCount: Int) {
+        eventCounter.increment(
+            Tags.of(
+                Tag.of("event_type", eventType),
+                Tag.of("consumer_count", consumerCount.toString())
+            )
+        )
     }
     
-    private fun compileAggregatedResponse(context: AggregationContext): AggregatedDataResponse {
-        return AggregatedDataResponse(
-            userId = context.originalRequest.payload.userId,
-            userData = context.responses["user-data"],
-            orderHistory = context.responses["order-history"] as? List<*>,
-            preferences = context.responses["preferences"] as? Map<*, *>,
-            aggregationTime = Duration.between(context.startTime, Instant.now()).toMillis()
+    fun recordRequestReply(requestType: String, duration: Duration, success: Boolean) {
+        requestReplyTimer.record(
+            duration,
+            Tags.of(
+                Tag.of("request_type", requestType),
+                Tag.of("status", if (success) "success" else "failure")
+            )
         )
     }
 }
 ```
 
-### 3. **Request Priority and Load Balancing**
+### 2. **Health Monitoring**
 
 ```kotlin
 @Component
-class PriorityRequestProcessor {
+class HybridSystemHealthIndicator : HealthIndicator {
     
-    @KafkaListener(
-        topics = ["high-priority-requests"],
-        concurrency = "5"
-    )
-    fun processHighPriorityRequest(
-        @Payload requestMessage: RequestMessage<Any>,
-        acknowledgment: Acknowledgment
-    ) {
-        processWithPriority(requestMessage, Priority.HIGH)
-        acknowledgment.acknowledge()
-    }
-    
-    @KafkaListener(
-        topics = ["normal-priority-requests"],
-        concurrency = "3"
-    )
-    fun processNormalPriorityRequest(
-        @Payload requestMessage: RequestMessage<Any>,
-        acknowledgment: Acknowledgment
-    ) {
-        processWithPriority(requestMessage, Priority.NORMAL)
-        acknowledgment.acknowledge()
-    }
-    
-    @KafkaListener(
-        topics = ["low-priority-requests"],
-        concurrency = "1"
-    )
-    fun processLowPriorityRequest(
-        @Payload requestMessage: RequestMessage<Any>,
-        acknowledgment: Acknowledgment
-    ) {
-        processWithPriority(requestMessage, Priority.LOW)
-        acknowledgment.acknowledge()
-    }
-    
-    private fun processWithPriority(
-        requestMessage: RequestMessage<Any>,
-        priority: Priority
-    ) {
-        val startTime = Instant.now()
-        
+    override fun health(): Health {
         try {
-            // Add artificial delay for low priority requests during high load
-            if (priority == Priority.LOW && isSystemUnderHighLoad()) {
-                Thread.sleep(1000) // 1 second delay
+            val restApiHealth = checkRestApiHealth()
+            val kafkaHealth = checkKafkaHealth()
+            val commandProcessingHealth = checkCommandProcessingHealth()
+            
+            val overallHealth = restApiHealth && kafkaHealth && commandProcessingHealth
+            
+            return if (overallHealth) {
+                Health.up()
+                    .withDetail("restApi", "healthy")
+                    .withDetail("kafka", "healthy")
+                    .withDetail("commandProcessing", "healthy")
+                    .build()
+            } else {
+                Health.down()
+                    .withDetail("restApi", if (restApiHealth) "healthy" else "unhealthy")
+                    .withDetail("kafka", if (kafkaHealth) "healthy" else "unhealthy")
+                    .withDetail("commandProcessing", if (commandProcessingHealth) "healthy" else "unhealthy")
+                    .build()
             }
-            
-            val response = processRequest(requestMessage.payload)
-            sendSuccessReply(requestMessage, response)
-            
-            // Record priority-specific metrics
-            recordPriorityMetrics(priority, Duration.between(startTime, Instant.now()), true)
             
         } catch (e: Exception) {
-            sendErrorReply(requestMessage, e.message ?: "Processing failed")
-            recordPriorityMetrics(priority, Duration.between(startTime, Instant.now()), false)
+            return Health.down()
+                .withDetail("error", e.message)
+                .build()
         }
-    }
-}
-```
-
-## 📊 **Advanced Monitoring and Circuit Breaking**
-
-### 1. **Request-Reply Circuit Breaker**
-
-```kotlin
-@Component
-class RequestReplyCircuitBreaker {
-    
-    private val circuitBreakers = ConcurrentHashMap<String, CircuitBreaker>()
-    
-    fun <T> executeWithCircuitBreaker(
-        serviceName: String,
-        request: () -> CompletableFuture<T>
-    ): CompletableFuture<T> {
-        
-        val circuitBreaker = circuitBreakers.computeIfAbsent(serviceName) {
-            CircuitBreaker.ofDefaults(serviceName).apply {
-                eventPublisher.onStateTransition { event ->
-                    logger.info("Circuit breaker $serviceName state transition: ${event.stateTransition}")
-                    
-                    when (event.stateTransition.toState) {
-                        CircuitBreaker.State.OPEN -> {
-                            alertService.sendAlert("Circuit breaker OPEN for service: $serviceName")
-                        }
-                        CircuitBreaker.State.HALF_OPEN -> {
-                            logger.info("Circuit breaker HALF_OPEN for service: $serviceName - testing...")
-                        }
-                        CircuitBreaker.State.CLOSED -> {
-                            logger.info("Circuit breaker CLOSED for service: $serviceName - service recovered")
-                        }
-                    }
-                }
-            }
-        }
-        
-        return circuitBreaker.executeCompletionStage { request() }.toCompletableFuture()
-    }
-}
-```
-
-### 2. **Request-Reply Analytics**
-
-```kotlin
-@Component
-class RequestReplyAnalytics {
-    
-    @EventListener
-    fun handleRequestReplyEvent(event: RequestReplyEvent) {
-        // Record detailed metrics
-        when (event.type) {
-            EventType.REQUEST_SENT -> recordRequestSent(event)
-            EventType.REPLY_RECEIVED -> recordReplyReceived(event)
-            EventType.REQUEST_TIMEOUT -> recordRequestTimeout(event)
-            EventType.REQUEST_FAILED -> recordRequestFailed(event)
-        }
-    }
-    
-    @Scheduled(fixedRate = 60000) // Every minute
-    fun generatePerformanceReport() {
-        val report = RequestReplyPerformanceReport(
-            totalRequests = getTotalRequestCount(),
-            successRate = getSuccessRate(),
-            averageResponseTime = getAverageResponseTime(),
-            timeoutRate = getTimeoutRate(),
-            topSlowServices = getTopSlowServices(),
-            circuitBreakerStatus = getCircuitBreakerStatus()
-        )
-        
-        logger.info("Request-Reply Performance Report: $report")
-        
-        // Store report for trending analysis
-        performanceReportRepository.save(report)
     }
 }
 ```
 
 ## ✅ **Best Practices Summary**
 
-### 🔄 **Request-Reply Design**
-- **Use sparingly** - prefer pure async patterns when possible
-- **Set reasonable timeouts** based on expected processing time
-- **Implement proper correlation ID management** to avoid memory leaks
-- **Design for idempotency** in request processors
+### 🔗 **Hybrid Architecture Design**
+- **Use REST for immediate responses** that users need to see
+- **Use events for background processing** that can be asynchronous
+- **Maintain clear separation** between command and event handling
+- **Implement proper error handling** for both synchronous and asynchronous flows
 
-### 🏗️ **Scalability Patterns**
-- **Use priority queues** for different request types
-- **Implement load balancing** across multiple processors
-- **Monitor queue depths** and processing times
-- **Scale processors independently** based on load
+### 🚀 **Command Pattern Implementation**
+- **Validate commands early** before processing
+- **Make commands idempotent** when possible
+- **Generate events consistently** for audit and downstream processing
+- **Return immediate feedback** for user-facing operations
 
-### 🔧 **Fault Tolerance**
-- **Implement circuit breakers** for external service calls
-- **Handle timeouts gracefully** with meaningful error messages
-- **Provide fallback responses** when appropriate
-- **Monitor failure patterns** to identify systemic issues
+### 🔄 **Event-Driven Integration**
+- **Use correlation IDs** for tracing across systems
+- **Implement circuit breakers** for external API calls
+- **Handle partial failures gracefully** in event processing
+- **Monitor both command and event metrics**
 
-### 📊 **Operational Excellence**
-- **Track request-reply metrics** including success rates and timing
-- **Monitor correlation ID cleanup** to prevent memory leaks
-- **Implement proper logging** with correlation tracking
-- **Set up alerts** for high failure rates or slow responses
-
-## 🎉 **Phase 2 Complete!**
-
-**Congratulations!** You've completed **Phase 2: Building Resilient Messaging Patterns** with mastery of:
-
-✅ **Consumer Groups & Load Balancing** (Lesson 7)  
-✅ **Retry Strategies & Dead Letter Topics** (Lesson 8)  
-✅ **Manual Acknowledgment & Idempotent Consumers** (Lesson 9)  
-✅ **Message Transformation & Filtering** (Lesson 10)  
-✅ **Fan-out Pattern & Notification Systems** (Lesson 11)  
-✅ **Kafka-Triggered REST & Command APIs** (Lesson 12)  
-✅ **Request-Reply Patterns** (Lesson 13)  
+### 📊 **Request-Reply Patterns**
+- **Use sparingly** - prefer pure async when possible
+- **Set appropriate timeouts** to prevent hanging requests
+- **Clean up resources** for temporary reply topics
+- **Monitor request-reply performance** and success rates
 
 ## 🚀 **What's Next?**
 
-Ready for **Phase 3: Kafka Streams, State & Aggregation**? Begin with [Lesson 14: Kafka Streams API Introduction](../lesson_14/concept.md) to learn stream processing, real-time aggregations, and stateful computations that transform how you process data.
+You've mastered hybrid event-driven architectures! Next, complete Phase 2 with [Lesson 13: Request-Reply Patterns](../lesson_14/concept.md), where you'll learn advanced synchronous communication patterns over Kafka for complex distributed scenarios.
 
 ---
 
-*Request-reply patterns complete your toolkit for building sophisticated distributed systems. Combined with the other resilient messaging patterns, you can now architect systems that are both responsive and fault-tolerant, handling any communication requirement with confidence.*
+*Hybrid architectures provide the flexibility to choose the right communication pattern for each use case. By combining REST APIs with event-driven processing, you can build systems that are both responsive and scalable.*

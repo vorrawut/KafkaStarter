@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_19/README",
-  "title": "Workshop: Observability & Monitoring",
+  "title": "Workshop: Kafka Security & ACLs",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_19/README.md",
   "sourceDirName": "workshop/lesson_19",

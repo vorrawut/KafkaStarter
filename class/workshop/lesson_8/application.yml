@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-error-handling-lesson8
+    name: kafka-consumer-groups-lesson7
 
-  # Kafka configuration for Lesson 8 - Retry Strategies & Dead Letter Topics
+  # Kafka configuration for Lesson 7 - Consumer Groups & Load Balancing
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -13,20 +13,21 @@ spring:
       retries: 3
     
     consumer:
-      group-id: lesson8-error-handling-group
+      # TODO: Configure consumer group settings
+      group-id: lesson7-consumer-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure error handling properties
-      # TODO: Configure retry settings
+      # TODO: Configure session timeout and heartbeat interval
+      # TODO: Configure max poll records and poll timeout
 
 server:
-  port: 8088
+  port: 8087
 
 logging:
   level:
     com.learning.KafkaStarter: DEBUG
-    org.springframework.kafka: INFO
+    org.apache.kafka.clients.consumer: INFO
 
 management:
   endpoints:

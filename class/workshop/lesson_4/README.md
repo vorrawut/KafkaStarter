@@ -249,4 +249,4 @@ graph TB
 - **Consumer**: Lag, processing rate, commit success
 
 ## 🚀 Next Steps
-Master the storage fundamentals? Time to add schemas! Move to [Lesson 5: Schema Registry](../lesson_5/README.md) to learn about structured data management and evolution.
+Master the storage fundamentals? Time to add schemas! Move to [Lesson 5: Schema Registry](../lesson_6/README.md) to learn about structured data management and evolution.

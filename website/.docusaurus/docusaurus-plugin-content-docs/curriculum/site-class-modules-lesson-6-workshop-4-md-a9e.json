@@ -1,0 +1,15 @@
+{
+  "id": "modules/lesson_6/workshop_4",
+  "title": "Workshop",
+  "description": "Topics, Partitions & Offsets Management",
+  "source": "@site/../class/modules/lesson_6/workshop_4.md",
+  "sourceDirName": "modules/lesson_6",
+  "slug": "/modules/lesson_6/workshop_4",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_4",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_6/workshop_4.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

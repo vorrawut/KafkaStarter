@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_7/concept",
   "title": "Concept",
-  "description": "Consumer Groups & Load Balancing - Scaling Kafka Consumers",
+  "description": "Development Tools - Debugging, Testing & Monitoring Kafka Applications",
   "source": "@site/../class/modules/lesson_7/concept.md",
   "sourceDirName": "modules/lesson_7",
   "slug": "/modules/lesson_7/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Development Tools & Testing Framework",
+    "title": "Workshop: Schema Registry & Evolution",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_6/"
   },
   "next": {
-    "title": "Workshop: Consumer Groups & Load Balancing",
-    "permalink": "/KafkaStarter/curriculum/workshop/lesson_7/"
+    "title": "Workshop",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_7/workshop"
   }
 }

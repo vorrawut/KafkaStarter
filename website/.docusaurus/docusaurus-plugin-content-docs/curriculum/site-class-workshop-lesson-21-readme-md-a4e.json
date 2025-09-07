@@ -1,0 +1,24 @@
+{
+  "id": "workshop/lesson_21/README",
+  "title": "Workshop: Deployment & Scaling Best Practices",
+  "description": "🎯 Objective",
+  "source": "@site/../class/workshop/lesson_21/README.md",
+  "sourceDirName": "workshop/lesson_21",
+  "slug": "/workshop/lesson_21/",
+  "permalink": "/KafkaStarter/curriculum/workshop/lesson_21/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/workshop/lesson_21/README.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_21/concept"
+  },
+  "next": {
+    "title": "👍 Practical Use Cases",
+    "permalink": "/KafkaStarter/curriculum/modules/practical_usecases_guideline"
+  }
+}

@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-fanout-lesson11
+    name: kafka-transformation-lesson10
 
-  # Kafka configuration for Lesson 11 - Fan-out Pattern: Notification Systems
+  # Kafka configuration for Lesson 10 - Message Transformation & Filtering
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -13,14 +13,14 @@ spring:
       retries: 3
     
     consumer:
-      group-id: lesson11-fanout-group
+      group-id: lesson10-transformation-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure consumer settings for fan-out patterns
+      # TODO: Configure consumer settings for transformation patterns
 
 server:
-  port: 8091
+  port: 8090
 
 logging:
   level:

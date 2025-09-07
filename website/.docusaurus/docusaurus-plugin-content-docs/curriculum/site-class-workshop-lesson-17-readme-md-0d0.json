@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_17/README",
-  "title": "Workshop: Building a Real-time Dashboard Application",
+  "title": "Workshop: Local State Stores & Fault Tolerance",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_17/README.md",
   "sourceDirName": "workshop/lesson_17",

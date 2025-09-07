@@ -1,45 +1,58 @@
 spring:
   application:
-    name: kafka-monitoring-lesson19
+    name: kafka-security-lesson18
 
-  # Kafka configuration for Lesson 19 - Observability & Monitoring
+  # Kafka configuration for Lesson 18 - Kafka Security & ACLs
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:9093  # Secure port
     
+    # Security configuration (workshop to be completed)
+    security:
+      protocol: SASL_SSL
+    
+    # SSL configuration
+    ssl:
+      # TODO: Configure SSL settings
+      # HINT: Configure keystore, truststore, and SSL protocols
+      
+    # SASL configuration  
+    sasl:
+      # TODO: Configure SASL authentication
+      # HINT: Configure SASL mechanism and credentials
+      
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
-      # TODO: Add monitoring-specific producer properties
+      # TODO: Add security properties for producer
       
     consumer:
-      group-id: lesson19-monitoring-group
+      group-id: lesson18-security-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Add monitoring-specific consumer properties
+      # TODO: Add security properties for consumer
+
+    admin:
+      # TODO: Configure admin client security properties
+      # HINT: Admin client needs proper authentication for ACL management
 
 server:
-  port: 8095
+  port: 8094
+  # TODO: Configure HTTPS for secure REST endpoints
+  # HINT: Add SSL configuration for web server
 
-# TODO: Configure Micrometer and Prometheus metrics
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  # TODO: Add monitoring endpoint configuration
-  # HINT: Configure metrics export and custom metrics
-
-# TODO: Configure logging for monitoring
 logging:
   level:
     com.learning.KafkaStarter: DEBUG
     org.springframework.kafka: INFO
-  # TODO: Add monitoring-specific logging configuration
+    org.apache.kafka.common.security: DEBUG
 
-# TODO: Configure alerting thresholds
-monitoring:
-  # TODO: Add alerting configuration
-  # HINT: Configure thresholds for metrics and alerts
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,kafka
+  # TODO: Secure management endpoints
+  # HINT: Add authentication for actuator endpoints

@@ -1,539 +1,316 @@
-# Workshop: Development Tools & Testing Framework
+# Workshop: Schema Registry & Evolution
 
 ## 🎯 Objective
-Master essential Kafka development tools, debugging techniques, testing strategies, and monitoring setups for productive and reliable Kafka application development.
+Master schema management with Confluent Schema Registry, implementing Avro and Protobuf schemas with proper evolution strategies for production systems.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Kafka CLI Mastery
-Practice CLI operations in `cli/KafkaCliOperations.kt`
+### Task 1: Schema Definition & Registration
+Create and register schemas in `schemas/UserEventSchema.kt`
 
-### Task 2: Testing Framework
-Build comprehensive testing in `testing/KafkaTestFramework.kt`
+### Task 2: Avro Implementation
+Implement Avro serialization in `avro/AvroUserEventProducer.kt` and `avro/AvroUserEventConsumer.kt`
 
-### Task 3: Debugging Tools
-Implement debugging utilities in `debugging/KafkaDebugger.kt`
+### Task 3: Protobuf Implementation  
+Implement Protobuf serialization in `protobuf/ProtobufUserEventProducer.kt` and `protobuf/ProtobufUserEventConsumer.kt`
 
-### Task 4: Development Monitoring
-Set up dev monitoring in `monitoring/DevMonitoring.kt`
+### Task 4: Schema Evolution
+Practice schema evolution strategies in `evolution/SchemaEvolutionManager.kt`
 
-### Task 5: Performance Profiling
-Create profiling tools in `profiling/PerformanceProfiler.kt`
+### Task 5: Performance Comparison
+Compare serialization performance in `performance/SerializationBenchmark.kt`
 
-## 🛠️ Development Toolkit Architecture
+## 🏗️ Schema Registry Architecture
 ```mermaid
 graph TB
-    subgraph "Development Environment"
-        IDE[IntelliJ IDEA<br/>Kotlin Development]
-        CLI[Kafka CLI Tools<br/>Topic/Consumer Management]
-        UI[Kafka UI<br/>Visual Interface]
-        DEBUG[Debug Tools<br/>Message Inspector]
+    subgraph "Schema Registry (:8081)"
+        SR[Schema Registry Server]
+        STORE[Schema Storage]
+        COMPAT[Compatibility Checker]
+        VERSIONS[Version Manager]
     end
     
-    subgraph "Testing Framework"
-        UNIT[Unit Tests<br/>Business Logic]
-        INTEGRATION[Integration Tests<br/>Embedded Kafka]
-        CONTRACT[Contract Tests<br/>Schema Validation]
-        PERFORMANCE[Performance Tests<br/>Load Testing]
+    subgraph "Producers"
+        PROD1[JSON Producer]
+        PROD2[Avro Producer]
+        PROD3[Protobuf Producer]
     end
     
-    subgraph "Monitoring & Observability"
-        METRICS[Application Metrics<br/>Micrometer + Prometheus]
-        LOGS[Structured Logging<br/>JSON + Correlation IDs]
-        TRACES[Distributed Tracing<br/>Sleuth + Zipkin]
-        HEALTH[Health Checks<br/>Actuator Endpoints]
+    subgraph "Consumers"
+        CONS1[JSON Consumer]
+        CONS2[Avro Consumer]
+        CONS3[Protobuf Consumer]
     end
     
-    subgraph "Kafka Infrastructure"
-        BROKER[Kafka Brokers]
-        ZK[Zookeeper]
-        SR[Schema Registry]
-        TOPICS[Topics & Partitions]
+    subgraph "Kafka Topics"
+        T1[user-events-json]
+        T2[user-events-avro]
+        T3[user-events-protobuf]
     end
     
-    IDE --> CLI
-    CLI --> BROKER
-    UI --> BROKER
-    DEBUG --> BROKER
+    PROD2 -->|Register Schema| SR
+    PROD3 -->|Register Schema| SR
     
-    UNIT --> INTEGRATION
-    INTEGRATION --> CONTRACT
-    CONTRACT --> PERFORMANCE
+    PROD1 -->|Raw JSON| T1
+    PROD2 -->|Schema ID + Binary| T2
+    PROD3 -->|Schema ID + Binary| T3
     
-    METRICS --> LOGS
-    LOGS --> TRACES
-    TRACES --> HEALTH
+    T1 --> CONS1
+    T2 --> CONS2
+    T3 --> CONS3
     
-    INTEGRATION --> BROKER
-    METRICS --> BROKER
+    CONS2 -->|Fetch Schema| SR
+    CONS3 -->|Fetch Schema| SR
     
-    style CLI fill:#ff6b6b
-    style INTEGRATION fill:#4ecdc4
-    style METRICS fill:#a8e6cf
-    style BROKER fill:#ffe66d
+    style SR fill:#ff6b6b
+    style T2 fill:#4ecdc4
+    style T3 fill:#a8e6cf
 ```
 
-## 🔧 Kafka CLI Mastery
-
-### Essential CLI Commands
-```mermaid
-graph TB
-    subgraph "Topic Management"
-        TC[kafka-topics<br/>Create, list, describe, delete]
-        CONFIG[kafka-configs<br/>View and modify configurations]
-        REASSIGN[kafka-reassign-partitions<br/>Partition reassignment]
-    end
-    
-    subgraph "Producer/Consumer Operations"
-        PROD[kafka-console-producer<br/>Send test messages]
-        CONS[kafka-console-consumer<br/>Read messages]
-        PERF[kafka-producer-perf-test<br/>Performance testing]
-    end
-    
-    subgraph "Consumer Group Management"
-        CG[kafka-consumer-groups<br/>List, describe, reset offsets]
-        LOG[kafka-run-class GetOffsetShell<br/>Check offsets]
-        RESET[kafka-consumer-groups --reset-offsets<br/>Offset management]
-    end
-    
-    subgraph "Cluster Operations"
-        BROKER[kafka-broker-api-versions<br/>Broker connectivity]
-        LEADER[kafka-leader-election<br/>Leadership management]
-        VERIFY[kafka-verifiable-producer/consumer<br/>End-to-end testing]
-    end
-    
-    TC --> CONFIG
-    CONFIG --> REASSIGN
-    
-    PROD --> CONS
-    CONS --> PERF
-    
-    CG --> LOG
-    LOG --> RESET
-    
-    BROKER --> LEADER
-    LEADER --> VERIFY
-    
-    style TC fill:#ff6b6b
-    style PROD fill:#4ecdc4
-    style CG fill:#a8e6cf
-    style BROKER fill:#ffe66d
-```
-
-### CLI Automation Scripts
-```bash
-#!/bin/bash
-# Topic management helper
-create_topic() {
-    local topic_name=$1
-    local partitions=${2:-3}
-    local replication=${3:-1}
-    
-    kafka-topics --create \
-        --topic "$topic_name" \
-        --partitions "$partitions" \
-        --replication-factor "$replication" \
-        --bootstrap-server localhost:9092
-}
-
-# Consumer group monitoring
-monitor_consumer_lag() {
-    local group_id=$1
-    
-    while true; do
-        echo "=== Consumer Group Lag: $(date) ==="
-        kafka-consumer-groups --bootstrap-server localhost:9092 \
-            --group "$group_id" --describe
-        echo ""
-        sleep 10
-    done
-}
-
-# Performance testing
-test_producer_performance() {
-    local topic=$1
-    local num_records=${2:-10000}
-    local record_size=${3:-1024}
-    
-    kafka-producer-perf-test \
-        --topic "$topic" \
-        --num-records "$num_records" \
-        --record-size "$record_size" \
-        --throughput -1 \
-        --producer-props bootstrap.servers=localhost:9092
-}
-```
-
-## 🧪 Testing Framework
-
-### Testing Strategy Pyramid
-```mermaid
-graph TB
-    subgraph "Testing Pyramid"
-        E2E[End-to-End Tests<br/>Full system integration<br/>Slow, expensive, comprehensive]
-        INTEGRATION[Integration Tests<br/>Kafka + Spring Boot<br/>Medium speed, realistic]
-        UNIT[Unit Tests<br/>Business logic only<br/>Fast, isolated, focused]
-    end
-    
-    subgraph "Kafka-Specific Testing"
-        EMBEDDED[Embedded Kafka<br/>@EmbeddedKafka annotation]
-        TESTCONTAINERS[TestContainers<br/>Docker-based testing]
-        TOPOLOGY[Topology Testing<br/>Kafka Streams validation]
-        SCHEMA[Schema Testing<br/>Avro/Protobuf validation]
-    end
-    
-    subgraph "Test Data Management"
-        FIXTURES[Test Fixtures<br/>Predefined test data]
-        BUILDERS[Test Builders<br/>Fluent test data creation]
-        FACTORIES[Test Factories<br/>Random test data generation]
-    end
-    
-    UNIT --> INTEGRATION
-    INTEGRATION --> E2E
-    
-    INTEGRATION --> EMBEDDED
-    INTEGRATION --> TESTCONTAINERS
-    
-    EMBEDDED --> TOPOLOGY
-    TESTCONTAINERS --> SCHEMA
-    
-    TOPOLOGY --> FIXTURES
-    SCHEMA --> BUILDERS
-    FIXTURES --> FACTORIES
-    
-    style E2E fill:#ff6b6b
-    style INTEGRATION fill:#4ecdc4
-    style UNIT fill:#a8e6cf
-    style EMBEDDED fill:#ffe66d
-```
-
-### Test Implementation Patterns
-```kotlin
-@SpringBootTest
-@EmbeddedKafka(partitions = 1, topics = ["test-topic"])
-class KafkaIntegrationTest {
-    
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
-    
-    @Autowired
-    private lateinit var userEventService: UserEventService
-    
-    @Test
-    fun `should process user registration event end-to-end`() {
-        // Given
-        val testEvent = UserEvent(
-            eventId = "test-123",
-            eventType = "USER_REGISTERED",
-            userId = "user-456",
-            username = "testuser",
-            email = "test@example.com"
-        )
-        
-        // When
-        kafkaTemplate.send("user-events", testEvent.userId, testEvent)
-        
-        // Then
-        await().atMost(5, SECONDS).untilAsserted {
-            val processedEvent = userEventService.getProcessedEvent(testEvent.eventId)
-            assertThat(processedEvent).isNotNull
-            assertThat(processedEvent.status).isEqualTo("PROCESSED")
-        }
-    }
-}
-```
-
-## 🔍 Debugging Tools
-
-### Message Flow Debugging
+## 🔄 Schema Evolution Flow
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant Debug as Debug Tool
-    participant Producer as Producer App
-    participant Kafka as Kafka Broker
-    participant Consumer as Consumer App
+    participant SR as Schema Registry
+    participant PROD as Producer
+    participant CONS as Consumer
     
-    Dev->>Debug: Start message tracing
-    Debug->>Producer: Intercept outgoing messages
-    Producer->>Kafka: Send message with trace ID
-    Debug->>Kafka: Monitor topic for traced messages
-    Kafka->>Consumer: Deliver message
-    Debug->>Consumer: Intercept incoming messages
-    Consumer->>Debug: Processing result
-    Debug->>Dev: Complete message flow trace
+    Dev->>SR: Register Schema v1
+    SR-->>Dev: Schema ID: 1
     
-    Note over Debug: Correlation ID tracking
-    Note over Debug: Timing measurements
-    Note over Debug: Error detection
+    PROD->>SR: Get Schema v1
+    PROD->>PROD: Serialize with Schema ID 1
+    PROD->>Kafka: Send [Schema ID 1][Binary Data]
+    
+    Kafka->>CONS: Deliver Message
+    CONS->>SR: Fetch Schema ID 1
+    CONS->>CONS: Deserialize with Schema v1
+    
+    Note over Dev,CONS: Schema Evolution
+    Dev->>SR: Register Schema v2 (backward compatible)
+    SR->>SR: Compatibility Check
+    SR-->>Dev: Schema ID: 2
+    
+    PROD->>SR: Get Schema v2
+    PROD->>PROD: Serialize with Schema ID 2
+    PROD->>Kafka: Send [Schema ID 2][Binary Data]
+    
+    Kafka->>CONS: Deliver Message
+    Note over CONS: Old consumer can still read v2 data!
+    CONS->>SR: Fetch Schema ID 2
+    CONS->>CONS: Deserialize with compatibility rules
 ```
 
-### Debug Tool Implementation
-```kotlin
-@Component
-class KafkaMessageTracer {
-    
-    private val messageTraces = ConcurrentHashMap<String, MessageTrace>()
-    
-    fun startTrace(correlationId: String): MessageTrace {
-        val trace = MessageTrace(
-            correlationId = correlationId,
-            startTime = System.currentTimeMillis(),
-            checkpoints = mutableListOf()
-        )
-        messageTraces[correlationId] = trace
-        return trace
-    }
-    
-    fun addCheckpoint(correlationId: String, checkpoint: String, metadata: Map<String, Any> = emptyMap()) {
-        messageTraces[correlationId]?.let { trace ->
-            trace.checkpoints.add(
-                TraceCheckpoint(
-                    timestamp = System.currentTimeMillis(),
-                    checkpoint = checkpoint,
-                    metadata = metadata
-                )
-            )
-        }
-    }
-    
-    fun completeTrace(correlationId: String): MessageTrace? {
-        return messageTraces.remove(correlationId)?.apply {
-            endTime = System.currentTimeMillis()
-            duration = endTime - startTime
-        }
-    }
-    
-    fun getActiveTraces(): List<MessageTrace> {
-        return messageTraces.values.toList()
-    }
+## 🎯 Key Concepts
+
+### **Schema Registry Benefits**
+- **Type Safety**: Compile-time checking of data structures
+- **Evolution**: Safe schema changes without breaking consumers
+- **Efficiency**: Binary serialization reduces message size
+- **Documentation**: Self-documenting data contracts
+- **Governance**: Centralized schema management
+
+### **Serialization Formats**
+
+#### **JSON** (Human-readable)
+```json
+{
+  "eventId": "evt-123",
+  "eventType": "USER_CREATED",
+  "userId": "user-456",
+  "username": "john_doe",
+  "email": "john@example.com",
+  "timestamp": 1645123456789
 }
+```
+
+#### **Avro** (Schema evolution focus)
+```json
+{
+  "type": "record",
+  "name": "UserEvent",
+  "fields": [
+    {"name": "eventId", "type": "string"},
+    {"name": "eventType", "type": "string"},
+    {"name": "userId", "type": "string"},
+    {"name": "username", "type": "string"},
+    {"name": "email", "type": "string"},
+    {"name": "timestamp", "type": "long"}
+  ]
+}
+```
+
+#### **Protobuf** (Performance focus)
+```protobuf
+syntax = "proto3";
+
+message UserEvent {
+  string event_id = 1;
+  string event_type = 2;
+  string user_id = 3;
+  string username = 4;
+  string email = 5;
+  int64 timestamp = 6;
+}
+```
+
+## ⚡ Performance Comparison
+```mermaid
+graph TB
+    subgraph "Serialization Performance"
+        JSON[JSON<br/>Size: 150 bytes<br/>Speed: Fast<br/>CPU: Low]
+        AVRO[Avro<br/>Size: 45 bytes<br/>Speed: Very Fast<br/>CPU: Low]
+        PROTO[Protobuf<br/>Size: 42 bytes<br/>Speed: Fastest<br/>CPU: Very Low]
+    end
+    
+    subgraph "Schema Evolution Support"
+        JSON_EV[JSON<br/>Manual handling<br/>No built-in compatibility]
+        AVRO_EV[Avro<br/>Excellent evolution<br/>Multiple compatibility modes]
+        PROTO_EV[Protobuf<br/>Good evolution<br/>Field number-based]
+    end
+    
+    subgraph "Use Cases"
+        JSON_UC[JSON<br/>• Development<br/>• Debugging<br/>• Simple APIs]
+        AVRO_UC[Avro<br/>• Data lakes<br/>• ETL pipelines<br/>• Analytics]
+        PROTO_UC[Protobuf<br/>• High throughput<br/>• Microservices<br/>• Real-time systems]
+    end
+    
+    style AVRO fill:#4ecdc4
+    style PROTO fill:#a8e6cf
+    style JSON fill:#ffe66d
+```
+
+## 🔄 Schema Evolution Strategies
+
+### **Backward Compatibility** (Consumers can read new data)
+```mermaid
+graph LR
+    V1[Schema v1<br/>Fields: A, B] --> V2[Schema v2<br/>Fields: A, B, C]
+    V2 --> OLD[Old Consumer<br/>Reads A, B<br/>Ignores C]
+    
+    style V2 fill:#4ecdc4
+    style OLD fill:#a8e6cf
+```
+
+### **Forward Compatibility** (Consumers can read old data)
+```mermaid
+graph LR
+    V1[Schema v1<br/>Fields: A, B, C] --> V2[Schema v2<br/>Fields: A, B]
+    V2 --> NEW[New Consumer<br/>Expects A, B<br/>C has default value]
+    
+    style V2 fill:#4ecdc4
+    style NEW fill:#a8e6cf
+```
+
+### **Full Compatibility** (Both directions work)
+```mermaid
+graph TB
+    V1[Schema v1] <--> V2[Schema v2]
+    V2 <--> V3[Schema v3]
+    
+    OLD[Old Consumers] --> V1
+    NEW[New Consumers] --> V3
+    
+    style V2 fill:#4ecdc4
 ```
 
 ## ✅ Success Criteria
-- [ ] Can efficiently use Kafka CLI tools for all common operations
-- [ ] Comprehensive testing framework with unit, integration, and E2E tests
-- [ ] Debugging tools provide clear visibility into message flows
-- [ ] Development monitoring shows real-time application metrics
-- [ ] Performance profiling identifies bottlenecks and optimization opportunities
-- [ ] Error scenarios can be reproduced and debugged systematically
-- [ ] Code coverage meets team standards (&gt;80% for critical paths)
+- [ ] Schema Registry accessible and healthy
+- [ ] Can register and retrieve schemas
+- [ ] Avro producer/consumer working with binary serialization
+- [ ] Protobuf producer/consumer working with binary serialization
+- [ ] Schema evolution scenarios tested
+- [ ] Performance benchmarks completed
+- [ ] Compatibility rules understood and applied
 
 ## 🚀 Getting Started
 
-### 1. Set Up Testing Framework
-```kotlin
-@TestConfiguration
-class KafkaTestConfig {
-    
-    @Bean
-    @Primary
-    fun testKafkaTemplate(): KafkaTemplate<String, Any> {
-        val producerFactory = DefaultKafkaProducerFactory<String, Any>(
-            mapOf(
-                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
-                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
-                ProducerConfig.ACKS_CONFIG to "all",
-                ProducerConfig.RETRIES_CONFIG to 0,
-                ProducerConfig.BATCH_SIZE_CONFIG to 1
-            )
-        )
-        
-        return KafkaTemplate(producerFactory)
-    }
-    
-    @Bean
-    fun testListener(): CountDownLatch {
-        return CountDownLatch(1)
-    }
-}
-```
-
-### 2. Practice CLI Operations
+### 1. Verify Schema Registry
 ```bash
-# Create development topic
-kafka-topics --create --topic dev-events \
-  --partitions 3 --replication-factor 1 \
-  --bootstrap-server localhost:9092
+# Check Schema Registry health
+curl http://localhost:8081/subjects
 
-# Send test messages
-echo "test-key:test-message" | kafka-console-producer \
-  --topic dev-events --bootstrap-server localhost:9092 \
-  --property "parse.key=true" --property "key.separator=:"
-
-# Monitor messages
-kafka-console-consumer --topic dev-events \
-  --from-beginning --bootstrap-server localhost:9092 \
-  --property print.key=true
-
-# Check consumer group
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group dev-group --describe
+# List all schemas
+curl http://localhost:8081/subjects
 ```
 
-### 3. Set Up Development Monitoring
-```yaml
-# application-dev.yml
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
-    metrics:
-      enabled: true
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-    tags:
-      application: kafka-starter
-      environment: development
-
-logging:
-  level:
-    org.springframework.kafka: DEBUG
-    org.apache.kafka: INFO
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"
-```
-
-## 📊 Performance Profiling
-
-### Performance Metrics Dashboard
-```mermaid
-graph TB
-    subgraph "Application Metrics"
-        THROUGHPUT[Message Throughput<br/>messages/second]
-        LATENCY[Processing Latency<br/&gt;95th percentile]
-        ERROR_RATE[Error Rate<br/>errors/minute]
-        MEMORY[Memory Usage<br/>heap utilization]
-    end
-    
-    subgraph "Kafka Metrics"
-        PRODUCER_RATE[Producer Rate<br/>records/second]
-        CONSUMER_LAG[Consumer Lag<br/>messages behind]
-        BATCH_SIZE[Batch Size<br/>records/batch]
-        COMMIT_RATE[Commit Rate<br/>commits/second]
-    end
-    
-    subgraph "System Metrics"
-        CPU[CPU Usage<br/>percentage]
-        DISK_IO[Disk I/O<br/>read/write rates]
-        NETWORK[Network I/O<br/>bytes in/out]
-        GC[Garbage Collection<br/>pause times]
-    end
-    
-    subgraph "Business Metrics"
-        ORDER_RATE[Order Processing Rate<br/>orders/minute]
-        USER_EVENTS[User Event Rate<br/>events/minute]
-        REVENUE[Revenue Impact<br/>from processing delays]
-        SLA[SLA Compliance<br/>% within targets]
-    end
-    
-    THROUGHPUT --> PRODUCER_RATE
-    LATENCY --> CONSUMER_LAG
-    ERROR_RATE --> COMMIT_RATE
-    
-    CPU --> THROUGHPUT
-    MEMORY --> LATENCY
-    DISK_IO --> BATCH_SIZE
-    
-    ORDER_RATE --> THROUGHPUT
-    USER_EVENTS --> PRODUCER_RATE
-    
-    style THROUGHPUT fill:#4ecdc4
-    style LATENCY fill:#ffe66d
-    style ERROR_RATE fill:#ff6b6b
-    style SLA fill:#a8e6cf
-```
-
-### Automated Performance Testing
-```kotlin
-@Component
-class PerformanceProfiler {
-    
-    fun profileProducerPerformance(
-        topicName: String,
-        messageCount: Int,
-        messageSize: Int
-    ): ProducerPerformanceResult {
-        
-        val startTime = System.currentTimeMillis()
-        val futures = mutableListOf<CompletableFuture<SendResult<String, ByteArray>>>()
-        
-        // Generate test data
-        val testMessage = ByteArray(messageSize) { it.toByte() }
-        
-        // Send messages and collect futures
-        repeat(messageCount) { index ->
-            val future = kafkaTemplate.send(topicName, "key-$index", testMessage)
-            futures.add(future)
-        }
-        
-        // Wait for all sends to complete
-        CompletableFuture.allOf(*futures.toTypedArray()).get()
-        
-        val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime
-        
-        return ProducerPerformanceResult(
-            messageCount = messageCount,
-            messageSize = messageSize,
-            durationMs = duration,
-            throughputMsgsPerSec = (messageCount * 1000.0) / duration,
-            throughputMBPerSec = (messageCount * messageSize * 1000.0) / (duration * 1024 * 1024)
-        )
-    }
-}
-```
-
-## 🎯 Best Practices
-
-### Development Workflow
-- **Use version control** for all configuration and test data
-- **Automate repetitive tasks** with scripts and aliases
-- **Test early and often** with embedded Kafka for fast feedback
-- **Monitor continuously** even in development environments
-
-### Testing Strategy
-- **Start with unit tests** for business logic
-- **Use integration tests** for Kafka interactions
-- **Add contract tests** for schema validation
-- **Include performance tests** for throughput requirements
-
-### Debugging Approach
-- **Use correlation IDs** to trace messages across services
-- **Log structured data** with consistent formatting
-- **Monitor key metrics** to identify issues quickly
-- **Reproduce issues** in controlled test environments
-
-## 🔍 Troubleshooting
-
-### Common Development Issues
-1. **Slow tests** - Use @DirtiesContext sparingly, prefer test slices
-2. **Flaky tests** - Add proper wait conditions and timeouts
-3. **Memory leaks** - Monitor test execution and clean up resources
-4. **Port conflicts** - Use random ports or test containers
-
-### Debug Commands
+### 2. Register Your First Schema
 ```bash
-# Check if Kafka is running
-kafka-broker-api-versions --bootstrap-server localhost:9092
+# Register Avro schema
+curl -X POST http://localhost:8081/subjects/user-events-avro-value/versions \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  -d '{"schema": "{\"type\":\"record\",\"name\":\"UserEvent\",\"fields\":[{\"name\":\"eventId\",\"type\":\"string\"}]}"}'
+```
 
-# Debug consumer issues
-kafka-console-consumer --topic your-topic \
-  --bootstrap-server localhost:9092 \
-  --property print.headers=true \
-  --property print.timestamp=true
+### 3. Test Serialization Performance
+```bash
+# Run performance benchmark
+./gradlew test --tests SerializationBenchmarkTest
 
-# Monitor JVM metrics
-jcmd <pid> VM.info
-jstack <pid>
+# Compare message sizes
+./gradlew bootRun --args="--benchmark.mode=size"
+```
+
+## 🔧 Schema Evolution Examples
+
+### Adding Optional Fields (Backward Compatible)
+```kotlin
+// Schema v1
+data class UserEventV1(
+    val eventId: String,
+    val userId: String,
+    val eventType: String
+)
+
+// Schema v2 - Added optional field with default
+data class UserEventV2(
+    val eventId: String,
+    val userId: String,
+    val eventType: String,
+    val metadata: Map<String, String> = emptyMap() // NEW FIELD
+)
+```
+
+### Removing Fields (Forward Compatible)
+```kotlin
+// Schema v1
+data class UserEventV1(
+    val eventId: String,
+    val userId: String,
+    val eventType: String,
+    val deprecatedField: String // TO BE REMOVED
+)
+
+// Schema v2 - Field removed
+data class UserEventV2(
+    val eventId: String,
+    val userId: String,
+    val eventType: String
+    // deprecatedField removed
+)
+```
+
+## 🔍 Monitoring & Debugging
+
+### Schema Registry Metrics
+- **Schema registration rate**
+- **Compatibility check failures**
+- **Schema fetch latency**
+- **Storage usage**
+
+### Debug Tools
+```bash
+# View schema by ID
+curl http://localhost:8081/schemas/ids/1
+
+# Check compatibility
+curl -X POST http://localhost:8081/compatibility/subjects/user-events-avro-value/versions/latest \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  -d '{"schema": "..."}'
+
+# List schema versions
+curl http://localhost:8081/subjects/user-events-avro-value/versions
 ```
 
 ## 🚀 Next Steps
-Development tools mastered? Time to scale with consumer groups! Move to [Lesson 7: Consumer Groups & Load Balancing](../lesson_7/README.md) to learn parallel processing patterns.
+Schema management mastered? Time to explore development tools! Move to [Lesson 6: Development Tools](../lesson_7/README.md) to learn debugging, testing, and monitoring techniques for Kafka applications.

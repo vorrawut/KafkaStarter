@@ -1,661 +1,564 @@
-# Workshop: Local State Stores & Fault Tolerance
+# Workshop: Windowing, Joins & Stateful Operations
 
 ## 🎯 Objective
-Master stateful stream processing with Kafka Streams local state stores, implement fault tolerance mechanisms, state backup and recovery, and build resilient stream applications that maintain state consistency across failures.
+Master advanced Kafka Streams operations including temporal windowing, stream-stream joins, stream-table joins, and stateful aggregations for complex real-time analytics and event processing.
 
 ## 📋 Workshop Tasks
 
-### Task 1: State Store Configuration
-Configure state stores in `statestore/StateStoreConfig.kt`
+### Task 1: Windowing Operations
+Implement windowing in `windowing/WindowingProcessor.kt`
 
-### Task 2: Stateful Processing
-Implement stateful operations in `stateful/StatefulProcessor.kt`
+### Task 2: Stream-Stream Joins
+Build stream joins in `joins/StreamJoinProcessor.kt`
 
-### Task 3: Fault Tolerance
-Build fault tolerance in `faulttolerance/FaultToleranceManager.kt`
+### Task 3: Stream-Table Joins
+Create table joins in `joins/StreamTableJoinProcessor.kt`
 
-### Task 4: State Recovery
-Create recovery mechanisms in `recovery/StateRecoveryService.kt`
+### Task 4: Temporal Aggregations
+Implement aggregations in `aggregation/TemporalAggregator.kt`
 
-### Task 5: Interactive Queries
-Implement queries in `queries/InteractiveQueryService.kt`
+### Task 5: Complex Event Processing
+Build CEP patterns in `cep/ComplexEventProcessor.kt`
 
-## 🏗️ Stateful Streams Architecture
+## 🏗️ Advanced Streams Architecture
 ```mermaid
 graph TB
     subgraph "Input Streams"
-        TRADES[Stock Trades<br/>Real-time pricing]
-        ORDERS[Order Events<br/>Buy/sell orders]
-        POSITIONS[Position Updates<br/>Portfolio changes]
-        MARKET[Market Data<br/>Reference prices]
+        TRADES[Stock Trades<br/>symbol, price, volume]
+        QUOTES[Stock Quotes<br/>bid, ask, spread]
+        NEWS[Market News<br/>sentiment, impact]
+        ORDERS[Order Events<br/>buy/sell orders]
     end
     
-    subgraph "Kafka Streams Application"
-        PROCESSOR[Stream Processor<br/>Stateful operations]
-        
-        subgraph "Local State Stores"
-            PRICE_STORE[Price Store<br/>Latest prices by symbol]
-            POSITION_STORE[Position Store<br/>Portfolio positions]
-            AGGREGATION_STORE[Aggregation Store<br/>Running calculations]
-            WINDOW_STORE[Window Store<br/>Time-based aggregations]
-        end
-        
-        subgraph "State Management"
-            CHANGELOG[Changelog Topics<br/>State backup]
-            STANDBY[Standby Replicas<br/>Fault tolerance]
-            RECOVERY[Recovery Manager<br/>State restoration]
-        end
+    subgraph "Windowing Operations"
+        TUMBLING[Tumbling Windows<br/>Fixed 1-minute intervals]
+        HOPPING[Hopping Windows<br/&gt;30-second slides, 1-minute size]
+        SESSION[Session Windows<br/>Activity-based grouping]
+        CUSTOM[Custom Windows<br/>Business-specific timing]
     end
     
-    subgraph "Query Interface"
-        REST_API[REST API<br/>Interactive queries]
-        WEBSOCKET[WebSocket<br/>Real-time updates]
-        ADMIN[Admin Interface<br/>State inspection]
+    subgraph "Join Operations"
+        SS_JOIN[Stream-Stream Join<br/>Trades ⋈ Quotes]
+        ST_JOIN[Stream-Table Join<br/>Trades ⋈ Reference Data]
+        GLOBAL_JOIN[Global Table Join<br/>Symbol Metadata]
+        OUTER_JOIN[Outer Joins<br/>Optional matching]
     end
     
-    subgraph "Fault Tolerance"
-        MONITORING[Health Monitoring<br/>Instance health]
-        REBALANCING[Partition Rebalancing<br/>Automatic failover]
-        BACKUP[State Backup<br/>Periodic snapshots]
-        RESTORE[State Restoration<br/>Recovery process]
+    subgraph "Aggregations & Analytics"
+        PRICE_AGG[Price Aggregations<br/>OHLC, VWAP, moving averages]
+        VOLUME_AGG[Volume Aggregations<br/>Total volume, trade count]
+        VOLATILITY[Volatility Calculation<br/>Standard deviation]
+        CORRELATION[Cross-Asset Correlation<br/>Market relationships]
     end
     
-    TRADES --> PROCESSOR
-    ORDERS --> PROCESSOR
-    POSITIONS --> PROCESSOR
-    MARKET --> PROCESSOR
+    subgraph "Output Streams"
+        ANALYTICS[Market Analytics<br/>Real-time metrics]
+        ALERTS[Trading Alerts<br/>Threshold breaches]
+        DASHBOARD[Dashboard Feed<br/>Live market data]
+        ARCHIVE[Historical Archive<br/>Long-term storage]
+    end
     
-    PROCESSOR --> PRICE_STORE
-    PROCESSOR --> POSITION_STORE
-    PROCESSOR --> AGGREGATION_STORE
-    PROCESSOR --> WINDOW_STORE
+    TRADES --> TUMBLING
+    QUOTES --> HOPPING
+    NEWS --> SESSION
+    ORDERS --> CUSTOM
     
-    PRICE_STORE --> CHANGELOG
-    POSITION_STORE --> CHANGELOG
-    AGGREGATION_STORE --> CHANGELOG
-    WINDOW_STORE --> CHANGELOG
+    TUMBLING --> SS_JOIN
+    HOPPING --> ST_JOIN
+    SESSION --> GLOBAL_JOIN
+    CUSTOM --> OUTER_JOIN
     
-    CHANGELOG --> STANDBY
-    STANDBY --> RECOVERY
+    SS_JOIN --> PRICE_AGG
+    ST_JOIN --> VOLUME_AGG
+    GLOBAL_JOIN --> VOLATILITY
+    OUTER_JOIN --> CORRELATION
     
-    PRICE_STORE --> REST_API
-    POSITION_STORE --> REST_API
-    REST_API --> WEBSOCKET
-    REST_API --> ADMIN
+    PRICE_AGG --> ANALYTICS
+    VOLUME_AGG --> ALERTS
+    VOLATILITY --> DASHBOARD
+    CORRELATION --> ARCHIVE
     
-    PROCESSOR --> MONITORING
-    MONITORING --> REBALANCING
-    REBALANCING --> BACKUP
-    BACKUP --> RESTORE
-    
-    style PROCESSOR fill:#ff6b6b
-    style PRICE_STORE fill:#4ecdc4
-    style CHANGELOG fill:#a8e6cf
-    style REST_API fill:#ffe66d
+    style TUMBLING fill:#ff6b6b
+    style SS_JOIN fill:#4ecdc4
+    style PRICE_AGG fill:#a8e6cf
+    style ANALYTICS fill:#ffe66d
 ```
 
-## 🗄️ State Store Types
+## ⏰ Windowing Operations Deep Dive
 
-### State Store Categories
+### Window Types and Use Cases
 ```mermaid
 graph TB
-    subgraph "Persistent State Stores"
-        KEY_VALUE[Key-Value Store<br/>RocksDB-backed<br/>Fault-tolerant]
-        WINDOW_STORE[Window Store<br/>Time-based partitioning<br/>Automatic cleanup]
-        SESSION_STORE[Session Store<br/>Activity-based windows<br/>Dynamic sizing]
+    subgraph "Tumbling Windows (Non-overlapping)"
+        TW1[Window 1<br/&gt;09:00-09:01]
+        TW2[Window 2<br/&gt;09:01-09:02]
+        TW3[Window 3<br/&gt;09:02-09:03]
+        
+        TW1 --> TW2
+        TW2 --> TW3
     end
     
-    subgraph "In-Memory State Stores"
-        MEMORY_KV[Memory Key-Value<br/>Fast access<br/>No persistence]
-        MEMORY_LRU[Memory LRU Cache<br/>Size-limited<br/>Cache eviction]
+    subgraph "Hopping Windows (Overlapping)"
+        HW1[Window 1<br/&gt;09:00-09:02]
+        HW2[Window 2<br/&gt;09:01-09:03]
+        HW3[Window 3<br/&gt;09:02-09:04]
+        
+        HW1 -.-> HW2
+        HW2 -.-> HW3
     end
     
-    subgraph "State Store Features"
-        MATERIALIZED[Materialized Views<br/>Query optimization]
-        CACHING[Caching Layer<br/>Write batching]
-        LOGGING[Change Logging<br/>Backup to Kafka]
-        SERIALIZATION[Custom Serdes<br/>Efficient encoding]
+    subgraph "Session Windows (Activity-based)"
+        SW1[Session 1<br/>User active 09:00-09:05]
+        SG1[Gap: 10 min inactivity]
+        SW2[Session 2<br/>User active 09:15-09:20]
+        
+        SW1 --> SG1
+        SG1 --> SW2
     end
     
-    subgraph "Access Patterns"
-        POINT_QUERIES[Point Queries<br/>Single key lookup]
-        RANGE_QUERIES[Range Queries<br/>Key range scanning]
-        TIME_QUERIES[Time-based Queries<br/>Window range access]
-        PREFIX_QUERIES[Prefix Queries<br/>Key prefix matching]
+    subgraph "Use Cases"
+        UC1[Tumbling: Hourly sales reports]
+        UC2[Hopping: Moving averages]
+        UC3[Session: User activity analysis]
     end
     
-    KEY_VALUE --> MATERIALIZED
-    WINDOW_STORE --> CACHING
-    SESSION_STORE --> LOGGING
+    TW1 --> UC1
+    HW1 --> UC2
+    SW1 --> UC3
     
-    MATERIALIZED --> POINT_QUERIES
-    CACHING --> RANGE_QUERIES
-    LOGGING --> TIME_QUERIES
-    SERIALIZATION --> PREFIX_QUERIES
-    
-    style KEY_VALUE fill:#ff6b6b
-    style WINDOW_STORE fill:#4ecdc4
-    style MATERIALIZED fill:#a8e6cf
-    style POINT_QUERIES fill:#ffe66d
+    style TW1 fill:#ff6b6b
+    style HW1 fill:#4ecdc4
+    style SW1 fill:#a8e6cf
 ```
 
-## 💾 State Store Implementation
-
-### Portfolio Position Manager
+### Windowing Implementation
 ```kotlin
 @Component
-class PortfolioStateManager {
-    
-    companion object {
-        const val POSITION_STORE = "portfolio-positions"
-        const val PRICE_STORE = "latest-prices"  
-        const val PNL_STORE = "profit-loss-calculations"
-    }
+class AdvancedWindowingProcessor {
     
     @Autowired
     private lateinit var streamsBuilder: StreamsBuilder
     
     @Bean
-    fun portfolioTrackingTopology(): KStream<String, TradeEvent> {
+    fun stockAnalyticsTopology(): KStream<String, StockTrade> {
         
-        // Input streams
-        val trades = streamsBuilder.stream<String, TradeEvent>("trade-events")
-        val prices = streamsBuilder.stream<String, PriceUpdate>("price-updates")
+        // Input stream of stock trades
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
         
-        // State stores configuration
-        val positionStoreBuilder = Stores.keyValueStoreBuilder(
-            Stores.persistentKeyValueStore(POSITION_STORE),
-            Serdes.String(),
-            JsonSerde(Position::class.java)
-        ).withCachingEnabled()
-         .withLoggingEnabled(mapOf(
-            TopicConfig.CLEANUP_POLICY_CONFIG to TopicConfig.CLEANUP_POLICY_COMPACT,
-            TopicConfig.MIN_COMPACTION_LAG_MS_CONFIG to "60000"
-        ))
-        
-        val priceStoreBuilder = Stores.keyValueStoreBuilder(
-            Stores.persistentKeyValueStore(PRICE_STORE),
-            Serdes.String(),
-            JsonSerde(Price::class.java)
-        ).withCachingEnabled()
-         .withLoggingEnabled(emptyMap())
-        
-        // Register state stores
-        streamsBuilder.addStateStore(positionStoreBuilder)
-        streamsBuilder.addStateStore(priceStoreBuilder)
-        
-        // Process price updates
-        prices.process(
-            ProcessorSupplier { PriceUpdateProcessor() },
-            PRICE_STORE
-        )
-        
-        // Process trades and update positions
-        val updatedPositions = trades.process(
-            ProcessorSupplier { TradeProcessor() },
-            POSITION_STORE, PRICE_STORE
-        )
-        
-        // Calculate P&L with windowed aggregations
-        val pnlCalculations = updatedPositions
+        // 1. Tumbling Window: 1-minute OHLC (Open, High, Low, Close)
+        val ohlcData = trades
             .groupByKey()
             .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
             .aggregate(
-                { PnLAccumulator() },
-                { symbol, position, accumulator -> 
-                    accumulator.updatePosition(position)
-                },
-                Materialized.`as`<String, PnLAccumulator, WindowStore<Bytes, ByteArray>>(PNL_STORE)
-                    .withValueSerde(JsonSerde(PnLAccumulator::class.java))
-                    .withRetention(Duration.ofHours(24))
+                { OHLCData() },
+                { key, trade, ohlc -> ohlc.update(trade) },
+                Materialized.`as`<String, OHLCData, WindowStore<Bytes, ByteArray>>("ohlc-store")
             )
-        
-        // Output real-time P&L updates
-        pnlCalculations.toStream()
-            .map { windowedKey, accumulator ->
+            .toStream()
+            .map { windowedKey, ohlc ->
                 KeyValue(
                     windowedKey.key(),
-                    PnLUpdate(
+                    MarketAnalytics(
                         symbol = windowedKey.key(),
                         windowStart = windowedKey.window().start(),
                         windowEnd = windowedKey.window().end(),
-                        unrealizedPnL = accumulator.getUnrealizedPnL(),
-                        realizedPnL = accumulator.getRealizedPnL(),
-                        totalPnL = accumulator.getTotalPnL()
+                        open = ohlc.open,
+                        high = ohlc.high,
+                        low = ohlc.low,
+                        close = ohlc.close,
+                        volume = ohlc.volume
                     )
                 )
             }
-            .to("portfolio-pnl-updates")
+        
+        // 2. Hopping Window: 5-minute moving average with 1-minute advance
+        val movingAverages = trades
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(5)).advanceBy(Duration.ofMinutes(1)))
+            .aggregate(
+                { PriceAccumulator() },
+                { key, trade, acc -> acc.add(trade.price, trade.volume) },
+                Materialized.`as`<String, PriceAccumulator, WindowStore<Bytes, ByteArray>>("moving-avg-store")
+            )
+            .toStream()
+            .mapValues { accumulator -> 
+                MovingAverage(
+                    vwap = accumulator.getVWAP(),
+                    simpleAverage = accumulator.getSimpleAverage(),
+                    totalVolume = accumulator.totalVolume,
+                    tradeCount = accumulator.tradeCount
+                )
+            }
+        
+        // 3. Session Window: Trading session analysis per user
+        val tradingSessions = trades
+            .groupBy { key, trade -> trade.traderId }
+            .windowedBy(SessionWindows.with(Duration.ofMinutes(30))) // 30-minute inactivity gap
+            .aggregate(
+                { TradingSession() },
+                { traderId, trade, session -> session.addTrade(trade) },
+                { traderId, session1, session2 -> session1.merge(session2) },
+                Materialized.`as`<String, TradingSession, SessionStore<Bytes, ByteArray>>("trading-sessions")
+            )
+            .toStream()
+            .filter { _, session -> session.isComplete() }
+        
+        // Send results to output topics
+        ohlcData.to("market-ohlc")
+        movingAverages.to("market-moving-averages")
+        tradingSessions.to("trading-sessions")
         
         return trades
     }
 }
-
-class TradeProcessor : Processor<String, TradeEvent, String, Position> {
-    
-    private lateinit var positionStore: KeyValueStore<String, Position>
-    private lateinit var priceStore: KeyValueStore<String, Price>
-    private lateinit var context: ProcessorContext<String, Position>
-    
-    override fun init(context: ProcessorContext<String, Position>) {
-        this.context = context
-        this.positionStore = context.getStateStore(PortfolioStateManager.POSITION_STORE)
-        this.priceStore = context.getStateStore(PortfolioStateManager.PRICE_STORE)
-        
-        // Schedule periodic commit
-        context.schedule(Duration.ofSeconds(30), PunctuationType.WALL_CLOCK_TIME) { timestamp ->
-            commitPositions(timestamp)
-        }
-    }
-    
-    override fun process(record: Record<String, TradeEvent>) {
-        val trade = record.value()
-        val symbol = trade.symbol
-        
-        // Get current position
-        var position = positionStore.get(symbol) ?: Position.empty(symbol)
-        
-        // Update position based on trade
-        position = when (trade.side) {
-            TradeSide.BUY -> position.addPosition(trade.quantity, trade.price)
-            TradeSide.SELL -> position.reducePosition(trade.quantity, trade.price)
-        }
-        
-        // Get current market price for mark-to-market
-        val currentPrice = priceStore.get(symbol)
-        if (currentPrice != null) {
-            position = position.markToMarket(currentPrice.price)
-        }
-        
-        // Store updated position
-        positionStore.put(symbol, position)
-        
-        // Forward updated position
-        context.forward(record.withValue(position))
-        
-        logger.debug("Updated position for $symbol: ${position.quantity} shares")
-    }
-    
-    private fun commitPositions(timestamp: Long) {
-        // Periodic commit for consistency
-        positionStore.flush()
-        logger.debug("Committed position updates at $timestamp")
-    }
-}
 ```
 
-### State Store Configuration
-```kotlin
-@Configuration
-class StateStoreConfiguration {
-    
-    @Bean
-    fun rocksDBConfig(): RocksDBConfigSetter {
-        return RocksDBConfigSetter { name, options ->
-            // Optimize for read-heavy workloads
-            options.setIncreaseParallelism(Runtime.getRuntime().availableProcessors())
-            options.setCreateIfMissing(true)
-            options.setCreateMissingColumnFamilies(true)
-            
-            // Memory settings
-            options.setDbWriteBufferSize(64 * 1024 * 1024) // 64MB
-            options.setWriteBufferSize(32 * 1024 * 1024)   // 32MB
-            options.setMaxWriteBufferNumber(3)
-            
-            // Compression
-            options.setCompressionType(CompressionType.LZ4_COMPRESSION)
-            
-            // Background compaction
-            options.setMaxBackgroundCompactions(2)
-            options.setMaxBackgroundFlushes(2)
-            
-            // Block cache for better read performance
-            val blockCache = LRUCache(256 * 1024 * 1024) // 256MB cache
-            val blockBasedTableConfig = BlockBasedTableConfig()
-            blockBasedTableConfig.setBlockCache(blockCache)
-            blockBasedTableConfig.setBlockSize(16 * 1024) // 16KB blocks
-            options.setTableFormatConfig(blockBasedTableConfig)
-        }
-    }
-    
-    @Bean
-    fun stateStoreMetrics(): StateStoreMetrics {
-        return StateStoreMetrics()
-    }
-}
+## 🔗 Stream Joins
 
-@Component
-class StateStoreMetrics {
-    
-    @Autowired
-    private lateinit var meterRegistry: MeterRegistry
-    
-    @EventListener
-    fun handleStateStoreMetrics(kafkaStreams: KafkaStreams) {
-        Gauge.builder("kafka.streams.state.store.size")
-            .tag("store", "portfolio-positions")
-            .register(meterRegistry) {
-                getStateStoreSize(kafkaStreams, "portfolio-positions")
-            }
+### Join Types and Semantics
+```mermaid
+graph TB
+    subgraph "Stream-Stream Join"
+        SS1[Stock Trades Stream]
+        SS2[Market News Stream]
+        SS_RESULT[Trade-News Correlation<br/>Within join window]
         
-        Gauge.builder("kafka.streams.state.store.records")
-            .tag("store", "portfolio-positions")
-            .register(meterRegistry) {
-                getStateStoreRecordCount(kafkaStreams, "portfolio-positions")
-            }
-    }
+        SS1 --> SS_RESULT
+        SS2 --> SS_RESULT
+    end
     
-    private fun getStateStoreSize(streams: KafkaStreams, storeName: String): Double {
-        return try {
-            val store = streams.store(
-                StoreQueryParameters.fromNameAndType(storeName, QueryableStoreTypes.keyValueStore<String, Any>())
-            )
-            
-            store.approximateNumEntries().toDouble()
-        } catch (e: Exception) {
-            0.0
-        }
-    }
-}
+    subgraph "Stream-Table Join"
+        ST_STREAM[Order Events Stream]
+        ST_TABLE[User Profiles Table<br/>Latest state]
+        ST_RESULT[Enriched Orders<br/>With user context]
+        
+        ST_STREAM --> ST_RESULT
+        ST_TABLE --> ST_RESULT
+    end
+    
+    subgraph "Global Table Join"
+        GT_STREAM[Trade Events Stream]
+        GT_TABLE[Symbol Reference Data<br/>Global view]
+        GT_RESULT[Enriched Trades<br/>With symbol metadata]
+        
+        GT_STREAM --> GT_RESULT
+        GT_TABLE --> GT_RESULT
+    end
+    
+    subgraph "Join Windows"
+        JW[Join Window<br/>Time-based correlation]
+        JW_DESC[Events within window<br/>get joined together]
+        
+        JW --> JW_DESC
+    end
+    
+    style SS_RESULT fill:#ff6b6b
+    style ST_RESULT fill:#4ecdc4
+    style GT_RESULT fill:#a8e6cf
+    style JW fill:#ffe66d
 ```
 
-## 🛡️ Fault Tolerance Implementation
-
-### Standby Replicas and Recovery
+### Join Implementation Examples
 ```kotlin
 @Component
-class FaultToleranceManager {
+class AdvancedJoinProcessor {
     
-    @Autowired
-    private lateinit var kafkaStreams: KafkaStreams
-    
-    @Value("\${kafka.streams.num.standby.replicas:1}")
-    private var numStandbyReplicas: Int = 1
-    
-    @PostConstruct
-    fun configureFaultTolerance() {
-        // Configure standby replicas
-        val streamsConfig = Properties().apply {
-            put(StreamsConfig.NUM_STANDBY_REPLICAS_CONFIG, numStandbyReplicas)
-            put(StreamsConfig.ACCEPTABLE_RECOVERY_LAG_CONFIG, 10000L) // 10 seconds
-            put(StreamsConfig.MAX_WARMUP_REPLICAS_CONFIG, 2)
-            put(StreamsConfig.PROBING_REBALANCE_INTERVAL_MS_CONFIG, 600000L) // 10 minutes
-        }
+    // Stream-Stream Join: Correlate trades with market news
+    fun tradeNewsCorrelation(): KStream<String, TradeNewsCorrelation> {
         
-        // Monitor stream state changes
-        kafkaStreams.setStateListener { newState, oldState ->
-            handleStateChange(newState, oldState)
-        }
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
+            .selectKey { _, trade -> trade.symbol } // Re-key by symbol
         
-        // Handle uncaught exceptions
-        kafkaStreams.setUncaughtExceptionHandler { thread, exception ->
-            logger.error("Uncaught exception in stream thread: ${thread.name}", exception)
-            handleStreamException(exception)
-        }
-    }
-    
-    private fun handleStateChange(newState: KafkaStreams.State, oldState: KafkaStreams.State) {
-        logger.info("Kafka Streams state changed: $oldState -> $newState")
+        val news = streamsBuilder
+            .stream<String, MarketNews>("market-news")
+            .selectKey { _, news -> news.symbol } // Re-key by symbol
         
-        when (newState) {
-            KafkaStreams.State.RUNNING -> {
-                logger.info("Kafka Streams application is running")
-                notifyHealthy()
-            }
-            KafkaStreams.State.REBALANCING -> {
-                logger.warn("Kafka Streams application is rebalancing")
-                notifyRebalancing()
-            }
-            KafkaStreams.State.ERROR -> {
-                logger.error("Kafka Streams application entered error state")
-                notifyError()
-                initiateRecovery()
-            }
-            KafkaStreams.State.NOT_RUNNING -> {
-                logger.warn("Kafka Streams application is not running")
-                notifyNotRunning()
-            }
-            else -> {
-                logger.debug("Kafka Streams state: $newState")
-            }
-        }
+        return trades.join(
+            news,
+            { trade, newsItem -> 
+                TradeNewsCorrelation(
+                    symbol = trade.symbol,
+                    trade = trade,
+                    news = newsItem,
+                    correlationTime = Instant.now(),
+                    potentialImpact = calculateImpact(trade, newsItem)
+                )
+            },
+            JoinWindows.of(Duration.ofMinutes(10)) // 10-minute correlation window
+        )
     }
     
-    private fun handleStreamException(exception: Throwable): StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse {
-        return when (exception) {
-            is InvalidStateStoreException -> {
-                logger.warn("State store not available, will retry")
-                StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
-            }
-            is StreamsException -> {
-                logger.error("Streams processing error", exception)
-                StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.REPLACE_THREAD
-            }
-            else -> {
-                logger.error("Unexpected exception, shutting down", exception)
-                StreamsUncaughtExceptionHandler.StreamThreadExceptionResponse.SHUTDOWN_APPLICATION
-            }
-        }
-    }
-    
-    private fun initiateRecovery() {
-        CompletableFuture.runAsync {
-            try {
-                logger.info("Initiating Kafka Streams recovery")
-                
-                // Clean up corrupted state if needed
-                cleanupCorruptedState()
-                
-                // Restart streams
-                restartStreamsApplication()
-                
-            } catch (e: Exception) {
-                logger.error("Recovery failed", e)
-            }
-        }
-    }
-    
-    private fun cleanupCorruptedState() {
-        // Implementation would check for corrupted state stores
-        // and clean them up if necessary
-        logger.info("Checking for corrupted state stores")
+    // Stream-Table Join: Enrich trades with trader profiles
+    fun enrichTradesWithTraderProfiles(): KStream<String, EnrichedTrade> {
         
-        val stateDir = File(kafkaStreams.allLocalStorePartitionLags().keys.first())
-        if (stateDir.exists() && isStateCorrupted(stateDir)) {
-            logger.warn("Corrupted state detected, cleaning up")
-            stateDir.deleteRecursively()
-        }
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
+            .selectKey { _, trade -> trade.traderId }
+        
+        val traderProfiles = streamsBuilder
+            .table<String, TraderProfile>("trader-profiles")
+        
+        return trades.join(
+            traderProfiles,
+            { trade, profile ->
+                EnrichedTrade(
+                    trade = trade,
+                    traderProfile = profile,
+                    riskCategory = profile.riskCategory,
+                    tradingLimit = profile.dailyLimit,
+                    enrichmentTime = Instant.now()
+                )
+            }
+        )
     }
     
-    private fun isStateCorrupted(stateDir: File): Boolean {
-        // Simple heuristic: check if state directory is empty or has lock files
-        return stateDir.listFiles()?.isEmpty() ?: true
+    // Global Table Join: Add symbol reference data
+    fun enrichWithSymbolMetadata(): KStream<String, EnrichedTrade> {
+        
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
+        
+        val symbolMetadata = streamsBuilder
+            .globalTable<String, SymbolMetadata>("symbol-metadata")
+        
+        return trades.join(
+            symbolMetadata,
+            { _, trade -> trade.symbol }, // KeyValueMapper to extract foreign key
+            { trade, metadata ->
+                EnrichedTrade(
+                    trade = trade,
+                    symbolMetadata = metadata,
+                    sector = metadata.sector,
+                    industry = metadata.industry,
+                    marketCap = metadata.marketCap
+                )
+            }
+        )
     }
     
-    private fun restartStreamsApplication() {
-        try {
-            kafkaStreams.close(Duration.ofSeconds(30))
-            kafkaStreams.start()
-            logger.info("Kafka Streams application restarted successfully")
-        } catch (e: Exception) {
-            logger.error("Failed to restart Kafka Streams application", e)
-        }
+    // Left Join: Include trades even without matching news
+    fun tradesWithOptionalNews(): KStream<String, TradeWithOptionalNews> {
+        
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
+            .selectKey { _, trade -> trade.symbol }
+        
+        val news = streamsBuilder
+            .stream<String, MarketNews>("market-news")
+            .selectKey { _, news -> news.symbol }
+        
+        return trades.leftJoin(
+            news,
+            { trade, newsItem -> 
+                TradeWithOptionalNews(
+                    trade = trade,
+                    relatedNews = newsItem, // Can be null
+                    hasNewsImpact = newsItem != null
+                )
+            },
+            JoinWindows.of(Duration.ofMinutes(5))
+        )
     }
 }
 ```
 
-## 🔍 Interactive Queries
+## 📊 Complex Aggregations
 
-### Real-time State Queries
+### Multi-Dimensional Analytics
+```mermaid
+graph TB
+    subgraph "Price Analytics"
+        OHLC[OHLC Calculation<br/>Open, High, Low, Close]
+        VWAP[VWAP Calculation<br/>Volume Weighted Average]
+        SMA[Simple Moving Average<br/>Time-based smoothing]
+        EMA[Exponential Moving Average<br/>Weighted recent values]
+    end
+    
+    subgraph "Volume Analytics"
+        TOTAL_VOL[Total Volume<br/>Sum of trade volumes]
+        AVG_VOL[Average Volume<br/>Mean trade size]
+        VOL_PROFILE[Volume Profile<br/>Price level distribution]
+        FLOW[Order Flow<br/>Buy vs Sell pressure]
+    end
+    
+    subgraph "Volatility Metrics"
+        STD_DEV[Standard Deviation<br/>Price volatility]
+        ATR[Average True Range<br/>Intraday volatility]
+        BETA[Beta Calculation<br/>Market correlation]
+        VAR[Value at Risk<br/>Risk assessment]
+    end
+    
+    subgraph "Cross-Asset Analytics"
+        CORRELATION[Asset Correlation<br/>Relationship strength]
+        SPREAD[Price Spreads<br/>Arbitrage opportunities]
+        RATIO[Price Ratios<br/>Relative performance]
+        COINTEGRATION[Cointegration<br/>Long-term relationships]
+    end
+    
+    OHLC --> TOTAL_VOL
+    VWAP --> AVG_VOL
+    SMA --> STD_DEV
+    EMA --> ATR
+    
+    TOTAL_VOL --> CORRELATION
+    VOL_PROFILE --> SPREAD
+    STD_DEV --> RATIO
+    BETA --> COINTEGRATION
+    
+    style OHLC fill:#ff6b6b
+    style VWAP fill:#4ecdc4
+    style STD_DEV fill:#a8e6cf
+    style CORRELATION fill:#ffe66d
+```
+
+### Complex Aggregation Implementation
 ```kotlin
-@RestController
-@RequestMapping("/api/state")
-class InteractiveQueryController {
+@Component
+class ComplexAggregationProcessor {
     
-    @Autowired
-    private lateinit var kafkaStreams: KafkaStreams
-    
-    @GetMapping("/positions/{symbol}")
-    fun getPosition(@PathVariable symbol: String): ResponseEntity<Position> {
-        return try {
-            val store = kafkaStreams.store(
-                StoreQueryParameters.fromNameAndType(
-                    PortfolioStateManager.POSITION_STORE,
-                    QueryableStoreTypes.keyValueStore<String, Position>()
-                )
-            )
-            
-            val position = store.get(symbol)
-            if (position != null) {
-                ResponseEntity.ok(position)
-            } else {
-                ResponseEntity.notFound().build()
-            }
-            
-        } catch (e: InvalidStateStoreException) {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(null)
-        }
-    }
-    
-    @GetMapping("/positions")
-    fun getAllPositions(
-        @RequestParam(required = false) minQuantity: Double?
-    ): ResponseEntity<List<Position>> {
+    fun buildMarketAnalyticsPipeline(): KStream<String, MarketAnalytics> {
         
-        return try {
-            val store = kafkaStreams.store(
-                StoreQueryParameters.fromNameAndType(
-                    PortfolioStateManager.POSITION_STORE,
-                    QueryableStoreTypes.keyValueStore<String, Position>()
-                )
-            )
-            
-            val positions = mutableListOf<Position>()
-            store.all().use { iterator ->
-                while (iterator.hasNext()) {
-                    val keyValue = iterator.next()
-                    val position = keyValue.value
-                    
-                    if (minQuantity == null || position.quantity >= minQuantity) {
-                        positions.add(position)
-                    }
-                }
-            }
-            
-            ResponseEntity.ok(positions)
-            
-        } catch (e: InvalidStateStoreException) {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(emptyList())
-        }
-    }
-    
-    @GetMapping("/pnl/{symbol}/window")
-    fun getWindowedPnL(
-        @PathVariable symbol: String,
-        @RequestParam from: Long,
-        @RequestParam to: Long
-    ): ResponseEntity<List<WindowedPnL>> {
+        val trades = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
         
-        return try {
-            val store = kafkaStreams.store(
-                StoreQueryParameters.fromNameAndType(
-                    PortfolioStateManager.PNL_STORE,
-                    QueryableStoreTypes.windowStore<String, PnLAccumulator>()
-                )
+        // Multi-level aggregation: Symbol -> Time Window -> Analytics
+        val marketAnalytics = trades
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
+            .aggregate(
+                { MarketDataAccumulator() },
+                { symbol, trade, accumulator -> 
+                    accumulator.addTrade(trade)
+                },
+                Materialized.`as`<String, MarketDataAccumulator, WindowStore<Bytes, ByteArray>>("market-analytics")
+                    .withValueSerde(JsonSerde(MarketDataAccumulator::class.java))
             )
-            
-            val fromTime = Instant.ofEpochMilli(from)
-            val toTime = Instant.ofEpochMilli(to)
-            
-            val windowedPnL = mutableListOf<WindowedPnL>()
-            store.fetch(symbol, fromTime, toTime).use { iterator ->
-                while (iterator.hasNext()) {
-                    val keyValue = iterator.next()
-                    val window = keyValue.key
-                    val accumulator = keyValue.value
-                    
-                    windowedPnL.add(
-                        WindowedPnL(
-                            symbol = symbol,
-                            windowStart = window.start(),
-                            windowEnd = window.end(),
-                            unrealizedPnL = accumulator.getUnrealizedPnL(),
-                            realizedPnL = accumulator.getRealizedPnL(),
-                            totalPnL = accumulator.getTotalPnL()
-                        )
+            .toStream()
+            .map { windowedKey, accumulator ->
+                KeyValue(
+                    windowedKey.key(),
+                    MarketAnalytics(
+                        symbol = windowedKey.key(),
+                        windowStart = windowedKey.window().start(),
+                        windowEnd = windowedKey.window().end(),
+                        
+                        // Price metrics
+                        ohlc = accumulator.getOHLC(),
+                        vwap = accumulator.getVWAP(),
+                        movingAverage = accumulator.getMovingAverage(),
+                        
+                        // Volume metrics
+                        totalVolume = accumulator.getTotalVolume(),
+                        averageTradeSize = accumulator.getAverageTradeSize(),
+                        tradeCount = accumulator.getTradeCount(),
+                        
+                        // Volatility metrics
+                        volatility = accumulator.getVolatility(),
+                        priceRange = accumulator.getPriceRange(),
+                        
+                        // Statistical measures
+                        standardDeviation = accumulator.getStandardDeviation(),
+                        skewness = accumulator.getSkewness(),
+                        kurtosis = accumulator.getKurtosis()
                     )
-                }
+                )
             }
-            
-            ResponseEntity.ok(windowedPnL)
-            
-        } catch (e: InvalidStateStoreException) {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(emptyList())
-        }
+        
+        return marketAnalytics
     }
     
-    @GetMapping("/health")
-    fun getStateStoreHealth(): ResponseEntity<StateStoreHealthReport> {
-        return try {
-            val allLocalStorePartitionLags = kafkaStreams.allLocalStorePartitionLags()
-            val healthy = allLocalStorePartitionLags.values.all { lag -> lag <= 1000 }
-            
-            val report = StateStoreHealthReport(
-                isHealthy = healthy,
-                storeCount = allLocalStorePartitionLags.size,
-                maxLag = allLocalStorePartitionLags.values.maxOrNull() ?: 0,
-                avgLag = allLocalStorePartitionLags.values.average(),
-                streamsState = kafkaStreams.state().name
+    // Cross-asset correlation analysis
+    fun buildCorrelationAnalysis(): KStream<String, CorrelationMatrix> {
+        
+        val priceUpdates = streamsBuilder
+            .stream<String, StockTrade>("stock-trades")
+            .map { _, trade -> KeyValue("ALL_STOCKS", trade) }
+        
+        return priceUpdates
+            .groupByKey()
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
+            .aggregate(
+                { CorrelationAccumulator() },
+                { _, trade, accumulator -> 
+                    accumulator.addPrice(trade.symbol, trade.price)
+                },
+                Materialized.`as`<String, CorrelationAccumulator, WindowStore<Bytes, ByteArray>>("correlations")
             )
-            
-            ResponseEntity.ok(report)
-            
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(StateStoreHealthReport(isHealthy = false))
-        }
+            .toStream()
+            .mapValues { accumulator -> accumulator.calculateCorrelationMatrix() }
+    }
+    
+    // Real-time risk metrics
+    fun buildRiskMetrics(): KStream<String, RiskMetrics> {
+        
+        val portfolioPositions = streamsBuilder
+            .stream<String, PositionUpdate>("portfolio-positions")
+        
+        val marketData = streamsBuilder
+            .stream<String, MarketAnalytics>("market-analytics")
+        
+        return portfolioPositions
+            .join(
+                marketData,
+                { position, marketData ->
+                    RiskCalculator.calculateRisk(position, marketData)
+                },
+                JoinWindows.of(Duration.ofSeconds(30))
+            )
+            .groupBy { _, riskMetrics -> riskMetrics.portfolioId }
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
+            .aggregate(
+                { PortfolioRiskAccumulator() },
+                { portfolioId, riskMetrics, accumulator ->
+                    accumulator.addRiskMetrics(riskMetrics)
+                },
+                Materialized.`as`<String, PortfolioRiskAccumulator, WindowStore<Bytes, ByteArray>>("portfolio-risk")
+            )
+            .toStream()
+            .mapValues { accumulator -> accumulator.calculateAggregateRisk() }
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Local state stores persist data across application restarts
-- [ ] Fault tolerance handles instance failures gracefully
-- [ ] State recovery restores consistent state from changelog topics
-- [ ] Interactive queries provide real-time access to state
-- [ ] Performance remains acceptable with large state stores (&gt;1GB)
-- [ ] Standby replicas enable fast failover (&lt;30 seconds)
-- [ ] State store health monitoring detects issues proactively
+- [ ] Windowing operations correctly group events by time
+- [ ] Stream-stream joins correlate events within join windows
+- [ ] Stream-table joins enrich streams with latest reference data
+- [ ] Complex aggregations produce accurate financial metrics
+- [ ] Late-arriving data handled appropriately with grace periods
+- [ ] Performance handles high-frequency trading data (&gt;100k events/sec)
+- [ ] Memory usage remains stable during large window operations
 
 ## 🚀 Getting Started
 
-### 1. Configure Stateful Streams Application
+### 1. Configure Advanced Streams Application
 ```kotlin
 @Configuration
 @EnableKafkaStreams
-class StatefulStreamsConfig {
+class AdvancedStreamsConfig {
     
     @Bean
     fun streamsConfig(): KafkaStreamsConfiguration {
         val props = mapOf(
-            StreamsConfig.APPLICATION_ID_CONFIG to "stateful-portfolio-tracker",
+            StreamsConfig.APPLICATION_ID_CONFIG to "advanced-market-analytics",
             StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
             
-            // State store configuration
-            StreamsConfig.STATE_DIR_CONFIG to "/tmp/kafka-streams-state",
-            StreamsConfig.NUM_STANDBY_REPLICAS_CONFIG to 1,
-            StreamsConfig.ACCEPTABLE_RECOVERY_LAG_CONFIG to 10000L,
+            // Windowing and join configurations
+            StreamsConfig.DEFAULT_WINDOWED_KEY_SERDE_INNER_CLASS to Serdes.String()::class.java,
+            StreamsConfig.DEFAULT_WINDOWED_VALUE_SERDE_INNER_CLASS to JsonSerde::class.java,
             
-            // RocksDB optimization
-            StreamsConfig.ROCKSDB_CONFIG_SETTER_CLASS_CONFIG to RocksDBConfigSetter::class.java,
-            StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG to 50 * 1024 * 1024, // 50MB
+            // State store configurations
+            StreamsConfig.STATE_DIR_CONFIG to "/tmp/kafka-streams-advanced",
+            StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG to 10 * 1024 * 1024, // 10MB
             
-            // Fault tolerance
-            StreamsConfig.PROCESSING_GUARANTEE_CONFIG to StreamsConfig.EXACTLY_ONCE_V2,
-            StreamsConfig.COMMIT_INTERVAL_MS_CONFIG to 1000
+            // Exactly-once processing
+            StreamsConfig.PROCESSING_GUARANTEE_CONFIG to StreamsConfig.EXACTLY_ONCE,
+            
+            // Performance tuning
+            StreamsConfig.COMMIT_INTERVAL_MS_CONFIG to 1000,
+            StreamsConfig.NUM_STREAM_THREADS_CONFIG to 4
         )
         
         return KafkaStreamsConfiguration(props)
@@ -663,78 +566,77 @@ class StatefulStreamsConfig {
 }
 ```
 
-### 2. Test Stateful Processing
+### 2. Test Windowing and Joins
 ```bash
-# Send trade events
-kafka-console-producer --topic trade-events --bootstrap-server localhost:9092 \
+# Send stock trade data
+kafka-console-producer --topic stock-trades --bootstrap-server localhost:9092 \
   --property "parse.key=true" --property "key.separator=:"
 
-# Input: AAPL:{"symbol":"AAPL","side":"BUY","quantity":100,"price":150.25,"timestamp":1645123456}
+# Input: AAPL:{"symbol":"AAPL","price":150.25,"volume":1000,"traderId":"T123","timestamp":1645123456}
 
-# Query current position
-curl http://localhost:8090/api/state/positions/AAPL
+# Send market news
+kafka-console-producer --topic market-news --bootstrap-server localhost:9092 \
+  --property "parse.key=true" --property "key.separator=:"
 
-# Query all positions
-curl http://localhost:8090/api/state/positions
+# Input: AAPL:{"symbol":"AAPL","headline":"Strong earnings report","sentiment":"POSITIVE","timestamp":1645123500}
 
-# Check state store health
-curl http://localhost:8090/api/state/health
+# Monitor windowed aggregations
+kafka-console-consumer --topic market-ohlc --from-beginning --bootstrap-server localhost:9092
 ```
 
-### 3. Monitor State Store Performance
+### 3. Monitor Stream Processing
 ```bash
-# Check state store metrics
-curl http://localhost:8090/actuator/metrics/kafka.streams.state.store
+# Check streams application metrics
+curl http://localhost:8090/actuator/metrics/kafka.streams
 
-# Monitor changelog topics
-kafka-console-consumer --topic stateful-portfolio-tracker-portfolio-positions-changelog \
-  --from-beginning --bootstrap-server localhost:9092
+# View window store contents
+curl http://localhost:8090/api/streams/windows/ohlc-store/AAPL
 
-# Check recovery lag
-curl http://localhost:8090/api/state/health
+# Monitor join operations
+curl http://localhost:8090/api/streams/joins/trade-news-correlation/metrics
 ```
 
 ## 🎯 Best Practices
 
-### State Store Design
-- **Choose appropriate store types** based on access patterns
-- **Configure caching** to reduce I/O for frequently accessed data
-- **Use custom serdes** for efficient serialization
-- **Monitor state store sizes** and implement cleanup policies
+### Windowing Strategy
+- **Choose appropriate window sizes** based on business requirements
+- **Handle late-arriving data** with grace periods
+- **Monitor window memory usage** for large windows
+- **Use session windows** for activity-based analysis
 
-### Fault Tolerance Strategy
-- **Configure standby replicas** for fast failover
-- **Monitor recovery lag** to ensure timely replication
-- **Implement health checks** for state store availability
-- **Test recovery scenarios** regularly
+### Join Design
+- **Co-partition data** for stream-stream joins
+- **Use global tables** for reference data joins
+- **Size join windows** appropriately for data arrival patterns
+- **Handle join failures** with outer joins when needed
 
 ### Performance Optimization
-- **Tune RocksDB settings** for your workload characteristics
-- **Use appropriate commit intervals** to balance latency and throughput
-- **Configure proper cleanup policies** for changelog topics
-- **Monitor memory usage** and adjust cache sizes accordingly
+- **Tune buffer sizes** for high-throughput scenarios
+- **Use custom serdes** for efficient serialization
+- **Monitor state store sizes** and implement cleanup
+- **Optimize aggregation functions** for computational efficiency
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Slow state store access** - Tune RocksDB configuration and increase cache
-2. **High recovery times** - Reduce changelog topic retention and increase replicas
-3. **Out of memory errors** - Reduce cache sizes and optimize serialization
-4. **Corrupted state stores** - Implement proper cleanup and recovery procedures
+1. **Out-of-order events** - Increase grace period for windows
+2. **High memory usage** - Tune cache sizes and commit intervals
+3. **Join failures** - Verify co-partitioning and data arrival timing
+4. **Slow aggregations** - Optimize aggregation logic and state stores
 
 ### Debug Commands
 ```bash
-# Check state directory contents
-ls -la /tmp/kafka-streams-state/
+# Check stream thread health
+kafka-streams-application-reset --application-id advanced-market-analytics \
+  --bootstrap-servers localhost:9092 --dry-run
 
-# Monitor RocksDB statistics
-curl http://localhost:8090/api/debug/rocksdb/stats
+# Monitor windowed state stores
+kafka-console-consumer --topic advanced-market-analytics-ohlc-store-changelog \
+  --from-beginning --bootstrap-server localhost:9092
 
-# Check changelog topic offsets
-kafka-run-class kafka.tools.GetOffsetShell \
-  --broker-list localhost:9092 \
-  --topic stateful-portfolio-tracker-portfolio-positions-changelog
+# View processing topology
+curl http://localhost:8090/actuator/kafka-streams/topology
 ```
 
 ## 🚀 Next Steps
-State stores mastered? Time to build real-time dashboards! Move to [Lesson 17: Building a Real-time Dashboard Application](../lesson_17/README.md) to create interactive data visualizations.
+Advanced streams operations mastered? Time to persist state reliably! Move to [Lesson 16: Local State Stores & Fault Tolerance](../lesson_17/README.md) to learn stateful stream processing.

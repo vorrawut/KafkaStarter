@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_15/concept",
   "title": "Concept",
-  "description": "Windowing, Joins & Stateful Operations - Advanced Stream Processing",
+  "description": "Kafka Streams API Introduction - Real-time Stream Processing",
   "source": "@site/../class/modules/lesson_15/concept.md",
   "sourceDirName": "modules/lesson_15",
   "slug": "/modules/lesson_15/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Kafka Streams API Introduction",
+    "title": "Workshop: Request-Reply Patterns with Kafka",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_14/"
   },
   "next": {
-    "title": "Workshop: Windowing, Joins & Stateful Operations",
+    "title": "Workshop: Kafka Streams API Introduction",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_15/"
   }
 }

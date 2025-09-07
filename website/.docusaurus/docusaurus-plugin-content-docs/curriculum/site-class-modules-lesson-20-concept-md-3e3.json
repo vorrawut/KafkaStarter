@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_20/concept",
   "title": "Concept",
-  "description": "Deployment & Scaling Best Practices - Production Excellence",
+  "description": "Observability & Monitoring - Production Operations Excellence",
   "source": "@site/../class/modules/lesson_20/concept.md",
   "sourceDirName": "modules/lesson_20",
   "slug": "/modules/lesson_20/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Observability & Monitoring",
+    "title": "Workshop: Kafka Security & ACLs",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_19/"
   },
   "next": {
-    "title": "Workshop: Deployment & Scaling Best Practices",
+    "title": "Workshop: Observability & Monitoring",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_20/"
   }
 }

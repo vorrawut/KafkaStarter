@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_6/concept",
   "title": "Concept",
-  "description": "Development Tools - Debugging, Testing & Monitoring Kafka Applications",
+  "description": "First Producer/Consumer - Hello Kafka with Spring Boot",
   "source": "@site/../class/modules/lesson_6/concept.md",
   "sourceDirName": "modules/lesson_6",
   "slug": "/modules/lesson_6/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Schema Registry & Evolution",
+    "title": "Workshop: Topics, Partitions & Offsets",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_5/"
   },
   "next": {
     "title": "Workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_6"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop"
   }
 }

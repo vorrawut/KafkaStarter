@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_6/README",
-  "title": "Workshop: Development Tools & Testing Framework",
+  "title": "Workshop: Schema Registry & Evolution",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_6/README.md",
   "sourceDirName": "workshop/lesson_6",
@@ -15,7 +15,7 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop_6"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop"
   },
   "next": {
     "title": "Concept",

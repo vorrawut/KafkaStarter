@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_6/workshop",
+  "title": "Workshop",
+  "description": "Hello Kafka - Your First Producer & Consumer",
+  "source": "@site/../class/modules/lesson_6/workshop.md",
+  "sourceDirName": "modules/lesson_6",
+  "slug": "/modules/lesson_6/workshop",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_6/workshop",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_6/workshop.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_6/concept"
+  },
+  "next": {
+    "title": "Workshop: Schema Registry & Evolution",
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_6/"
+  }
+}

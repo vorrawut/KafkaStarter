@@ -1,489 +1,645 @@
-# Workshop: Kafka Streams API Introduction
+# Workshop: Request-Reply Patterns with Kafka
 
 ## 🎯 Objective
-Master Kafka Streams for real-time stream processing, building stateless transformations, filtering, and branching operations with the Streams DSL.
+Master request-reply patterns over Kafka for synchronous communication needs, implementing correlation-based responses, timeout handling, and high-performance request-response systems using asynchronous messaging.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Streams Topology
-Build basic stream topology in `streams/BasicStreamProcessor.kt`
+### Task 1: Request-Reply Infrastructure
+Implement request-reply in `requestreply/RequestReplyInfrastructure.kt`
 
-### Task 2: Stateless Transformations
-Implement transformations in `streams/StatelessTransformations.kt`
+### Task 2: Correlation Management
+Build correlation handling in `correlation/CorrelationManager.kt`
 
-### Task 3: Stream Filtering & Branching
-Create filtering logic in `streams/StreamFilterBrancher.kt`
+### Task 3: Async Response Handling
+Create response handling in `response/AsyncResponseHandler.kt`
 
-### Task 4: Stream Joining
-Implement stream joins in `streams/StreamJoiner.kt`
+### Task 4: Timeout Management
+Implement timeouts in `timeout/TimeoutManager.kt`
 
-### Task 5: Testing Framework
-Test streams with `test/StreamsTestFramework.kt`
+### Task 5: Performance Optimization
+Optimize performance in `optimization/RequestReplyOptimizer.kt`
 
-## 🏗️ Kafka Streams Architecture
+## 🏗️ Request-Reply Architecture
 ```mermaid
 graph TB
-    subgraph "Input Topics"
-        IT1[user-events]
-        IT2[order-events] 
-        IT3[product-events]
+    subgraph "Client Applications"
+        WEB[Web Application<br/>Synchronous API calls]
+        MOBILE[Mobile App<br/>Real-time queries]
+        API[External API<br/>Third-party integration]
+        BATCH[Batch Jobs<br/>Bulk processing]
     end
     
-    subgraph "Kafka Streams Application"
-        subgraph "Stream Processing Topology"
-            ST1[User Stream]
-            ST2[Order Stream]
-            ST3[Product Stream]
-            
-            FILTER[Filter Valid Events]
-            MAP[Transform Events]
-            JOIN[Join Streams]
-            BRANCH[Branch by Type]
-            AGGREGATE[Aggregate Metrics]
-        end
-        
-        subgraph "State Stores"
-            SS1[User Profiles Store]
-            SS2[Order Totals Store]
-            SS3[Product Catalog Store]
-        end
+    subgraph "Request-Reply Gateway"
+        GATEWAY[Request-Reply Gateway<br/>Correlation management]
+        CORRELATION[Correlation Store<br/>Redis/Memory]
+        TIMEOUT[Timeout Handler<br/>Cleanup expired requests]
+        RESPONSE_CACHE[Response Cache<br/>Performance optimization]
     end
     
-    subgraph "Output Topics"
-        OT1[processed-events]
-        OT2[user-metrics]
-        OT3[order-analytics]
-        OT4[alerts]
+    subgraph "Kafka Infrastructure"
+        REQUEST_TOPIC[Request Topics<br/>user-query-requests<br/>order-lookup-requests<br/>analytics-requests]
+        REPLY_TOPIC[Reply Topics<br/>user-query-responses<br/>order-lookup-responses<br/>analytics-responses]
     end
     
-    IT1 --> ST1
-    IT2 --> ST2
-    IT3 --> ST3
+    subgraph "Backend Services"
+        USER_SVC[User Service<br/>User data queries]
+        ORDER_SVC[Order Service<br/>Order lookups]
+        ANALYTICS_SVC[Analytics Service<br/>Complex analytics]
+        INVENTORY_SVC[Inventory Service<br/>Stock queries]
+    end
     
-    ST1 --> FILTER
-    ST2 --> FILTER
-    ST3 --> FILTER
+    subgraph "Response Processing"
+        RESPONSE_ROUTER[Response Router<br/>Correlation-based routing]
+        RESULT_AGGREGATOR[Result Aggregator<br/>Multi-service responses]
+        ERROR_HANDLER[Error Handler<br/>Failure management]
+    end
     
-    FILTER --> MAP
-    MAP --> JOIN
-    JOIN --> BRANCH
-    BRANCH --> AGGREGATE
+    WEB --> GATEWAY
+    MOBILE --> GATEWAY
+    API --> GATEWAY
+    BATCH --> GATEWAY
     
-    JOIN --> SS1
-    AGGREGATE --> SS2
-    AGGREGATE --> SS3
+    GATEWAY --> CORRELATION
+    GATEWAY --> TIMEOUT
+    GATEWAY --> RESPONSE_CACHE
     
-    BRANCH --> OT1
-    AGGREGATE --> OT2
-    AGGREGATE --> OT3
-    BRANCH --> OT4
+    GATEWAY --> REQUEST_TOPIC
+    REQUEST_TOPIC --> USER_SVC
+    REQUEST_TOPIC --> ORDER_SVC
+    REQUEST_TOPIC --> ANALYTICS_SVC
+    REQUEST_TOPIC --> INVENTORY_SVC
     
-    style FILTER fill:#ff6b6b
-    style MAP fill:#4ecdc4
-    style JOIN fill:#a8e6cf
-    style BRANCH fill:#ffe66d
+    USER_SVC --> REPLY_TOPIC
+    ORDER_SVC --> REPLY_TOPIC
+    ANALYTICS_SVC --> REPLY_TOPIC
+    INVENTORY_SVC --> REPLY_TOPIC
+    
+    REPLY_TOPIC --> RESPONSE_ROUTER
+    RESPONSE_ROUTER --> RESULT_AGGREGATOR
+    RESPONSE_ROUTER --> ERROR_HANDLER
+    
+    RESULT_AGGREGATOR --> GATEWAY
+    ERROR_HANDLER --> GATEWAY
+    
+    style GATEWAY fill:#ff6b6b
+    style CORRELATION fill:#4ecdc4
+    style REQUEST_TOPIC fill:#a8e6cf
+    style REPLY_TOPIC fill:#ffe66d
 ```
 
-## 🌊 Stream Processing Flow
+## 🔄 Request-Reply Flow
 ```mermaid
 sequenceDiagram
-    participant Input as Input Topic
-    participant Streams as Streams App
-    participant Store as State Store
-    participant Output as Output Topic
+    participant Client
+    participant Gateway as Request-Reply Gateway
+    participant Correlation as Correlation Store
+    participant RequestTopic as Request Topic
+    participant Service as Backend Service
+    participant ResponseTopic as Response Topic
+    participant ResponseRouter as Response Router
     
-    Input->>Streams: Event Record
-    Streams->>Streams: Filter Event
+    Client->>Gateway: API Request (GET /users/123/profile)
+    Gateway->>Gateway: Generate Correlation ID
+    Gateway->>Correlation: Store Request Context
     
-    alt Valid Event
-        Streams->>Streams: Transform Event
-        Streams->>Store: Update State
-        Store-->>Streams: Current State
-        Streams->>Streams: Enrich with State
-        Streams->>Output: Processed Event
-    else Invalid Event
-        Streams->>Streams: Log & Drop
+    Gateway->>RequestTopic: Publish Request + Correlation ID
+    Gateway->>Gateway: Start Timeout Timer
+    Gateway-->>Client: Return Future/Promise
+    
+    RequestTopic->>Service: Request Message
+    Service->>Service: Process Request
+    Service->>ResponseTopic: Publish Response + Correlation ID
+    
+    ResponseTopic->>ResponseRouter: Response Message
+    ResponseRouter->>Correlation: Lookup Request Context
+    ResponseRouter->>Gateway: Complete Request with Response
+    
+    Gateway->>Correlation: Remove Request Context
+    Gateway-->>Client: Return Response Data
+    
+    Note over Gateway,Client: Request-Reply Complete
+    
+    alt Timeout Scenario
+        Gateway->>Gateway: Timeout Expired
+        Gateway->>Correlation: Remove Request Context
+        Gateway-->>Client: Return Timeout Error
     end
-    
-    Note over Streams: Continuous Processing Loop
 ```
 
 ## 🎯 Key Concepts
 
-### **Stream Processing Paradigm**
-- **Continuous Processing**: Events processed as they arrive
-- **Low Latency**: Sub-millisecond processing times
-- **Fault Tolerant**: Automatic recovery from failures
-- **Scalable**: Horizontal scaling through partitioning
+### **Request-Reply Benefits**
+- **Synchronous Interface**: Traditional request-response semantics over async messaging
+- **Scalability**: Leverage Kafka's horizontal scaling capabilities
+- **Reliability**: Built-in retry and fault tolerance
+- **Performance**: High-throughput request processing
 
-### **Kafka Streams DSL**
+### **Correlation Strategies**
 
-#### **1. Stateless Transformations**
+#### **UUID-Based Correlation**
 ```mermaid
 graph LR
-    INPUT[Input Stream] --> FILTER[filter()]
-    FILTER --> MAP[map()]
-    MAP --> FLATMAP[flatMap()]
-    FLATMAP --> FOREACH[foreach()]
-    FOREACH --> OUTPUT[Output Stream]
+    REQUEST[Request<br/>correlationId: uuid-123] --> KAFKA[Kafka Topic]
+    KAFKA --> SERVICE[Backend Service]
+    SERVICE --> RESPONSE[Response<br/>correlationId: uuid-123]
+    RESPONSE --> ROUTER[Response Router]
+    ROUTER --> MATCH[Match by UUID]
     
-    style FILTER fill:#ff6b6b
-    style MAP fill:#4ecdc4
-    style FLATMAP fill:#a8e6cf
-    style FOREACH fill:#ffe66d
+    style REQUEST fill:#ff6b6b
+    style RESPONSE fill:#4ecdc4
+    style MATCH fill:#a8e6cf
 ```
 
-#### **2. Stateful Operations**
-```mermaid
-graph TB
-    INPUT[Input Stream] --> GROUPBY[groupByKey()]
-    GROUPBY --> WINDOW[windowedBy()]
-    WINDOW --> AGG[aggregate()]
-    AGG --> STORE[(State Store)]
-    STORE --> OUTPUT[Output Stream]
-    
-    style GROUPBY fill:#ff6b6b
-    style WINDOW fill:#4ecdc4
-    style AGG fill:#a8e6cf
-```
-
-#### **3. Stream-Stream Joins**
-```mermaid
-graph TB
-    STREAM1[User Events] --> JOIN[join()]
-    STREAM2[Order Events] --> JOIN
-    JOIN --> JOINED[Enriched Events]
-    
-    subgraph "Join Window"
-        JW[10 minute window<br/>Events within window get joined]
-    end
-    
-    JOIN --> JW
-    JW --> JOINED
-    
-    style JOIN fill:#ffe66d
-    style JOINED fill:#4ecdc4
-```
-
-## ⚡ Stream Processing Operations
-
-### Basic Transformations
+#### **Structured Correlation**
 ```kotlin
-// Filter events
-val validEvents = inputStream
-    .filter { key, value -> value.isValid() }
-
-// Transform events  
-val enrichedEvents = validEvents
-    .map { key, value -> 
-        KeyValue(key, value.enrich()) 
+data class CorrelationId(
+    val requestId: String,          // Unique request identifier
+    val clientId: String,           // Client application identifier
+    val sessionId: String?,         // User session identifier
+    val timestamp: Long,            // Request timestamp
+    val timeoutMs: Long,            // Request timeout
+    val replyTopic: String,         // Where to send response
+    val retryCount: Int = 0         // Number of retries
+) {
+    fun toCorrelationString(): String {
+        return "$requestId:$clientId:${sessionId ?: "none"}:$timestamp:$timeoutMs:$replyTopic:$retryCount"
     }
-
-// FlatMap for one-to-many
-val expandedEvents = enrichedEvents
-    .flatMap { key, value ->
-        value.expand().map { KeyValue(key, it) }
-    }
-```
-
-### Stream Branching
-```kotlin
-val branches = inputStream
-    .split(Named.as("branch-"))
-    .branch({ key, value -> value.type == "USER" }, 
-            Branched.as("users"))
-    .branch({ key, value -> value.type == "ORDER" }, 
-            Branched.as("orders"))
-    .defaultBranch(Branched.as("others"))
-
-val userStream = branches["branch-users"]
-val orderStream = branches["branch-orders"]
-val otherStream = branches["branch-others"]
-```
-
-### Stream Joins
-```kotlin
-// Stream-Stream Join
-val joinedStream = userStream
-    .join(orderStream,
-        { user, order -> UserOrder(user, order) },
-        JoinWindows.of(Duration.ofMinutes(10))
-    )
-
-// Stream-Table Join  
-val enrichedStream = orderStream
-    .join(userTable,
-        { order, user -> order.enrichWith(user) }
-    )
-```
-
-## 🔧 Topology Building
-
-### Simple Processing Topology
-```kotlin
-@Component
-class UserEventProcessor {
     
-    @Autowired
-    private lateinit var streamsBuilder: StreamsBuilder
-    
-    @Bean
-    fun userEventProcessingTopology(): KStream<String, UserEvent> {
-        
-        val userEvents = streamsBuilder
-            .stream<String, UserEvent>("user-events")
-        
-        // Filter valid events
-        val validEvents = userEvents
-            .filter { _, event -> 
-                event.userId.isNotBlank() && event.eventType.isNotBlank() 
-            }
-        
-        // Transform and enrich
-        val enrichedEvents = validEvents
-            .map { key, event ->
-                KeyValue(key, event.copy(
-                    timestamp = System.currentTimeMillis(),
-                    enrichedData = fetchUserProfile(event.userId)
-                ))
-            }
-        
-        // Branch by event type
-        val branches = enrichedEvents
-            .split(Named.as("event-type-"))
-            .branch({ _, event -> event.eventType == "LOGIN" },
-                    Branched.as("logins"))
-            .branch({ _, event -> event.eventType == "PURCHASE" },
-                    Branched.as("purchases"))
-            .defaultBranch(Branched.as("others"))
-        
-        // Send to different topics
-        branches["event-type-logins"]?.to("user-logins")
-        branches["event-type-purchases"]?.to("user-purchases")
-        branches["event-type-others"]?.to("user-other-events")
-        
-        return enrichedEvents
-    }
-}
-```
-
-## ✅ Success Criteria
-- [ ] Kafka Streams application starts and processes events
-- [ ] Stateless transformations (filter, map, flatMap) working correctly
-- [ ] Stream branching directs events to correct output topics
-- [ ] Stream joins combine data from multiple input streams
-- [ ] Topology testing framework validates processing logic
-- [ ] Error handling and monitoring implemented
-- [ ] Performance metrics show acceptable throughput and latency
-
-## 🚀 Getting Started
-
-### 1. Configure Kafka Streams
-```kotlin
-@Configuration
-@EnableKafkaStreams
-class KafkaStreamsConfig {
-    
-    @Bean
-    fun streamsConfig(): KafkaStreamsConfiguration {
-        val props = mapOf(
-            StreamsConfig.APPLICATION_ID_CONFIG to "user-event-processor",
-            StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
-            StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to Serdes.String()::class.java,
-            StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to JsonSerde::class.java,
-            StreamsConfig.PROCESSING_GUARANTEE_CONFIG to StreamsConfig.EXACTLY_ONCE,
-            StreamsConfig.COMMIT_INTERVAL_MS_CONFIG to 1000,
-            StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG to 1024 * 1024 // 1MB
-        )
-        
-        return KafkaStreamsConfiguration(props)
-    }
-}
-```
-
-### 2. Test Stream Processing
-```bash
-# Send test events
-kafka-console-producer --topic user-events --bootstrap-server localhost:9092 \
-  --property "parse.key=true" --property "key.separator=:"
-
-# Input: user-123:{"userId":"123","eventType":"LOGIN","timestamp":1645123456}
-
-# Monitor processed outputs
-kafka-console-consumer --topic user-logins --from-beginning --bootstrap-server localhost:9092
-kafka-console-consumer --topic user-purchases --from-beginning --bootstrap-server localhost:9092
-```
-
-### 3. Monitor Stream Metrics
-```bash
-# Check Kafka Streams metrics
-curl http://localhost:8090/actuator/metrics/kafka.streams
-
-# View topology description
-curl http://localhost:8090/actuator/kafka-streams/topology
-```
-
-## 📊 Performance & Monitoring
-
-### Stream Processing Metrics
-```mermaid
-graph TB
-    subgraph "Throughput Metrics"
-        TM1[Records Processed/sec]
-        TM2[Records Consumed/sec]
-        TM3[Records Produced/sec]
-        TM4[Processing Rate]
-    end
-    
-    subgraph "Latency Metrics"
-        LM1[Processing Latency<br/>Avg/95th/99th percentile]
-        LM2[Commit Latency]
-        LM3[Punctuation Latency]
-        LM4[End-to-End Latency]
-    end
-    
-    subgraph "Error Metrics"
-        EM1[Processing Errors/min]
-        EM2[Deserialization Errors]
-        EM3[Production Errors]
-        EM4[State Store Errors]
-    end
-    
-    subgraph "Resource Metrics"
-        RM1[CPU Usage %]
-        RM2[Memory Usage]
-        RM3[Network I/O]
-        RM4[Disk I/O (State)]
-    end
-    
-    style TM1 fill:#4ecdc4
-    style LM1 fill:#ffe66d
-    style EM1 fill:#ff6b6b
-    style RM1 fill:#a8e6cf
-```
-
-### Health Check Implementation
-```kotlin
-@Component
-class StreamsHealthIndicator : HealthIndicator {
-    
-    @Autowired
-    private lateinit var kafkaStreams: KafkaStreams
-    
-    override fun health(): Health {
-        val state = kafkaStreams.state()
-        val metrics = kafkaStreams.metrics()
-        
-        return when (state) {
-            KafkaStreams.State.RUNNING -> {
-                val throughput = metrics.values
-                    .find { it.metricName().name() == "process-rate" }
-                    ?.metricValue() as? Double ?: 0.0
-                
-                Health.up()
-                    .withDetail("state", state.name)
-                    .withDetail("throughput", "$throughput records/sec")
-                    .withDetail("threads", kafkaStreams.localThreadsMetadata().size)
-                    .build()
-            }
-            KafkaStreams.State.ERROR -> {
-                Health.down()
-                    .withDetail("state", state.name)
-                    .withDetail("reason", "Streams application in error state")
-                    .build()
-            }
-            else -> {
-                Health.degraded()
-                    .withDetail("state", state.name)
-                    .withDetail("reason", "Streams application not running")
-                    .build()
-            }
+    companion object {
+        fun fromString(correlationString: String): CorrelationId {
+            val parts = correlationString.split(":")
+            return CorrelationId(
+                requestId = parts[0],
+                clientId = parts[1],
+                sessionId = parts[2].takeIf { it != "none" },
+                timestamp = parts[3].toLong(),
+                timeoutMs = parts[4].toLong(),
+                replyTopic = parts[5],
+                retryCount = parts.getOrElse(6) { "0" }.toInt()
+            )
         }
     }
 }
 ```
 
-## 🧪 Testing Streams Applications
+## ⚙️ Request-Reply Infrastructure
 
-### Unit Testing with TopologyTestDriver
+### Request-Reply Gateway
 ```kotlin
-@Test
-fun `should filter and transform user events`() {
-    val topology = userEventProcessor.buildTopology()
-    val testDriver = TopologyTestDriver(topology, streamsConfig)
+@Component
+class RequestReplyGateway {
     
-    val inputTopic = testDriver.createInputTopic(
-        "user-events",
-        Serdes.String().serializer(),
-        JsonSerde<UserEvent>().serializer()
-    )
+    @Autowired
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
     
-    val outputTopic = testDriver.createOutputTopic(
-        "user-logins", 
-        Serdes.String().deserializer(),
-        JsonSerde<UserEvent>().deserializer()
-    )
+    @Autowired
+    private lateinit var correlationManager: CorrelationManager
     
-    // Send test event
-    val testEvent = UserEvent(
-        userId = "123",
-        eventType = "LOGIN",
-        timestamp = System.currentTimeMillis()
-    )
+    @Autowired
+    private lateinit var timeoutManager: TimeoutManager
     
-    inputTopic.pipeInput("user-123", testEvent)
+    fun <T> sendRequest(
+        requestTopic: String,
+        request: Any,
+        responseType: Class<T>,
+        timeoutMs: Long = 30000
+    ): CompletableFuture<T> {
+        
+        val correlationId = generateCorrelationId()
+        val future = CompletableFuture<T>()
+        
+        try {
+            // Store request context
+            val requestContext = RequestContext(
+                correlationId = correlationId,
+                requestTopic = requestTopic,
+                responseType = responseType,
+                future = future,
+                timeoutMs = timeoutMs,
+                startTime = System.currentTimeMillis()
+            )
+            
+            correlationManager.storeRequestContext(correlationId, requestContext)
+            
+            // Prepare request message
+            val requestMessage = RequestMessage(
+                correlationId = correlationId,
+                payload = request,
+                timestamp = System.currentTimeMillis(),
+                replyTopic = determineReplyTopic(requestTopic),
+                timeoutMs = timeoutMs
+            )
+            
+            // Send request
+            kafkaTemplate.send(requestTopic, correlationId, requestMessage)
+                .whenComplete { sendResult, throwable ->
+                    if (throwable != null) {
+                        correlationManager.removeRequestContext(correlationId)
+                        future.completeExceptionally(
+                            RequestSendException("Failed to send request", throwable)
+                        )
+                    } else {
+                        // Start timeout monitoring
+                        timeoutManager.scheduleTimeout(correlationId, timeoutMs)
+                    }
+                }
+            
+        } catch (e: Exception) {
+            future.completeExceptionally(e)
+        }
+        
+        return future
+    }
     
-    // Verify output
-    val outputRecord = outputTopic.readValue()
-    assertThat(outputRecord.userId).isEqualTo("123")
-    assertThat(outputRecord.eventType).isEqualTo("LOGIN")
+    fun <T> sendBatchRequest(
+        requestTopic: String,
+        requests: List<Any>,
+        responseType: Class<T>,
+        timeoutMs: Long = 30000
+    ): CompletableFuture<List<T>> {
+        
+        val batchId = UUID.randomUUID().toString()
+        val futures = requests.mapIndexed { index, request ->
+            val correlationId = "$batchId-$index"
+            sendRequest(requestTopic, request, responseType, timeoutMs)
+        }
+        
+        return CompletableFuture.allOf(*futures.toTypedArray())
+            .thenApply { futures.map { it.get() } }
+    }
     
-    testDriver.close()
+    private fun generateCorrelationId(): String {
+        return UUID.randomUUID().toString()
+    }
+    
+    private fun determineReplyTopic(requestTopic: String): String {
+        return requestTopic.replace("-requests", "-responses")
+    }
 }
+```
+
+### Response Handler
+```kotlin
+@Component
+class AsyncResponseHandler {
+    
+    @Autowired
+    private lateinit var correlationManager: CorrelationManager
+    
+    @Autowired
+    private lateinit var timeoutManager: TimeoutManager
+    
+    @KafkaListener(topics = [
+        "user-query-responses",
+        "order-lookup-responses", 
+        "analytics-responses",
+        "inventory-query-responses"
+    ])
+    fun handleResponse(
+        @Payload responseMessage: ResponseMessage,
+        @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) correlationId: String,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
+    ) {
+        try {
+            logger.debug("Received response for correlation ID: $correlationId")
+            
+            val requestContext = correlationManager.getRequestContext(correlationId)
+            if (requestContext == null) {
+                logger.warn("No request context found for correlation ID: $correlationId")
+                return
+            }
+            
+            // Cancel timeout
+            timeoutManager.cancelTimeout(correlationId)
+            
+            // Process response
+            when {
+                responseMessage.isSuccess -> {
+                    completeRequestWithSuccess(requestContext, responseMessage)
+                }
+                responseMessage.isError -> {
+                    completeRequestWithError(requestContext, responseMessage)
+                }
+                else -> {
+                    completeRequestWithError(
+                        requestContext, 
+                        ResponseMessage.error(correlationId, "Invalid response format")
+                    )
+                }
+            }
+            
+            // Clean up
+            correlationManager.removeRequestContext(correlationId)
+            
+        } catch (e: Exception) {
+            logger.error("Failed to handle response for correlation ID: $correlationId", e)
+        }
+    }
+    
+    private fun completeRequestWithSuccess(
+        requestContext: RequestContext<*>,
+        responseMessage: ResponseMessage
+    ) {
+        try {
+            val responseData = when (requestContext.responseType) {
+                String::class.java -> responseMessage.payload.toString()
+                else -> objectMapper.convertValue(responseMessage.payload, requestContext.responseType)
+            }
+            
+            @Suppress("UNCHECKED_CAST")
+            val future = requestContext.future as CompletableFuture<Any>
+            future.complete(responseData)
+            
+            // Record metrics
+            recordResponseMetrics(requestContext, "success")
+            
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize response", e)
+            completeRequestWithError(
+                requestContext,
+                ResponseMessage.error(requestContext.correlationId, "Response deserialization failed")
+            )
+        }
+    }
+    
+    private fun completeRequestWithError(
+        requestContext: RequestContext<*>,
+        responseMessage: ResponseMessage
+    ) {
+        val exception = RequestReplyException(
+            correlationId = requestContext.correlationId,
+            errorCode = responseMessage.errorCode ?: "UNKNOWN_ERROR",
+            errorMessage = responseMessage.errorMessage ?: "Unknown error occurred"
+        )
+        
+        requestContext.future.completeExceptionally(exception)
+        
+        // Record metrics
+        recordResponseMetrics(requestContext, "error")
+    }
+    
+    private fun recordResponseMetrics(requestContext: RequestContext<*>, status: String) {
+        val duration = System.currentTimeMillis() - requestContext.startTime
+        
+        meterRegistry.timer(
+            "request.reply.duration",
+            "topic", requestContext.requestTopic,
+            "status", status
+        ).record(duration, TimeUnit.MILLISECONDS)
+        
+        meterRegistry.counter(
+            "request.reply.total",
+            "topic", requestContext.requestTopic,
+            "status", status
+        ).increment()
+    }
+}
+```
+
+## ⏱️ Timeout Management
+
+### Timeout Handler
+```kotlin
+@Component
+class TimeoutManager {
+    
+    private val timeoutTasks = ConcurrentHashMap<String, ScheduledFuture<*>>()
+    private val executorService = Executors.newScheduledThreadPool(10)
+    
+    @Autowired
+    private lateinit var correlationManager: CorrelationManager
+    
+    fun scheduleTimeout(correlationId: String, timeoutMs: Long) {
+        val timeoutTask = executorService.schedule({
+            handleTimeout(correlationId)
+        }, timeoutMs, TimeUnit.MILLISECONDS)
+        
+        timeoutTasks[correlationId] = timeoutTask
+    }
+    
+    fun cancelTimeout(correlationId: String) {
+        timeoutTasks.remove(correlationId)?.cancel(false)
+    }
+    
+    private fun handleTimeout(correlationId: String) {
+        logger.warn("Request timeout for correlation ID: $correlationId")
+        
+        val requestContext = correlationManager.getRequestContext(correlationId)
+        if (requestContext != null) {
+            val timeoutException = RequestTimeoutException(
+                correlationId = correlationId,
+                timeoutMs = requestContext.timeoutMs,
+                message = "Request timed out after ${requestContext.timeoutMs}ms"
+            )
+            
+            requestContext.future.completeExceptionally(timeoutException)
+            correlationManager.removeRequestContext(correlationId)
+            
+            // Record timeout metrics
+            meterRegistry.counter(
+                "request.reply.timeout",
+                "topic", requestContext.requestTopic
+            ).increment()
+        }
+        
+        // Clean up
+        timeoutTasks.remove(correlationId)
+    }
+    
+    @PreDestroy
+    fun cleanup() {
+        timeoutTasks.values.forEach { it.cancel(false) }
+        executorService.shutdown()
+    }
+}
+```
+
+## 🎮 High-Level API Integration
+
+### REST Controller with Request-Reply
+```kotlin
+@RestController
+@RequestMapping("/api/users")
+class UserQueryController {
+    
+    @Autowired
+    private lateinit var requestReplyGateway: RequestReplyGateway
+    
+    @GetMapping("/{userId}/profile")
+    fun getUserProfile(@PathVariable userId: String): CompletableFuture<ResponseEntity<UserProfile>> {
+        
+        val profileQuery = UserProfileQuery(
+            userId = userId,
+            includePreferences = true,
+            includeActivity = false
+        )
+        
+        return requestReplyGateway.sendRequest(
+            requestTopic = "user-profile-requests",
+            request = profileQuery,
+            responseType = UserProfile::class.java,
+            timeoutMs = 5000
+        ).thenApply { profile ->
+            ResponseEntity.ok(profile)
+        }.exceptionally { throwable ->
+            when (throwable.cause) {
+                is RequestTimeoutException -> {
+                    ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+                        .body(null)
+                }
+                is RequestReplyException -> {
+                    ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(null)
+                }
+                else -> {
+                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(null)
+                }
+            }
+        }
+    }
+    
+    @GetMapping("/{userId}/orders")
+    fun getUserOrders(
+        @PathVariable userId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): CompletableFuture<ResponseEntity<PagedResponse<OrderSummary>>> {
+        
+        val orderQuery = UserOrderQuery(
+            userId = userId,
+            page = page,
+            size = size,
+            includeDetails = false
+        )
+        
+        return requestReplyGateway.sendRequest(
+            requestTopic = "user-order-requests",
+            request = orderQuery,
+            responseType = object : TypeReference<PagedResponse<OrderSummary>>() {}.type,
+            timeoutMs = 10000
+        ).thenApply { orders ->
+            ResponseEntity.ok(orders)
+        }.exceptionally { throwable ->
+            logger.error("Failed to retrieve user orders", throwable)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
+        }
+    }
+    
+    @PostMapping("/batch-lookup")
+    fun batchUserLookup(@RequestBody userIds: List<String>): CompletableFuture<ResponseEntity<List<UserSummary>>> {
+        
+        val batchQuery = UserBatchQuery(
+            userIds = userIds,
+            fields = listOf("id", "name", "email", "status")
+        )
+        
+        return requestReplyGateway.sendRequest(
+            requestTopic = "user-batch-requests",
+            request = batchQuery,
+            responseType = object : TypeReference<List<UserSummary>>() {}.type,
+            timeoutMs = 15000
+        ).thenApply { users ->
+            ResponseEntity.ok(users)
+        }.exceptionally { throwable ->
+            logger.error("Failed to perform batch user lookup", throwable)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
+        }
+    }
+}
+```
+
+## ✅ Success Criteria
+- [ ] Request-reply infrastructure handles synchronous communication over Kafka
+- [ ] Correlation management correctly matches requests with responses
+- [ ] Timeout handling prevents hanging requests
+- [ ] Performance optimization achieves target throughput (&gt;1000 req/sec)
+- [ ] Error handling provides meaningful feedback to clients
+- [ ] Batch requests work efficiently for bulk operations
+- [ ] Integration with REST APIs is seamless
+
+## 🚀 Getting Started
+
+### 1. Configure Request-Reply Topics
+```bash
+# Create request-reply topic pairs
+kafka-topics --create --topic user-profile-requests --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic user-profile-responses --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+
+kafka-topics --create --topic order-lookup-requests --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic order-lookup-responses --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
+
+kafka-topics --create --topic analytics-requests --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic analytics-responses --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+```
+
+### 2. Test Request-Reply
+```bash
+# Send user profile request
+curl http://localhost:8090/api/users/USER-123/profile
+
+# Send batch user lookup
+curl -X POST http://localhost:8090/api/users/batch-lookup \
+  -H "Content-Type: application/json" \
+  -d '["USER-123", "USER-456", "USER-789"]'
+
+# Monitor request-reply metrics
+curl http://localhost:8090/actuator/metrics/request.reply.duration
+```
+
+### 3. Monitor Performance
+```bash
+# Check correlation store size
+curl http://localhost:8090/api/debug/correlation-store/size
+
+# View active timeouts
+curl http://localhost:8090/api/debug/timeouts/active
+
+# Monitor request-reply topics
+kafka-console-consumer --topic user-profile-requests --from-beginning --bootstrap-server localhost:9092
+kafka-console-consumer --topic user-profile-responses --from-beginning --bootstrap-server localhost:9092
 ```
 
 ## 🎯 Best Practices
 
-### Topology Design
-- **Keep transformations simple** - complex logic should be in separate processors
-- **Use meaningful names** - name your streams and stores clearly
-- **Plan for evolution** - design topology for future changes
-- **Monitor performance** - track throughput and latency metrics
-
-### Error Handling
-- **Handle deserialization errors** - use try-catch or error handlers
-- **Implement poison pill detection** - skip or DLT problematic messages
-- **Use proper exception handling** - don't let streams applications crash
-- **Log processing errors** - include context for debugging
+### Request-Reply Design
+- **Use appropriate timeouts** based on expected response times
+- **Implement idempotent operations** to handle retries safely
+- **Design for failure** with proper error handling and fallbacks
+- **Monitor correlation store** to prevent memory leaks
 
 ### Performance Optimization
-- **Tune buffer sizes** - balance memory usage and throughput
-- **Configure commit intervals** - balance latency and throughput
-- **Use appropriate serdes** - choose efficient serialization
-- **Partition data effectively** - ensure even distribution
+- **Use connection pooling** for Kafka producers/consumers
+- **Implement response caching** for frequently requested data
+- **Batch similar requests** to reduce overhead
+- **Tune partition counts** based on expected load
+
+### Error Handling
+- **Distinguish timeout vs processing errors** for appropriate responses
+- **Implement circuit breakers** for failing services
+- **Use dead letter topics** for unprocessable requests
+- **Provide meaningful error messages** to API consumers
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **High latency** - Check commit interval and buffer settings
-2. **Uneven processing** - Verify partition key distribution
-3. **Memory issues** - Tune cache sizes and state store configs
-4. **Rebalancing issues** - Check network stability and timeouts
+1. **Memory leaks from orphaned correlations** - Implement proper cleanup
+2. **High timeout rates** - Adjust timeout values and check service health
+3. **Poor response times** - Optimize consumer processing and partition distribution
+4. **Lost responses** - Verify topic configuration and consumer group setup
 
-### Debug Tools
+### Debug Commands
 ```bash
-# View streams application info
-kafka-streams-application-reset --application-id user-event-processor \
-  --bootstrap-servers localhost:9092
+# Check correlation store contents
+redis-cli KEYS "correlation:*"
 
-# Monitor consumer group (streams apps are consumers)
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group user-event-processor --describe
+# Monitor request-reply latency
+curl 'http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,rate(request_reply_duration_bucket[5m]))'
 
-# Check state store contents
-kafka-console-consumer --topic user-event-processor-store-changelog \
-  --from-beginning --bootstrap-server localhost:9092
+# View timeout statistics
+curl http://localhost:8090/api/debug/timeout-stats
 ```
 
 ## 🚀 Next Steps
-Streams basics mastered? Time for advanced temporal processing! Move to [Lesson 15: Windowing, Joins & Stateful Operations](../lesson_15/README.md) to learn time-based aggregations and complex event processing.
+Request-reply mastered? Time for advanced state management! Move to [Lesson 16: Local State Stores & Fault Tolerance](../lesson_17/README.md) to learn persistent state in stream processing.

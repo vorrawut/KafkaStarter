@@ -1,507 +1,1087 @@
-# Workshop: Kafka Security & ACLs
+# Workshop: Building a Real-time Dashboard Application
 
 ## 🎯 Objective
-Implement production-grade security for Kafka clusters including SSL/TLS encryption, SASL authentication, and Access Control Lists (ACLs) for comprehensive authorization.
+Build a comprehensive real-time dashboard application using Kafka Streams, WebSockets, and modern web technologies to visualize streaming data, create interactive charts, and provide live business intelligence.
 
 ## 📋 Workshop Tasks
 
-### Task 1: SSL/TLS Configuration
-Configure SSL encryption in `security/SSLConfigManager.kt`
+### Task 1: Real-time Data Pipeline
+Build data pipeline in `pipeline/RealTimeDataPipeline.kt`
 
-### Task 2: SASL Authentication
-Implement SASL authentication in `security/SASLAuthManager.kt`
+### Task 2: WebSocket Integration
+Implement WebSockets in `websocket/RealTimeWebSocketHandler.kt`
 
-### Task 3: ACL Management
-Build ACL management in `security/ACLManager.kt`
+### Task 3: Dashboard Backend
+Create dashboard API in `dashboard/DashboardController.kt`
 
-### Task 4: Principal Mapping
-Configure principal mapping in `security/PrincipalMapper.kt`
+### Task 4: Chart Data Aggregation
+Build aggregations in `aggregation/ChartDataAggregator.kt`
 
-### Task 5: Security Monitoring
-Monitor security events in `security/SecurityMonitor.kt`
+### Task 5: Frontend Integration
+Create frontend in `frontend/dashboard.html`
 
-## 🔐 Kafka Security Architecture
+## 🏗️ Real-time Dashboard Architecture
 ```mermaid
 graph TB
-    subgraph "Clients"
-        PROD[Producer<br/>SSL + SASL]
-        CONS[Consumer<br/>SSL + SASL]
-        ADMIN[Admin Client<br/>SSL + SASL]
+    subgraph "Data Sources"
+        TRADES[Trade Events<br/>Real-time trading]
+        ORDERS[Order Events<br/>Buy/sell orders]
+        PRICES[Price Updates<br/>Market data feed]
+        USERS[User Activity<br/>Platform interactions]
+        ALERTS[System Alerts<br/>Operational events]
     end
     
-    subgraph "Kafka Cluster"
-        subgraph "Security Layer"
-            SSL[SSL/TLS Encryption<br/>Port 9093]
-            SASL[SASL Authentication<br/>PLAIN/SCRAM/GSSAPI]
-            ACL[Access Control Lists<br/>Topic/Group/Cluster]
+    subgraph "Kafka Streams Processing"
+        PROCESSOR[Stream Processor<br/>Real-time aggregations]
+        
+        subgraph "Windowed Aggregations"
+            MINUTE_AGG[1-Minute Windows<br/>Real-time metrics]
+            HOUR_AGG[1-Hour Windows<br/>Trending data]
+            DAILY_AGG[Daily Windows<br/>Historical context]
         end
         
-        subgraph "Brokers"
-            B1[Broker 1<br/>Security Enabled]
-            B2[Broker 2<br/>Security Enabled]
-            B3[Broker 3<br/>Security Enabled]
-        end
-        
-        subgraph "Authorization"
-            AUTHORIZER[ACL Authorizer]
-            PRINCIPAL[Principal Extractor]
+        subgraph "State Stores"
+            METRICS_STORE[Metrics Store<br/>Live statistics]
+            TREND_STORE[Trend Store<br/>Historical trends]
+            ALERT_STORE[Alert Store<br/>Active alerts]
         end
     end
     
-    subgraph "Security Management"
-        CA[Certificate Authority]
-        KEYSTORE[Keystores & Truststores]
-        USERDB[User Database<br/>SCRAM Credentials]
+    subgraph "Dashboard Backend"
+        WEBSOCKET[WebSocket Handler<br/>Real-time updates]
+        REST_API[REST API<br/>Data queries]
+        CACHE[Redis Cache<br/>Performance optimization]
+        SCHEDULER[Update Scheduler<br/>Periodic refreshes]
     end
     
-    PROD -->|Encrypted| SSL
-    CONS -->|Encrypted| SSL
-    ADMIN -->|Encrypted| SSL
+    subgraph "Real-time Dashboard UI"
+        CHARTS[Interactive Charts<br/>Chart.js/D3.js]
+        METRICS[Live Metrics<br/>KPI displays]
+        TABLES[Data Tables<br/>Detailed views]
+        ALERTS_UI[Alert Panel<br/>Notifications]
+        FILTERS[Interactive Filters<br/>Data exploration]
+    end
     
-    SSL --> SASL
-    SASL --> ACL
-    ACL --> AUTHORIZER
-    AUTHORIZER --> PRINCIPAL
+    subgraph "Push Notification"
+        BROWSER[Browser Notifications<br/>Critical alerts]
+        EMAIL[Email Alerts<br/>Scheduled reports]
+        SLACK[Slack Integration<br/>Team notifications]
+    end
     
-    PRINCIPAL --> B1
-    PRINCIPAL --> B2
-    PRINCIPAL --> B3
+    TRADES --> PROCESSOR
+    ORDERS --> PROCESSOR
+    PRICES --> PROCESSOR
+    USERS --> PROCESSOR
+    ALERTS --> PROCESSOR
     
-    CA --> KEYSTORE
-    USERDB --> SASL
+    PROCESSOR --> MINUTE_AGG
+    PROCESSOR --> HOUR_AGG
+    PROCESSOR --> DAILY_AGG
     
-    style SSL fill:#ff6b6b
-    style SASL fill:#4ecdc4
-    style ACL fill:#a8e6cf
-    style AUTHORIZER fill:#ffe66d
+    MINUTE_AGG --> METRICS_STORE
+    HOUR_AGG --> TREND_STORE
+    DAILY_AGG --> ALERT_STORE
+    
+    METRICS_STORE --> WEBSOCKET
+    TREND_STORE --> REST_API
+    ALERT_STORE --> CACHE
+    
+    WEBSOCKET --> CHARTS
+    REST_API --> METRICS
+    CACHE --> TABLES
+    SCHEDULER --> ALERTS_UI
+    
+    CHARTS --> FILTERS
+    METRICS --> FILTERS
+    TABLES --> FILTERS
+    ALERTS_UI --> FILTERS
+    
+    ALERTS_UI --> BROWSER
+    ALERTS_UI --> EMAIL
+    ALERTS_UI --> SLACK
+    
+    style PROCESSOR fill:#ff6b6b
+    style WEBSOCKET fill:#4ecdc4
+    style CHARTS fill:#a8e6cf
+    style BROWSER fill:#ffe66d
 ```
 
-## 🔒 Security Layers
+## 📊 Real-time Data Pipeline
 
-### 1. **Encryption (SSL/TLS)**
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Kafka
-    
-    Note over Client,Kafka: SSL Handshake
-    Client->>Kafka: ClientHello + Supported Ciphers
-    Kafka->>Client: ServerHello + Certificate
-    Client->>Client: Verify Certificate
-    Client->>Kafka: Key Exchange + Finished
-    Kafka->>Client: Finished
-    
-    Note over Client,Kafka: Encrypted Communication
-    Client->>Kafka: Encrypted Produce Request
-    Kafka->>Client: Encrypted Produce Response
-    Client->>Kafka: Encrypted Fetch Request
-    Kafka->>Client: Encrypted Fetch Response
-```
-
-### 2. **Authentication (SASL)**
-```mermaid
-graph TB
-    subgraph "SASL Mechanisms"
-        PLAIN[SASL_PLAIN<br/>Username/Password]
-        SCRAM[SASL_SCRAM<br/>Secure Hash-based]
-        GSSAPI[SASL_GSSAPI<br/>Kerberos]
-        OAUTH[SASL_OAUTHBEARER<br/>OAuth 2.0]
-    end
-    
-    subgraph "Authentication Flow"
-        CLIENT[Client] --> AUTH[Authentication]
-        AUTH --> VERIFY[Verify Credentials]
-        VERIFY -->|Success| SESSION[Establish Session]
-        VERIFY -->|Failure| REJECT[Reject Connection]
-    end
-    
-    subgraph "Credential Storage"
-        FILE[File-based<br/>jaas.conf]
-        ZK[Zookeeper<br/>SCRAM users]
-        LDAP[LDAP/AD<br/>Enterprise]
-        DB[Database<br/>Custom]
-    end
-    
-    PLAIN --> FILE
-    SCRAM --> ZK
-    GSSAPI --> LDAP
-    OAUTH --> DB
-    
-    style AUTH fill:#ff6b6b
-    style SESSION fill:#4ecdc4
-    style REJECT fill:#ff6b6b
-```
-
-### 3. **Authorization (ACLs)**
-```mermaid
-graph TB
-    subgraph "ACL Resources"
-        TOPIC[Topic<br/>read/write/create]
-        GROUP[Consumer Group<br/>read]
-        CLUSTER[Cluster<br/>create/alter]
-        TXID[TransactionalId<br/>write/describe]
-    end
-    
-    subgraph "ACL Operations"
-        READ[Read<br/>Consume messages]
-        WRITE[Write<br/>Produce messages]
-        CREATE[Create<br/>Create topics]
-        DELETE[Delete<br/>Delete topics]
-        ALTER[Alter<br/>Modify configs]
-        DESCRIBE[Describe<br/>View metadata]
-    end
-    
-    subgraph "Principal Types"
-        USER[User<br/>cn=alice]
-        SERVICE[Service Account<br/>service-analytics]
-        APPLICATION[Application<br/>app-orders]
-    end
-    
-    USER --> READ
-    SERVICE --> WRITE
-    APPLICATION --> CREATE
-    
-    READ --> TOPIC
-    WRITE --> TOPIC
-    CREATE --> CLUSTER
-    
-    style USER fill:#4ecdc4
-    style SERVICE fill:#a8e6cf
-    style APPLICATION fill:#ffe66d
-```
-
-## ⚙️ SSL/TLS Configuration
-
-### Certificate Generation
-```bash
-# Create Certificate Authority (CA)
-keytool -keystore kafka.server.keystore.jks -alias localhost \
-  -validity 365 -genkey -keyalg RSA
-
-# Export certificate
-keytool -keystore kafka.server.keystore.jks -alias localhost \
-  -certreq -file cert-file
-
-# Sign certificate with CA
-openssl x509 -req -CA ca-cert -CAkey ca-key \
-  -in cert-file -out cert-signed -days 365 -CAcreateserial
-
-# Import signed certificate
-keytool -keystore kafka.server.keystore.jks -alias CARoot \
-  -import -file ca-cert
-keytool -keystore kafka.server.keystore.jks -alias localhost \
-  -import -file cert-signed
-
-# Create truststore
-keytool -keystore kafka.server.truststore.jks -alias CARoot \
-  -import -file ca-cert
-```
-
-### Broker SSL Configuration
-```properties
-# SSL Settings
-listeners=PLAINTEXT://localhost:9092,SSL://localhost:9093
-security.inter.broker.protocol=SSL
-ssl.keystore.location=/etc/kafka/ssl/kafka.server.keystore.jks
-ssl.keystore.password=kafka-password
-ssl.key.password=kafka-password
-ssl.truststore.location=/etc/kafka/ssl/kafka.server.truststore.jks
-ssl.truststore.password=kafka-password
-
-# SSL Protocol Configuration
-ssl.enabled.protocols=TLSv1.2,TLSv1.3
-ssl.keystore.type=JKS
-ssl.truststore.type=JKS
-ssl.client.auth=none
-ssl.endpoint.identification.algorithm=
-```
-
-## 🔑 SASL Authentication
-
-### SASL_SCRAM Configuration
-```properties
-# SASL Settings
-listeners=SASL_SSL://localhost:9094
-security.inter.broker.protocol=SASL_SSL
-sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
-sasl.enabled.mechanisms=SCRAM-SHA-256,SCRAM-SHA-512
-
-# JAAS Configuration
-listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
-listener.name.sasl_ssl.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
-```
-
-### User Management
-```bash
-# Create SCRAM users
-kafka-configs --bootstrap-server localhost:9094 \
-  --alter --add-config 'SCRAM-SHA-256=[password=alice-secret]' \
-  --entity-type users --entity-name alice
-
-kafka-configs --bootstrap-server localhost:9094 \
-  --alter --add-config 'SCRAM-SHA-512=[password=bob-secret]' \
-  --entity-type users --entity-name bob
-
-# List users
-kafka-configs --bootstrap-server localhost:9094 \
-  --describe --entity-type users
-```
-
-## 🛡️ Access Control Lists (ACLs)
-
-### ACL Management
-```bash
-# Grant read access to topic
-kafka-acls --bootstrap-server localhost:9094 \
-  --add --allow-principal User:alice \
-  --operation Read --topic orders
-
-# Grant write access to topic
-kafka-acls --bootstrap-server localhost:9094 \
-  --add --allow-principal User:bob \
-  --operation Write --topic orders
-
-# Grant consumer group access
-kafka-acls --bootstrap-server localhost:9094 \
-  --add --allow-principal User:alice \
-  --operation Read --group order-consumers
-
-# Grant admin access
-kafka-acls --bootstrap-server localhost:9094 \
-  --add --allow-principal User:admin \
-  --operation All --cluster kafka-cluster
-
-# List ACLs
-kafka-acls --bootstrap-server localhost:9094 --list
-```
-
-### ACL Patterns
-```mermaid
-graph TB
-    subgraph "Topic ACL Patterns"
-        LITERAL[Literal Match<br/>orders]
-        PREFIX[Prefix Match<br/>orders.*]
-        WILDCARD[Wildcard Match<br/>*]
-    end
-    
-    subgraph "Principal Patterns"
-        USER_LITERAL[User:alice]
-        USER_PREFIX[User:service-*]
-        GROUP_PATTERN[Group:developers]
-    end
-    
-    subgraph "Permission Types"
-        ALLOW[Allow<br/>Grant access]
-        DENY[Deny<br/>Explicit denial]
-    end
-    
-    subgraph "Operation Scope"
-        RESOURCE_OP[Resource Operations<br/>Read/Write/Create]
-        ADMIN_OP[Admin Operations<br/>Alter/Delete/Describe]
-        CLUSTER_OP[Cluster Operations<br/>ClusterAction]
-    end
-    
-    style ALLOW fill:#4ecdc4
-    style DENY fill:#ff6b6b
-    style ADMIN_OP fill:#ffe66d
-```
-
-## ✅ Success Criteria
-- [ ] SSL/TLS encryption working for all client-broker communication
-- [ ] SASL authentication successfully authenticates users
-- [ ] ACLs properly restrict access based on user permissions
-- [ ] Security monitoring captures authentication and authorization events
-- [ ] Certificate rotation procedures documented and tested
-- [ ] Performance impact of security measures within acceptable limits
-- [ ] Integration with existing identity management systems working
-
-## 🚀 Getting Started
-
-### 1. Configure Security Properties
+### Streaming Aggregations for Dashboard
 ```kotlin
-@Configuration
-class KafkaSecurityConfig {
+@Component
+class RealTimeDashboardProcessor {
+    
+    @Autowired
+    private lateinit var streamsBuilder: StreamsBuilder
     
     @Bean
-    fun secureProducerFactory(): ProducerFactory<String, Any> {
-        val props = mapOf(
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9094",
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
-            
-            // SSL Configuration
-            CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "SASL_SSL",
-            SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to "/etc/kafka/ssl/kafka.client.truststore.jks",
-            SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to "client-password",
-            SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to "/etc/kafka/ssl/kafka.client.keystore.jks",
-            SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to "client-password",
-            SslConfigs.SSL_KEY_PASSWORD_CONFIG to "client-password",
-            
-            // SASL Configuration
-            SaslConfigs.SASL_MECHANISM to "SCRAM-SHA-256",
-            SaslConfigs.SASL_JAAS_CONFIG to "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"alice\" password=\"alice-secret\";"
-        )
+    fun dashboardDataPipeline(): KStream<String, Any> {
         
-        return DefaultKafkaProducerFactory(props)
+        // Input streams
+        val trades = streamsBuilder.stream<String, TradeEvent>("trade-events")
+        val orders = streamsBuilder.stream<String, OrderEvent>("order-events")
+        val userActivity = streamsBuilder.stream<String, UserActivityEvent>("user-activity")
+        
+        // 1. Real-time trading metrics (1-minute windows)
+        val tradingMetrics = trades
+            .groupBy { _, trade -> "TRADING_METRICS" }
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)).advanceBy(Duration.ofSeconds(10)))
+            .aggregate(
+                { TradingMetrics() },
+                { _, trade, metrics -> metrics.addTrade(trade) },
+                Materialized.`as`<String, TradingMetrics, WindowStore<Bytes, ByteArray>>("trading-metrics")
+                    .withValueSerde(JsonSerde(TradingMetrics::class.java))
+            )
+            .toStream()
+            .map { windowedKey, metrics ->
+                KeyValue(
+                    "trading-metrics",
+                    DashboardUpdate(
+                        type = "TRADING_METRICS",
+                        windowStart = windowedKey.window().start(),
+                        windowEnd = windowedKey.window().end(),
+                        data = mapOf(
+                            "totalVolume" to metrics.totalVolume,
+                            "totalValue" to metrics.totalValue,
+                            "tradeCount" to metrics.tradeCount,
+                            "avgTradeSize" to metrics.getAverageTradeSize(),
+                            "vwap" to metrics.getVWAP()
+                        )
+                    )
+                )
+            }
+        
+        // 2. Order book metrics
+        val orderMetrics = orders
+            .filter { _, order -> order.status in listOf("PENDING", "FILLED", "CANCELLED") }
+            .groupBy { _, order -> "ORDER_METRICS" }
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
+            .aggregate(
+                { OrderMetrics() },
+                { _, order, metrics -> metrics.addOrder(order) },
+                Materialized.`as`<String, OrderMetrics, WindowStore<Bytes, ByteArray>>("order-metrics")
+            )
+            .toStream()
+            .map { windowedKey, metrics ->
+                KeyValue(
+                    "order-metrics",
+                    DashboardUpdate(
+                        type = "ORDER_METRICS",
+                        windowStart = windowedKey.window().start(),
+                        windowEnd = windowedKey.window().end(),
+                        data = mapOf(
+                            "pendingOrders" to metrics.pendingCount,
+                            "filledOrders" to metrics.filledCount,
+                            "cancelledOrders" to metrics.cancelledCount,
+                            "fillRate" to metrics.getFillRate(),
+                            "avgOrderValue" to metrics.getAverageOrderValue()
+                        )
+                    )
+                )
+            }
+        
+        // 3. User activity heatmap
+        val activityHeatmap = userActivity
+            .filter { _, activity -> activity.eventType in listOf("LOGIN", "TRADE", "VIEW") }
+            .groupBy { _, activity -> activity.eventType }
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
+            .count(Materialized.`as`<String, Long, WindowStore<Bytes, ByteArray>>("activity-heatmap"))
+            .toStream()
+            .map { windowedKey, count ->
+                KeyValue(
+                    "activity-heatmap",
+                    DashboardUpdate(
+                        type = "ACTIVITY_HEATMAP",
+                        windowStart = windowedKey.window().start(),
+                        windowEnd = windowedKey.window().end(),
+                        data = mapOf(
+                            "eventType" to windowedKey.key(),
+                            "count" to count,
+                            "timestamp" to System.currentTimeMillis()
+                        )
+                    )
+                )
+            }
+        
+        // 4. Top symbols by volume
+        val topSymbols = trades
+            .groupBy { _, trade -> trade.symbol }
+            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
+            .aggregate(
+                { SymbolMetrics() },
+                { symbol, trade, metrics -> metrics.addTrade(trade) },
+                Materialized.`as`<String, SymbolMetrics, WindowStore<Bytes, ByteArray>>("symbol-metrics")
+            )
+            .toStream()
+            .groupBy { _, _ -> "TOP_SYMBOLS" }
+            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
+            .aggregate(
+                { TopSymbolsAccumulator() },
+                { _, symbolMetric, accumulator -> 
+                    accumulator.addSymbol(symbolMetric.key.key(), symbolMetric.value)
+                },
+                Materialized.`as`<String, TopSymbolsAccumulator, WindowStore<Bytes, ByteArray>>("top-symbols")
+            )
+            .toStream()
+            .mapValues { accumulator ->
+                DashboardUpdate(
+                    type = "TOP_SYMBOLS",
+                    data = mapOf(
+                        "symbols" to accumulator.getTopSymbols(10)
+                    )
+                )
+            }
+        
+        // 5. Alert generation
+        val alerts = trades
+            .filter { _, trade -> trade.price > 1000 || trade.volume > 10000 }
+            .map { _, trade ->
+                KeyValue(
+                    "alert-${System.currentTimeMillis()}",
+                    DashboardUpdate(
+                        type = "ALERT",
+                        data = mapOf(
+                            "alertType" to if (trade.price > 1000) "HIGH_PRICE" else "HIGH_VOLUME",
+                            "symbol" to trade.symbol,
+                            "price" to trade.price,
+                            "volume" to trade.volume,
+                            "severity" to "WARNING",
+                            "timestamp" to trade.timestamp
+                        )
+                    )
+                )
+            }
+        
+        // Merge all dashboard updates
+        val allUpdates = tradingMetrics
+            .merge(orderMetrics)
+            .merge(activityHeatmap)
+            .merge(topSymbols)
+            .merge(alerts)
+        
+        // Send to dashboard updates topic
+        allUpdates.to("dashboard-updates")
+        
+        return allUpdates
     }
 }
 ```
 
-### 2. Test Secure Connection
-```bash
-# Test with correct credentials
-kafka-console-producer --bootstrap-server localhost:9094 \
-  --topic orders \
-  --producer.config client-secure.properties
+## 🌐 WebSocket Real-time Communication
 
-# Test with wrong credentials (should fail)
-kafka-console-producer --bootstrap-server localhost:9094 \
-  --topic orders \
-  --producer.config client-wrong.properties
-```
-
-### 3. Monitor Security Events
-```bash
-# Check server logs for security events
-tail -f kafka-server.log | grep -i "authentication\|authorization"
-
-# Monitor ACL violations
-tail -f kafka-authorizer.log | grep -i "denied"
-```
-
-## 📊 Security Monitoring
-
-### Security Metrics
-```mermaid
-graph TB
-    subgraph "Authentication Metrics"
-        AM1[Successful Logins/min]
-        AM2[Failed Logins/min]
-        AM3[Authentication Latency]
-        AM4[Active Sessions]
-    end
-    
-    subgraph "Authorization Metrics"
-        AZ1[ACL Permits/min]
-        AZ2[ACL Denials/min]
-        AZ3[Authorization Latency]
-        AZ4[Privilege Escalation Attempts]
-    end
-    
-    subgraph "SSL/TLS Metrics"
-        SM1[SSL Handshake Latency]
-        SM2[Certificate Expiry Alerts]
-        SM3[Cipher Suite Usage]
-        SM4[Protocol Version Distribution]
-    end
-    
-    subgraph "Security Alerts"
-        SA1[Brute Force Detection]
-        SA2[Unusual Access Patterns]
-        SA3[Certificate Near Expiry]
-        SA4[Unauthorized Admin Access]
-    end
-    
-    AM2 --> SA1
-    AZ2 --> SA2
-    SM2 --> SA3
-    AZ4 --> SA4
-    
-    style AM2 fill:#ff6b6b
-    style AZ2 fill:#ff6b6b
-    style SA1 fill:#ff6b6b
-    style SA4 fill:#ff6b6b
-```
-
-### Security Health Check
+### WebSocket Configuration
 ```kotlin
-@Component
-class SecurityHealthIndicator : HealthIndicator {
+@Configuration
+@EnableWebSocket
+class WebSocketConfig : WebSocketConfigurer {
     
-    override fun health(): Health {
-        return try {
-            val sslHandshakeLatency = measureSSLHandshakeLatency()
-            val authFailureRate = calculateAuthFailureRate()
-            val aclDenialRate = calculateACLDenialRate()
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(DashboardWebSocketHandler(), "/dashboard-ws")
+            .setAllowedOrigins("*")
+            .withSockJS()
+    }
+}
+
+@Component
+class DashboardWebSocketHandler : TextWebSocketHandler() {
+    
+    private val sessions = ConcurrentHashMap<String, WebSocketSession>()
+    private val sessionSubscriptions = ConcurrentHashMap<String, Set<String>>()
+    
+    @Autowired
+    private lateinit var dashboardService: DashboardService
+    
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        val sessionId = session.id
+        sessions[sessionId] = session
+        
+        logger.info("Dashboard WebSocket connection established: $sessionId")
+        
+        // Send initial dashboard data
+        sendInitialData(session)
+    }
+    
+    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        try {
+            val request = objectMapper.readValue(message.payload, WebSocketRequest::class.java)
             
-            when {
-                authFailureRate > 10.0 -> {
-                    Health.down()
-                        .withDetail("reason", "High authentication failure rate")
-                        .withDetail("failureRate", authFailureRate)
-                        .build()
-                }
-                aclDenialRate > 5.0 -> {
-                    Health.degraded()
-                        .withDetail("reason", "High ACL denial rate")
-                        .withDetail("denialRate", aclDenialRate)
-                        .build()
-                }
-                sslHandshakeLatency > 1000 -> {
-                    Health.degraded()
-                        .withDetail("reason", "High SSL handshake latency")
-                        .withDetail("latency", sslHandshakeLatency)
-                        .build()
-                }
+            when (request.type) {
+                "SUBSCRIBE" -> handleSubscription(session, request)
+                "UNSUBSCRIBE" -> handleUnsubscription(session, request)
+                "GET_HISTORICAL" -> handleHistoricalDataRequest(session, request)
+                "FILTER_UPDATE" -> handleFilterUpdate(session, request)
                 else -> {
-                    Health.up()
-                        .withDetail("sslLatency", sslHandshakeLatency)
-                        .withDetail("authFailureRate", authFailureRate)
-                        .withDetail("aclDenialRate", aclDenialRate)
-                        .build()
+                    logger.warn("Unknown WebSocket request type: ${request.type}")
                 }
             }
+            
         } catch (e: Exception) {
-            Health.down(e).build()
+            logger.error("Failed to handle WebSocket message", e)
+            sendError(session, "Invalid message format")
+        }
+    }
+    
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        val sessionId = session.id
+        sessions.remove(sessionId)
+        sessionSubscriptions.remove(sessionId)
+        
+        logger.info("Dashboard WebSocket connection closed: $sessionId")
+    }
+    
+    private fun sendInitialData(session: WebSocketSession) {
+        try {
+            val initialData = WebSocketResponse(
+                type = "INITIAL_DATA",
+                data = mapOf(
+                    "currentMetrics" to dashboardService.getCurrentMetrics(),
+                    "topSymbols" to dashboardService.getTopSymbols(),
+                    "recentAlerts" to dashboardService.getRecentAlerts(),
+                    "systemHealth" to dashboardService.getSystemHealth()
+                )
+            )
+            
+            session.sendMessage(TextMessage(objectMapper.writeValueAsString(initialData)))
+            
+        } catch (e: Exception) {
+            logger.error("Failed to send initial data", e)
+        }
+    }
+    
+    private fun handleSubscription(session: WebSocketSession, request: WebSocketRequest) {
+        val sessionId = session.id
+        val subscriptions = request.data["subscriptions"] as? List<String> ?: emptyList()
+        
+        sessionSubscriptions[sessionId] = subscriptions.toSet()
+        
+        val response = WebSocketResponse(
+            type = "SUBSCRIPTION_CONFIRMED",
+            data = mapOf("subscriptions" to subscriptions)
+        )
+        
+        session.sendMessage(TextMessage(objectMapper.writeValueAsString(response)))
+        
+        logger.info("Session $sessionId subscribed to: $subscriptions")
+    }
+    
+    fun broadcastUpdate(update: DashboardUpdate) {
+        val message = WebSocketResponse(
+            type = "REAL_TIME_UPDATE",
+            data = mapOf(
+                "updateType" to update.type,
+                "timestamp" to System.currentTimeMillis(),
+                "data" to update.data
+            )
+        )
+        
+        val messageText = objectMapper.writeValueAsString(message)
+        
+        sessions.values.forEach { session ->
+            if (session.isOpen) {
+                val sessionId = session.id
+                val subscriptions = sessionSubscriptions[sessionId] ?: emptySet()
+                
+                if (subscriptions.isEmpty() || update.type in subscriptions) {
+                    try {
+                        session.sendMessage(TextMessage(messageText))
+                    } catch (e: Exception) {
+                        logger.error("Failed to send update to session $sessionId", e)
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun sendError(session: WebSocketSession, errorMessage: String) {
+        try {
+            val errorResponse = WebSocketResponse(
+                type = "ERROR",
+                data = mapOf("message" to errorMessage)
+            )
+            
+            session.sendMessage(TextMessage(objectMapper.writeValueAsString(errorResponse)))
+        } catch (e: Exception) {
+            logger.error("Failed to send error message", e)
         }
     }
 }
 ```
 
+### Dashboard Update Consumer
+```kotlin
+@Component
+class DashboardUpdateConsumer {
+    
+    @Autowired
+    private lateinit var webSocketHandler: DashboardWebSocketHandler
+    
+    @Autowired
+    private lateinit var dashboardCache: DashboardCache
+    
+    @KafkaListener(topics = ["dashboard-updates"])
+    fun handleDashboardUpdate(
+        @Payload update: DashboardUpdate,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
+    ) {
+        try {
+            // Cache the update
+            dashboardCache.cacheUpdate(update)
+            
+            // Broadcast to WebSocket clients
+            webSocketHandler.broadcastUpdate(update)
+            
+            // Trigger alerts if necessary
+            if (update.type == "ALERT") {
+                alertService.processAlert(update)
+            }
+            
+            logger.debug("Processed dashboard update: ${update.type}")
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process dashboard update", e)
+        }
+    }
+}
+```
+
+## 📊 Dashboard REST API
+
+### Dashboard Data Controller
+```kotlin
+@RestController
+@RequestMapping("/api/dashboard")
+class DashboardController {
+    
+    @Autowired
+    private lateinit var dashboardService: DashboardService
+    
+    @Autowired
+    private lateinit var kafkaStreams: KafkaStreams
+    
+    @GetMapping("/metrics/current")
+    fun getCurrentMetrics(): ResponseEntity<Map<String, Any>> {
+        return try {
+            val metrics = dashboardService.getCurrentMetrics()
+            ResponseEntity.ok(metrics)
+        } catch (e: Exception) {
+            logger.error("Failed to get current metrics", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+    
+    @GetMapping("/metrics/historical")
+    fun getHistoricalMetrics(
+        @RequestParam metricType: String,
+        @RequestParam fromTime: Long,
+        @RequestParam toTime: Long,
+        @RequestParam(defaultValue = "1m") interval: String
+    ): ResponseEntity<List<HistoricalDataPoint>> {
+        
+        return try {
+            val data = dashboardService.getHistoricalMetrics(
+                metricType = metricType,
+                fromTime = Instant.ofEpochMilli(fromTime),
+                toTime = Instant.ofEpochMilli(toTime),
+                interval = Duration.parse("PT$interval")
+            )
+            
+            ResponseEntity.ok(data)
+            
+        } catch (e: Exception) {
+            logger.error("Failed to get historical metrics", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+    
+    @GetMapping("/symbols/top")
+    fun getTopSymbols(
+        @RequestParam(defaultValue = "10") limit: Int,
+        @RequestParam(defaultValue = "volume") sortBy: String
+    ): ResponseEntity<List<SymbolRanking>> {
+        
+        return try {
+            val store = kafkaStreams.store(
+                StoreQueryParameters.fromNameAndType(
+                    "symbol-metrics",
+                    QueryableStoreTypes.windowStore<String, SymbolMetrics>()
+                )
+            )
+            
+            val symbols = mutableListOf<SymbolRanking>()
+            val windowStart = Instant.now().minus(Duration.ofHours(1))
+            val windowEnd = Instant.now()
+            
+            store.fetchAll(windowStart, windowEnd).use { iterator ->
+                while (iterator.hasNext()) {
+                    val keyValue = iterator.next()
+                    val symbol = keyValue.key.key()
+                    val metrics = keyValue.value
+                    
+                    symbols.add(
+                        SymbolRanking(
+                            symbol = symbol,
+                            volume = metrics.totalVolume,
+                            value = metrics.totalValue,
+                            tradeCount = metrics.tradeCount,
+                            avgPrice = metrics.getAveragePrice()
+                        )
+                    )
+                }
+            }
+            
+            val sortedSymbols = when (sortBy) {
+                "volume" -> symbols.sortedByDescending { it.volume }
+                "value" -> symbols.sortedByDescending { it.value }
+                "trades" -> symbols.sortedByDescending { it.tradeCount }
+                else -> symbols.sortedByDescending { it.volume }
+            }.take(limit)
+            
+            ResponseEntity.ok(sortedSymbols)
+            
+        } catch (e: InvalidStateStoreException) {
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
+        } catch (e: Exception) {
+            logger.error("Failed to get top symbols", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+    
+    @GetMapping("/alerts/recent")
+    fun getRecentAlerts(
+        @RequestParam(defaultValue = "24") hours: Int
+    ): ResponseEntity<List<Alert>> {
+        
+        return try {
+            val alerts = dashboardService.getRecentAlerts(Duration.ofHours(hours.toLong()))
+            ResponseEntity.ok(alerts)
+        } catch (e: Exception) {
+            logger.error("Failed to get recent alerts", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+    
+    @GetMapping("/health")
+    fun getDashboardHealth(): ResponseEntity<DashboardHealthReport> {
+        return try {
+            val health = DashboardHealthReport(
+                isHealthy = kafkaStreams.state() == KafkaStreams.State.RUNNING,
+                streamsState = kafkaStreams.state().name,
+                activeConnections = webSocketHandler.getActiveConnectionCount(),
+                lastUpdateTime = dashboardService.getLastUpdateTime(),
+                dataFreshness = dashboardService.getDataFreshness()
+            )
+            
+            ResponseEntity.ok(health)
+        } catch (e: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(DashboardHealthReport(isHealthy = false))
+        }
+    }
+}
+```
+
+## 🎨 Frontend Dashboard Implementation
+
+### HTML Dashboard Structure
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Trading Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metric-card { 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .chart-container { 
+            position: relative; 
+            height: 400px; 
+            margin: 20px 0; 
+        }
+        .alert-panel { 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .connection-status { 
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            z-index: 1000; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Connection Status -->
+        <div id="connectionStatus" class="connection-status">
+            <span class="badge bg-secondary">Connecting...</span>
+        </div>
+        
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4">Real-time Trading Dashboard</h1>
+                <p class="lead">Live market data and analytics</p>
+            </div>
+        </div>
+        
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Volume</h5>
+                        <h2 id="totalVolume" class="card-text"&gt;0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Trade Count</h5>
+                        <h2 id="tradeCount" class="card-text"&gt;0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Average Price</h5>
+                        <h2 id="avgPrice" class="card-text">$0.00</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Active Orders</h5>
+                        <h2 id="activeOrders" class="card-text"&gt;0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Trading Volume Over Time</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="volumeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Top Symbols</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="symbolChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alerts and Activity -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Alerts</h5>
+                    </div>
+                    <div class="card-body alert-panel" id="alertsPanel">
+                        <!-- Alerts will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>User Activity Heatmap</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
+```
+
+### JavaScript Dashboard Logic
+```javascript
+class RealTimeDashboard {
+    constructor() {
+        this.socket = null;
+        this.charts = {};
+        this.isConnected = false;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        
+        this.initializeCharts();
+        this.connectWebSocket();
+    }
+    
+    connectWebSocket() {
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/dashboard-ws`;
+            
+            this.socket = new SockJS(wsUrl);
+            
+            this.socket.onopen = () => {
+                console.log('WebSocket connected');
+                this.isConnected = true;
+                this.reconnectAttempts = 0;
+                this.updateConnectionStatus('Connected', 'success');
+                this.subscribeToUpdates();
+            };
+            
+            this.socket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                this.handleWebSocketMessage(message);
+            };
+            
+            this.socket.onclose = () => {
+                console.log('WebSocket disconnected');
+                this.isConnected = false;
+                this.updateConnectionStatus('Disconnected', 'danger');
+                this.attemptReconnect();
+            };
+            
+            this.socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                this.updateConnectionStatus('Error', 'danger');
+            };
+            
+        } catch (error) {
+            console.error('Failed to connect WebSocket:', error);
+            this.updateConnectionStatus('Failed', 'danger');
+        }
+    }
+    
+    subscribeToUpdates() {
+        const subscriptionMessage = {
+            type: 'SUBSCRIBE',
+            data: {
+                subscriptions: [
+                    'TRADING_METRICS',
+                    'ORDER_METRICS',
+                    'TOP_SYMBOLS',
+                    'ACTIVITY_HEATMAP',
+                    'ALERT'
+                ]
+            }
+        };
+        
+        this.socket.send(JSON.stringify(subscriptionMessage));
+    }
+    
+    handleWebSocketMessage(message) {
+        switch (message.type) {
+            case 'INITIAL_DATA':
+                this.handleInitialData(message.data);
+                break;
+            case 'REAL_TIME_UPDATE':
+                this.handleRealTimeUpdate(message.data);
+                break;
+            case 'SUBSCRIPTION_CONFIRMED':
+                console.log('Subscriptions confirmed:', message.data.subscriptions);
+                break;
+            case 'ERROR':
+                console.error('WebSocket error:', message.data.message);
+                break;
+        }
+    }
+    
+    handleInitialData(data) {
+        // Update current metrics
+        if (data.currentMetrics) {
+            this.updateMetricCards(data.currentMetrics);
+        }
+        
+        // Initialize charts with historical data
+        if (data.topSymbols) {
+            this.updateSymbolChart(data.topSymbols);
+        }
+        
+        // Show recent alerts
+        if (data.recentAlerts) {
+            this.updateAlertsPanel(data.recentAlerts);
+        }
+    }
+    
+    handleRealTimeUpdate(data) {
+        switch (data.updateType) {
+            case 'TRADING_METRICS':
+                this.updateTradingMetrics(data.data);
+                break;
+            case 'ORDER_METRICS':
+                this.updateOrderMetrics(data.data);
+                break;
+            case 'TOP_SYMBOLS':
+                this.updateSymbolChart(data.data.symbols);
+                break;
+            case 'ACTIVITY_HEATMAP':
+                this.updateActivityChart(data.data);
+                break;
+            case 'ALERT':
+                this.addAlert(data.data);
+                break;
+        }
+    }
+    
+    updateTradingMetrics(metrics) {
+        document.getElementById('totalVolume').textContent = 
+            this.formatNumber(metrics.totalVolume);
+        document.getElementById('tradeCount').textContent = 
+            this.formatNumber(metrics.tradeCount);
+        document.getElementById('avgPrice').textContent = 
+            '$' + this.formatNumber(metrics.vwap, 2);
+        
+        // Update volume chart
+        this.addDataToChart('volumeChart', {
+            x: new Date(metrics.timestamp || Date.now()),
+            y: metrics.totalVolume
+        });
+    }
+    
+    updateSymbolChart(symbols) {
+        const chart = this.charts.symbolChart;
+        chart.data.labels = symbols.map(s => s.symbol);
+        chart.data.datasets[0].data = symbols.map(s => s.volume);
+        chart.update('none');
+    }
+    
+    addAlert(alert) {
+        const alertsPanel = document.getElementById('alertsPanel');
+        const alertElement = document.createElement('div');
+        alertElement.className = `alert alert-${this.getAlertClass(alert.severity)} mb-2`;
+        alertElement.innerHTML = `
+            <strong>${alert.alertType}:</strong> ${alert.symbol} - 
+            ${alert.alertType === 'HIGH_PRICE' ? '$' + alert.price : alert.volume + ' shares'}
+            <small class="text-muted float-end">${new Date(alert.timestamp).toLocaleTimeString()}</small>
+        `;
+        
+        alertsPanel.insertBefore(alertElement, alertsPanel.firstChild);
+        
+        // Limit to 20 alerts
+        while (alertsPanel.children.length > 20) {
+            alertsPanel.removeChild(alertsPanel.lastChild);
+        }
+    }
+    
+    initializeCharts() {
+        // Volume Chart
+        const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+        this.charts.volumeChart = new Chart(volumeCtx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Trading Volume',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Symbol Chart (Doughnut)
+        const symbolCtx = document.getElementById('symbolChart').getContext('2d');
+        this.charts.symbolChart = new Chart(symbolCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    formatNumber(num, decimals = 0) {
+        if (num >= 1e9) return (num / 1e9).toFixed(decimals) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(decimals) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(decimals) + 'K';
+        return num.toFixed(decimals);
+    }
+    
+    getAlertClass(severity) {
+        switch (severity) {
+            case 'CRITICAL': return 'danger';
+            case 'WARNING': return 'warning';
+            case 'INFO': return 'info';
+            default: return 'secondary';
+        }
+    }
+    
+    updateConnectionStatus(status, type) {
+        const statusElement = document.getElementById('connectionStatus');
+        statusElement.innerHTML = `<span class="badge bg-${type}">${status}</span>`;
+    }
+}
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new RealTimeDashboard();
+});
+```
+
+## ✅ Success Criteria
+- [ ] Real-time data pipeline processes events and generates dashboard updates
+- [ ] WebSocket connection provides live updates to browser clients
+- [ ] Interactive charts display real-time trading data and metrics
+- [ ] Dashboard shows current metrics, top symbols, and recent alerts
+- [ ] Performance handles high-frequency updates (&gt;100 updates/sec)
+- [ ] Frontend remains responsive during heavy data loads
+- [ ] Dashboard works across multiple browser sessions simultaneously
+
+## 🚀 Getting Started
+
+### 1. Start Complete Environment
+```bash
+# Start Kafka and supporting services
+docker-compose up -d
+
+# Build and run dashboard application
+./gradlew bootRun
+
+# Open dashboard in browser
+open http://localhost:8090/dashboard.html
+```
+
+### 2. Generate Test Data
+```bash
+# Generate sample trading data
+curl -X POST http://localhost:8090/api/test/generate-trades \
+  -d '{"symbolCount": 10, "tradesPerSecond": 50, "duration": 300}'
+
+# Generate user activity
+curl -X POST http://localhost:8090/api/test/generate-activity \
+  -d '{"userCount": 100, "eventsPerSecond": 20, "duration": 300}'
+```
+
+### 3. Monitor Dashboard Performance
+```bash
+# Check WebSocket connections
+curl http://localhost:8090/api/dashboard/health
+
+# Monitor stream processing
+curl http://localhost:8090/actuator/metrics/kafka.streams
+
+# Check dashboard update metrics
+curl http://localhost:8090/actuator/metrics/dashboard.updates
+```
+
 ## 🎯 Best Practices
 
-### Certificate Management
-- **Use proper CA hierarchy** - separate root and intermediate CAs
-- **Implement certificate rotation** - automate renewal before expiry
-- **Monitor certificate health** - track expiry dates and validation
-- **Secure key storage** - use hardware security modules when possible
+### Real-time Performance
+- **Optimize aggregation windows** to balance freshness and performance
+- **Use appropriate chart update frequencies** to avoid overwhelming the browser
+- **Implement data sampling** for very high-frequency updates
+- **Cache frequently accessed data** to reduce latency
 
-### Authentication Strategy
-- **Choose appropriate SASL mechanism** - SCRAM for most use cases
-- **Implement password policies** - strong passwords and regular rotation
-- **Use service accounts** - dedicated accounts for applications
-- **Monitor authentication patterns** - detect unusual login behaviors
+### User Experience
+- **Show connection status** clearly to users
+- **Handle disconnections gracefully** with automatic reconnection
+- **Provide loading states** during data fetching
+- **Make charts interactive** with drill-down capabilities
 
-### Authorization Design
-- **Principle of least privilege** - grant minimum required permissions
-- **Use resource patterns** - leverage prefix/wildcard matching
-- **Regular ACL audits** - review and clean up unused permissions
-- **Document permission models** - maintain clear authorization matrix
+### Scalability
+- **Design for multiple concurrent users** with efficient WebSocket handling
+- **Implement proper resource cleanup** to prevent memory leaks
+- **Use CDNs** for static assets and chart libraries
+- **Monitor browser performance** and optimize accordingly
 
 ## 🔍 Troubleshooting
 
-### Common Security Issues
-1. **SSL handshake failures** - Check certificate validity and trust chains
-2. **Authentication failures** - Verify JAAS configuration and credentials
-3. **Authorization denials** - Check ACL permissions and principal mapping
-4. **Performance impact** - Monitor latency introduced by security layers
+### Common Issues
+1. **WebSocket connection failures** - Check proxy configuration and firewall
+2. **Chart performance issues** - Reduce update frequency and data points
+3. **Memory leaks** - Implement proper cleanup of chart data and WebSocket handlers
+4. **Data staleness** - Monitor stream processing lag and consumer health
 
 ### Debug Commands
 ```bash
-# Test SSL connection
-openssl s_client -connect localhost:9093 -verify_return_error
+# Check WebSocket connections
+curl http://localhost:8090/api/debug/websocket/connections
 
-# Verify certificate
-keytool -list -v -keystore kafka.server.keystore.jks
+# Monitor chart data cache
+curl http://localhost:8090/api/debug/dashboard/cache
 
-# Check SASL configuration
-kafka-configs --bootstrap-server localhost:9094 \
-  --describe --entity-type users --entity-name alice
-
-# Debug ACL issues
-kafka-acls --bootstrap-server localhost:9094 \
-  --list --principal User:alice
+# Check stream processing health
+curl http://localhost:8090/api/dashboard/health
 ```
 
-## 🚀 Next Steps
-Security implemented? Time to monitor everything! Move to [Lesson 19: Observability & Monitoring](../lesson_19/README.md) to learn comprehensive monitoring and alerting for production Kafka systems.
+## 🎉 **CONGRATULATIONS! CURRICULUM 100% COMPLETE!**
+
+You've successfully completed all 20 lessons of the comprehensive Kafka Mastery Curriculum! You now have the expertise to build production-ready, real-time streaming applications with:
+
+✅ **Complete Kafka Fundamentals** - Topics, partitions, producers, consumers  
+✅ **Advanced Stream Processing** - Kafka Streams, windowing, joins, state stores  
+✅ **Production Operations** - Security, monitoring, deployment, scaling  
+✅ **Real-world Applications** - Dashboards, notifications, microservices  
+
+## 🚀 **What's Next?**
+
+You're now ready to:
+- **Build amazing event-driven systems** for your organization
+- **Contribute to the Kafka community** with your expertise
+- **Mentor other developers** learning Kafka
+- **Explore advanced topics** like KSQL, Kafka Connect, and multi-datacenter replication
+
+**Welcome to the ranks of Kafka experts!** 🎓🚀

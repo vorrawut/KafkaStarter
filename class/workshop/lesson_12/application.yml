@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-hybrid-rest-lesson12
+    name: kafka-fanout-lesson11
 
-  # Kafka configuration for Lesson 12 - Kafka-Triggered REST & Command APIs
+  # Kafka configuration for Lesson 11 - Fan-out Pattern: Notification Systems
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -13,14 +13,14 @@ spring:
       retries: 3
     
     consumer:
-      group-id: lesson12-hybrid-group
+      group-id: lesson11-fanout-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure consumer settings for hybrid patterns
+      # TODO: Configure consumer settings for fan-out patterns
 
 server:
-  port: 8092
+  port: 8091
 
 logging:
   level:

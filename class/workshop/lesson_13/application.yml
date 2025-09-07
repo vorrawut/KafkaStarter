@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-request-reply-lesson13
+    name: kafka-hybrid-rest-lesson12
 
-  # Kafka configuration for Lesson 13 - Request-Reply Patterns
+  # Kafka configuration for Lesson 12 - Kafka-Triggered REST & Command APIs
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -13,14 +13,14 @@ spring:
       retries: 3
     
     consumer:
-      group-id: lesson13-request-reply-group
+      group-id: lesson12-hybrid-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure consumer settings for request-reply patterns
+      # TODO: Configure consumer settings for hybrid patterns
 
 server:
-  port: 8093
+  port: 8092
 
 logging:
   level:

@@ -1,476 +1,466 @@
-# Workshop: Manual Acknowledgment & Idempotent Consumers
+# Workshop: Error Handling & Dead Letter Topics
 
 ## 🎯 Objective
-Master precise message processing control with manual acknowledgment, implement idempotent consumers for exactly-once semantics, and handle duplicate messages gracefully in production systems.
+Build robust, fault-tolerant Kafka applications with comprehensive error handling, retry strategies, and dead letter topic patterns for production resilience.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Manual Acknowledgment Configuration
-Configure manual ack in `config/ManualAckConfig.kt`
+### Task 1: Error Classification
+Implement error classification in `error/ErrorClassifier.kt`
 
-### Task 2: Idempotent Consumer Implementation
-Build idempotent consumers in `consumer/IdempotentBankTransferConsumer.kt`
+### Task 2: Retry Strategies
+Build retry mechanisms in `retry/RetryStrategyManager.kt`
 
-### Task 3: Duplicate Detection
-Implement duplicate detection in `deduplication/DuplicateDetector.kt`
+### Task 3: Dead Letter Topic
+Implement DLT handling in `dlt/DeadLetterTopicHandler.kt`
 
-### Task 4: Transaction Management
-Handle transactions in `transaction/TransactionManager.kt`
+### Task 4: Circuit Breaker
+Add circuit breaker pattern in `circuit/CircuitBreakerService.kt`
 
-### Task 5: Exactly-Once Processing
-Implement exactly-once in `exactlyonce/ExactlyOnceProcessor.kt`
+### Task 5: Error Monitoring
+Monitor errors and recovery in `monitoring/ErrorMonitor.kt`
 
-## 🏗️ Manual Acknowledgment Architecture
+## 🏗️ Error Handling Architecture
 ```mermaid
 graph TB
     subgraph "Message Processing Flow"
-        KAFKA[Kafka Topic<br/>bank-transfers]
-        CONSUMER[Consumer Instance]
-        PROCESSOR[Business Logic<br/>Transfer Processing]
-        DB[(Database<br/>Account Balances)]
-        ACK[Manual Acknowledgment]
+        MSG[Incoming Message] --> PROC[Process Message]
+        PROC -->|Success| ACK[Acknowledge]
+        PROC -->|Error| CLASSIFY[Classify Error]
         
-        KAFKA -->|Poll Messages| CONSUMER
-        CONSUMER -->|Process| PROCESSOR
-        PROCESSOR -->|Update| DB
-        DB -->|Success| ACK
-        ACK -->|Commit Offset| KAFKA
+        CLASSIFY -->|Retryable| RETRY[Retry Logic]
+        CLASSIFY -->|Non-Retryable| DLT[Dead Letter Topic]
+        CLASSIFY -->|Poison| SKIP[Skip & Log]
         
-        PROCESSOR -->|Failure| RETRY[Retry Logic]
-        RETRY -->|Max Retries| DLT[Dead Letter Topic]
-        RETRY -->|Retry Success| DB
+        RETRY -->|Max Retries| DLT
+        RETRY -->|Retry Success| ACK
+        RETRY -->|Backoff| WAIT[Exponential Backoff]
+        WAIT --> PROC
+        
+        DLT --> DLTP[DLT Processing]
+        DLTP -->|Manual Fix| REPLAY[Replay to Main Topic]
+        DLTP -->|Permanent Failure| ARCHIVE[Archive Message]
     end
     
-    subgraph "Idempotency Mechanisms"
-        DEDUP[Duplicate Detection<br/>Message ID tracking]
-        CACHE[Idempotency Cache<br/>Redis/Memory]
-        FINGERPRINT[Message Fingerprint<br/>Hash-based detection]
+    subgraph "Circuit Breaker"
+        CB[Circuit Breaker]
+        CLOSED[Closed State<br/>Normal Operation]
+        OPEN[Open State<br/>Fail Fast]
+        HALF[Half-Open State<br/>Testing Recovery]
         
-        CONSUMER --> DEDUP
-        DEDUP --> CACHE
-        DEDUP --> FINGERPRINT
+        CLOSED -->|Failure Threshold| OPEN
+        OPEN -->|Timeout| HALF
+        HALF -->|Success| CLOSED
+        HALF -->|Failure| OPEN
     end
     
-    subgraph "Exactly-Once Guarantees"
-        TXN[Database Transaction]
-        OFFSET[Offset Management]
-        ATOMIC[Atomic Operations]
-        
-        PROCESSOR --> TXN
-        ACK --> OFFSET
-        TXN --> ATOMIC
-        OFFSET --> ATOMIC
-    end
+    PROC --> CB
+    CB --> CLASSIFY
     
     style ACK fill:#4ecdc4
-    style DEDUP fill:#a8e6cf
-    style TXN fill:#ffe66d
     style DLT fill:#ff6b6b
+    style RETRY fill:#ffe66d
+    style OPEN fill:#ff6b6b
+    style CLOSED fill:#4ecdc4
 ```
 
-## 🔄 Manual Acknowledgment Flow
+## 🔄 Retry Strategy Flow
 ```mermaid
 sequenceDiagram
-    participant Kafka
     participant Consumer
-    participant BusinessLogic
-    participant Database
-    participant Ack as Acknowledgment
+    participant ErrorHandler
+    participant RetryService
+    participant DLT
+    participant Monitor
     
-    Note over Kafka,Ack: Manual Acknowledgment Process
+    Consumer->>ErrorHandler: Processing Failed
+    ErrorHandler->>ErrorHandler: Classify Error
     
-    Kafka->>Consumer: Poll() - Get batch of messages
-    Consumer->>Consumer: Disable auto-commit
-    
-    loop For each message
-        Consumer->>BusinessLogic: Process message
-        BusinessLogic->>Database: Perform operations
+    alt Retryable Error
+        ErrorHandler->>RetryService: Schedule Retry
+        RetryService->>RetryService: Exponential Backoff
+        RetryService->>Consumer: Retry Processing
         
-        alt Success
-            Database-->>BusinessLogic: Operation completed
-            BusinessLogic-->>Consumer: Success result
-            Consumer->>Ack: acknowledge()
-            Ack->>Kafka: Commit offset for message
-        else Failure
-            Database-->>BusinessLogic: Operation failed
-            BusinessLogic-->>Consumer: Failure result
-            Consumer->>Consumer: Don't acknowledge
-            Note over Consumer: Message will be redelivered
+        alt Retry Success
+            Consumer->>Monitor: Success After Retry
+        else Max Retries Exceeded
+            RetryService->>DLT: Send to Dead Letter Topic
+            DLT->>Monitor: DLT Message Logged
         end
+        
+    else Non-Retryable Error
+        ErrorHandler->>DLT: Send Directly to DLT
+        DLT->>Monitor: Non-Retryable Error Logged
+        
+    else Poison Message
+        ErrorHandler->>Monitor: Skip & Log Poison Message
     end
-    
-    Note over Consumer,Ack: Only successful messages are committed
 ```
 
 ## 🎯 Key Concepts
 
-### **Manual Acknowledgment Benefits**
-- **Precise Control**: Commit offsets only after successful processing
-- **Fault Tolerance**: Failed messages are automatically retried
-- **Data Integrity**: Prevents message loss during processing failures
-- **Exactly-Once**: Combined with idempotency for exactly-once semantics
+### **Error Classification**
+- **Retryable Errors**: Temporary failures (network issues, service unavailable)
+- **Non-Retryable Errors**: Permanent failures (validation errors, malformed data)
+- **Poison Messages**: Messages that consistently cause processing failures
 
-### **Idempotency Patterns**
+### **Retry Strategies**
 
-#### **1. Message ID-Based Idempotency**
+#### **1. Exponential Backoff**
 ```mermaid
 graph LR
-    MSG[Message<br/>ID: msg-123] --> CHECK{Already Processed?}
-    CHECK -->|No| PROCESS[Process Message]
-    CHECK -->|Yes| SKIP[Skip Processing]
+    R1[Retry 1<br/>Wait: 1s] --> R2[Retry 2<br/>Wait: 2s]
+    R2 --> R3[Retry 3<br/>Wait: 4s]
+    R3 --> R4[Retry 4<br/>Wait: 8s]
+    R4 --> R5[Retry 5<br/>Wait: 16s]
+    R5 --> DLT[Dead Letter Topic]
     
-    PROCESS --> STORE[Store Message ID]
-    STORE --> RESULT[Return Result]
-    SKIP --> CACHE[Return Cached Result]
-    
-    style PROCESS fill:#4ecdc4
-    style SKIP fill:#ffe66d
-    style CACHE fill:#a8e6cf
+    style DLT fill:#ff6b6b
 ```
 
-#### **2. Natural Key Idempotency**
+#### **2. Fixed Interval**
 ```mermaid
 graph LR
-    TRANSFER[Bank Transfer<br/>Account: 123<br/>Amount: $100] --> UPSERT[Upsert Operation]
-    UPSERT --> BALANCE[Update Balance<br/>Idempotent by nature]
+    R1[Retry 1<br/>Wait: 5s] --> R2[Retry 2<br/>Wait: 5s]
+    R2 --> R3[Retry 3<br/>Wait: 5s]
+    R3 --> DLT[Dead Letter Topic]
     
-    style UPSERT fill:#4ecdc4
-    style BALANCE fill:#a8e6cf
+    style DLT fill:#ff6b6b
 ```
 
-#### **3. Fingerprint-Based Detection**
+#### **3. Linear Backoff**
+```mermaid
+graph LR
+    R1[Retry 1<br/>Wait: 2s] --> R2[Retry 2<br/>Wait: 4s]
+    R2 --> R3[Retry 3<br/>Wait: 6s]
+    R3 --> R4[Retry 4<br/>Wait: 8s]
+    R4 --> DLT[Dead Letter Topic]
+    
+    style DLT fill:#ff6b6b
+```
+
+### **Dead Letter Topic Patterns**
+
+#### **Single DLT Pattern**
 ```mermaid
 graph TB
-    MESSAGE[Original Message] --> HASH[Generate Hash<br/>SHA-256]
-    HASH --> STORE[Store in Cache<br/>TTL: 24 hours]
+    MAIN[main-topic] -->|Processing Failure| DLT[main-topic-dlt]
+    DLT --> MANUAL[Manual Investigation]
+    MANUAL --> REPLAY[Replay to Main Topic]
     
-    DUPLICATE[Duplicate Message] --> HASH2[Generate Hash]
-    HASH2 --> CHECK[Check Cache]
-    CHECK -->|Found| REJECT[Reject Duplicate]
-    CHECK -->|Not Found| ACCEPT[Accept Message]
-    
-    style REJECT fill:#ff6b6b
-    style ACCEPT fill:#4ecdc4
+    style DLT fill:#ff6b6b
+    style REPLAY fill:#4ecdc4
 ```
 
-## 💰 Bank Transfer Use Case
+#### **Multi-Level DLT Pattern**
+```mermaid
+graph TB
+    MAIN[main-topic] -->|Retryable Failure| RETRY[main-topic-retry]
+    RETRY -->|Retry Exhausted| DLT[main-topic-dlt]
+    MAIN -->|Non-Retryable| DLT
+    DLT -->|Investigation| ARCHIVE[main-topic-archive]
+    
+    style RETRY fill:#ffe66d
+    style DLT fill:#ff6b6b
+    style ARCHIVE fill:#a8e6cf
+```
 
-### Transfer Processing States
+## ⚙️ Circuit Breaker Pattern
+
+### Circuit Breaker States
 ```mermaid
 stateDiagram-v2
-    [*] --> Received: Transfer request received
-    Received --> Validating: Validate transfer details
-    Validating --> Processing: Validation passed
-    Validating --> Failed: Validation failed
-    Processing --> Completed: Transfer successful
-    Processing --> Failed: Transfer failed
-    Processing --> Retrying: Temporary failure
-    Retrying --> Processing: Retry attempt
-    Retrying --> Failed: Max retries exceeded
-    Completed --> [*]
-    Failed --> [*]
+    [*] --> Closed
+    Closed --> Open: Failure threshold exceeded
+    Open --> HalfOpen: Timeout period elapsed
+    HalfOpen --> Closed: Success threshold met
+    HalfOpen --> Open: Failure detected
     
-    note right of Processing: Idempotent operation
-    note right of Retrying: Automatic retry with backoff
+    Closed: Normal Operation<br/>All requests processed
+    Open: Fail Fast<br/>Reject all requests
+    HalfOpen: Testing Recovery<br/>Limited requests allowed
 ```
 
-### Bank Transfer Event Model
+### Implementation Example
 ```kotlin
-data class BankTransferEvent(
-    val transferId: String,              // Unique transfer identifier
-    val messageId: String,               // Idempotency key
-    val fromAccount: String,             // Source account
-    val toAccount: String,               // Destination account
-    val amount: BigDecimal,              // Transfer amount
-    val currency: String,                // Currency code
-    val reference: String,               // Transfer reference
-    val timestamp: Instant,              // Event timestamp
-    val correlationId: String,           // Request correlation
-    val version: Int = 1                 // Event version
-) {
-    fun generateFingerprint(): String {
-        return "$transferId:$fromAccount:$toAccount:$amount:$currency".sha256()
-    }
-}
-```
-
-## ⚙️ Manual Acknowledgment Configuration
-
-### Consumer Configuration
-```kotlin
-@Configuration
-class ManualAckConsumerConfig {
+@Component
+class PaymentServiceCircuitBreaker {
     
-    @Bean
-    fun manualAckConsumerFactory(): ConsumerFactory<String, BankTransferEvent> {
-        val props = mapOf(
-            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
-            ConsumerConfig.GROUP_ID_CONFIG to "bank-transfer-processors",
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to JsonDeserializer::class.java,
-            
-            // Manual acknowledgment settings
-            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
-            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 1,  // Process one at a time
-            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
-            
-            // Performance tuning
-            ConsumerConfig.FETCH_MIN_BYTES_CONFIG to 1,
-            ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG to 1000,
-            ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG to 30000,
-            ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG to 3000
-        )
-        
-        return DefaultKafkaConsumerFactory(props)
-    }
+    private var state = CircuitBreakerState.CLOSED
+    private var failureCount = 0
+    private var lastFailureTime = 0L
+    private val failureThreshold = 5
+    private val recoveryTimeout = 60000L // 1 minute
     
-    @Bean
-    fun manualAckListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, BankTransferEvent> {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, BankTransferEvent>()
-        factory.consumerFactory = manualAckConsumerFactory()
-        
-        // Enable manual acknowledgment
-        factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
-        
-        // Configure error handling
-        factory.setCommonErrorHandler(
-            DefaultErrorHandler(
-                DeadLetterPublishingRecoverer(kafkaTemplate()) { record, _ ->
-                    TopicPartition("bank-transfers-dlt", record.partition())
+    fun processPayment(payment: Payment): PaymentResult {
+        when (state) {
+            CircuitBreakerState.OPEN -> {
+                if (System.currentTimeMillis() - lastFailureTime > recoveryTimeout) {
+                    state = CircuitBreakerState.HALF_OPEN
+                } else {
+                    throw CircuitBreakerOpenException("Payment service unavailable")
                 }
-            ).apply {
-                setRetryTemplate(retryTemplate())
             }
-        )
+            CircuitBreakerState.HALF_OPEN -> {
+                // Limited requests allowed
+            }
+            CircuitBreakerState.CLOSED -> {
+                // Normal operation
+            }
+        }
         
-        return factory
-    }
-}
-```
-
-### Consumer Implementation with Manual Ack
-```kotlin
-@Component
-class BankTransferConsumer {
-    
-    @KafkaListener(
-        topics = ["bank-transfers"],
-        containerFactory = "manualAckListenerContainerFactory"
-    )
-    fun processBankTransfer(
-        @Payload transfer: BankTransferEvent,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
-        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
-        @Header(KafkaHeaders.OFFSET) offset: Long,
-        acknowledgment: Acknowledgment
-    ) {
-        logger.info("Processing transfer ${transfer.transferId} from $topic:$partition:$offset")
-        
-        try {
-            // Check for duplicate
-            if (duplicateDetector.isDuplicate(transfer.messageId)) {
-                logger.info("Duplicate transfer detected: ${transfer.transferId}")
-                acknowledgment.acknowledge() // Acknowledge duplicate
-                return
-            }
-            
-            // Process transfer idempotently
-            val result = bankTransferService.processTransfer(transfer)
-            
-            if (result.isSuccess) {
-                // Mark as processed to prevent future duplicates
-                duplicateDetector.markProcessed(transfer.messageId, result)
-                
-                // Acknowledge successful processing
-                acknowledgment.acknowledge()
-                logger.info("Successfully processed transfer: ${transfer.transferId}")
-            } else {
-                // Don't acknowledge - message will be retried
-                logger.warn("Transfer processing failed: ${transfer.transferId}, reason: ${result.errorMessage}")
-            }
-            
+        return try {
+            val result = paymentService.processPayment(payment)
+            onSuccess()
+            result
         } catch (e: Exception) {
-            logger.error("Error processing transfer: ${transfer.transferId}", e)
-            // Don't acknowledge - let error handler manage retries
+            onFailure()
+            throw e
         }
-    }
-}
-```
-
-## 🔍 Duplicate Detection Implementation
-
-### Redis-Based Duplicate Detector
-```kotlin
-@Component
-class DuplicateDetector {
-    
-    @Autowired
-    private lateinit var redisTemplate: RedisTemplate<String, String>
-    
-    private val duplicateKeyPrefix = "transfer:processed:"
-    private val defaultTtl = Duration.ofHours(24)
-    
-    fun isDuplicate(messageId: String): Boolean {
-        val key = duplicateKeyPrefix + messageId
-        return redisTemplate.hasKey(key)
-    }
-    
-    fun markProcessed(messageId: String, result: TransferResult, ttl: Duration = defaultTtl) {
-        val key = duplicateKeyPrefix + messageId
-        val value = objectMapper.writeValueAsString(
-            ProcessedTransfer(
-                messageId = messageId,
-                result = result,
-                processedAt = Instant.now()
-            )
-        )
-        
-        redisTemplate.opsForValue().set(key, value, ttl)
-        logger.debug("Marked transfer as processed: $messageId")
-    }
-    
-    fun getProcessedResult(messageId: String): TransferResult? {
-        val key = duplicateKeyPrefix + messageId
-        val value = redisTemplate.opsForValue().get(key)
-        
-        return value?.let { 
-            val processed = objectMapper.readValue(it, ProcessedTransfer::class.java)
-            processed.result
-        }
-    }
-    
-    fun removeProcessedMarker(messageId: String) {
-        val key = duplicateKeyPrefix + messageId
-        redisTemplate.delete(key)
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Manual acknowledgment working correctly - failed messages are retried
-- [ ] Idempotent consumer handles duplicate messages gracefully
-- [ ] Bank transfer processing maintains data consistency
-- [ ] Duplicate detection prevents double processing
-- [ ] Exactly-once semantics achieved for critical operations
-- [ ] Performance impact of manual ack is acceptable
-- [ ] Error scenarios (network issues, DB failures) handled properly
+- [ ] Error classification correctly identifies retryable vs non-retryable errors
+- [ ] Retry mechanism with exponential backoff is working
+- [ ] Dead letter topic receives failed messages after max retries
+- [ ] Circuit breaker protects downstream services from cascading failures
+- [ ] Error monitoring provides visibility into failure patterns
+- [ ] Messages can be replayed from DLT back to main topic
+- [ ] Poison message detection and handling works correctly
 
 ## 🚀 Getting Started
 
-### 1. Configure Manual Acknowledgment
+### 1. Configure Error Handling
+```kotlin
+@Configuration
+class ErrorHandlingConfig {
+    
+    @Bean
+    fun errorHandlingContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, OrderEvent> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, OrderEvent>()
+        factory.consumerFactory = consumerFactory()
+        
+        // Configure error handler
+        val errorHandler = SeekToCurrentErrorHandler(
+            DeadLetterPublishingRecoverer(kafkaTemplate()) { record, _ ->
+                TopicPartition("order-events-dlt", record.partition())
+            }
+        ).apply {
+            setRetryTemplate(retryTemplate())
+        }
+        
+        factory.setCommonErrorHandler(errorHandler)
+        return factory
+    }
+    
+    @Bean
+    fun retryTemplate(): RetryTemplate {
+        return RetryTemplate.builder()
+            .maxAttempts(3)
+            .exponentialBackoff(1000, 2.0, 10000)
+            .retryOn(RetryableException::class.java)
+            .build()
+    }
+}
+```
+
+### 2. Test Error Scenarios
+```bash
+# Send valid message
+curl -X POST http://localhost:8090/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"orderId": "123", "amount": 100.0}'
+
+# Send invalid message (triggers non-retryable error)
+curl -X POST http://localhost:8090/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"orderId": "", "amount": -100.0}'
+
+# Simulate service failure (triggers retryable error)
+curl -X POST http://localhost:8090/admin/simulate-failure \
+  -d '{"service": "payment", "duration": 30000}'
+```
+
+### 3. Monitor Error Topics
+```bash
+# Monitor main topic
+kafka-console-consumer --topic order-events --from-beginning --bootstrap-server localhost:9092
+
+# Monitor dead letter topic
+kafka-console-consumer --topic order-events-dlt --from-beginning --bootstrap-server localhost:9092
+
+# Monitor retry topic
+kafka-console-consumer --topic order-events-retry --from-beginning --bootstrap-server localhost:9092
+```
+
+## 🔧 Advanced Error Handling Patterns
+
+### Custom Error Classification
 ```kotlin
 @Service
-class BankTransferService {
+class PaymentErrorClassifier {
     
-    @Transactional
-    fun processTransfer(transfer: BankTransferEvent): TransferResult {
-        return try {
-            // Validate transfer
-            validateTransfer(transfer)
+    fun classifyError(exception: Exception): ErrorType {
+        return when (exception) {
+            is SocketTimeoutException -> ErrorType.RETRYABLE
+            is ConnectException -> ErrorType.RETRYABLE
+            is ServiceUnavailableException -> ErrorType.RETRYABLE
             
-            // Check account balances
-            val fromAccount = accountService.getAccount(transfer.fromAccount)
-            if (fromAccount.balance < transfer.amount) {
-                return TransferResult.failure("Insufficient balance")
-            }
+            is ValidationException -> ErrorType.NON_RETRYABLE
+            is IllegalArgumentException -> ErrorType.NON_RETRYABLE
+            is JsonParseException -> ErrorType.POISON_MESSAGE
             
-            // Perform transfer (idempotent operations)
-            accountService.debitAccount(transfer.fromAccount, transfer.amount)
-            accountService.creditAccount(transfer.toAccount, transfer.amount)
+            is PaymentDeclinedException -> ErrorType.BUSINESS_ERROR
+            is InsufficientFundsException -> ErrorType.BUSINESS_ERROR
             
-            // Record transfer
-            transferRepository.recordTransfer(transfer)
-            
-            TransferResult.success(transfer.transferId)
-            
-        } catch (e: Exception) {
-            logger.error("Transfer processing failed", e)
-            TransferResult.failure("Processing error: ${e.message}")
+            else -> ErrorType.UNKNOWN
         }
     }
 }
 ```
 
-### 2. Test Duplicate Handling
-```bash
-# Send same transfer twice
-curl -X POST http://localhost:8090/api/transfers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transferId": "TXN-123",
-    "messageId": "MSG-456", 
-    "fromAccount": "ACC-111",
-    "toAccount": "ACC-222",
-    "amount": 100.00,
-    "currency": "USD"
-  }'
-
-# Send exact duplicate (should be detected)
-curl -X POST http://localhost:8090/api/transfers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transferId": "TXN-123",
-    "messageId": "MSG-456",
-    "fromAccount": "ACC-111", 
-    "toAccount": "ACC-222",
-    "amount": 100.00,
-    "currency": "USD"
-  }'
+### DLT Message Enrichment
+```kotlin
+@Service
+class DeadLetterEnrichmentService {
+    
+    fun enrichDLTMessage(
+        originalMessage: OrderEvent,
+        exception: Exception,
+        attemptCount: Int
+    ): DeadLetterMessage {
+        return DeadLetterMessage(
+            originalMessage = originalMessage,
+            errorDetails = ErrorDetails(
+                errorType = exception.javaClass.simpleName,
+                errorMessage = exception.message ?: "Unknown error",
+                stackTrace = exception.stackTraceToString(),
+                firstFailureTime = System.currentTimeMillis(),
+                attemptCount = attemptCount,
+                lastAttemptTime = System.currentTimeMillis()
+            ),
+            metadata = mapOf(
+                "originalTopic" to "order-events",
+                "consumerGroup" to "order-processors",
+                "processingHost" to InetAddress.getLocalHost().hostName
+            )
+        )
+    }
+}
 ```
 
-### 3. Monitor Processing
-```bash
-# Check processed transfers
-redis-cli KEYS "transfer:processed:*"
+## 📊 Error Monitoring & Alerting
 
-# Monitor consumer group
-kafka-consumer-groups --bootstrap-server localhost:9092 \
-  --group bank-transfer-processors --describe
+### Key Error Metrics
+```mermaid
+graph TB
+    subgraph "Error Rate Metrics"
+        ER1[Total Error Rate<br/>errors/minute]
+        ER2[Error Rate by Type<br/>retryable vs non-retryable]
+        ER3[DLT Message Rate<br/>messages/hour]
+        ER4[Retry Success Rate<br/>percentage]
+    end
+    
+    subgraph "Performance Metrics"
+        PM1[Average Retry Attempts<br/>before success]
+        PM2[Circuit Breaker State<br/>open/closed/half-open]
+        PM3[Processing Latency<br/>with retries]
+        PM4[DLT Processing Lag<br/>time to investigation]
+    end
+    
+    subgraph "Business Metrics"
+        BM1[Revenue Impact<br/>from failed orders]
+        BM2[Customer Impact<br/>failed transactions]
+        BM3[SLA Compliance<br/>error rate vs target]
+        BM4[Recovery Time<br/>from failure to fix]
+    end
+    
+    style ER1 fill:#ff6b6b
+    style PM2 fill:#ffe66d
+    style BM1 fill:#ff6b6b
+```
 
-# Check dead letter topic
-kafka-console-consumer --topic bank-transfers-dlt \
-  --from-beginning --bootstrap-server localhost:9092
+### Health Check with Error Rates
+```kotlin
+@Component
+class ErrorHandlingHealthIndicator : HealthIndicator {
+    
+    override fun health(): Health {
+        val errorRateThreshold = 5.0 // 5% error rate threshold
+        val currentErrorRate = calculateErrorRate()
+        val dltMessageCount = getDLTMessageCount()
+        
+        return when {
+            currentErrorRate > errorRateThreshold -> {
+                Health.down()
+                    .withDetail("reason", "High error rate detected")
+                    .withDetail("errorRate", currentErrorRate)
+                    .withDetail("threshold", errorRateThreshold)
+                    .build()
+            }
+            dltMessageCount > 100 -> {
+                Health.degraded()
+                    .withDetail("reason", "High DLT message count")
+                    .withDetail("dltMessageCount", dltMessageCount)
+                    .build()
+            }
+            else -> {
+                Health.up()
+                    .withDetail("errorRate", currentErrorRate)
+                    .withDetail("dltMessageCount", dltMessageCount)
+                    .build()
+            }
+        }
+    }
+}
 ```
 
 ## 🎯 Best Practices
 
-### Manual Acknowledgment
-- **Process one message at a time** for critical operations
-- **Use transactions** to ensure atomicity
-- **Handle retries gracefully** with exponential backoff
-- **Monitor processing lag** to ensure performance
+### Error Handling Design
+- **Classify errors properly** - distinguish between temporary and permanent failures
+- **Implement idempotent processing** - handle duplicate messages gracefully
+- **Use structured logging** - include correlation IDs and context
+- **Monitor error patterns** - identify systemic issues early
 
-### Idempotency Design
-- **Use business-meaningful keys** when possible
-- **Cache results** for quick duplicate detection
-- **Set appropriate TTLs** to prevent cache bloat
-- **Handle cache failures** gracefully
+### Retry Strategy Selection
+- **Exponential backoff** - for network-related failures
+- **Fixed interval** - for predictable service outages
+- **No retry** - for validation and business logic errors
+- **Circuit breaker** - for protecting downstream services
 
-### Error Handling
-- **Distinguish retryable vs non-retryable errors**
-- **Implement circuit breakers** for downstream services
-- **Use dead letter topics** for poison messages
-- **Monitor error rates** and alert on anomalies
+### Dead Letter Topic Management
+- **Separate DLT per topic** - easier management and monitoring
+- **Enrich DLT messages** - include error context and debugging info
+- **Automate replay** - when possible, automatically retry DLT messages
+- **Archive old messages** - prevent DLT from growing indefinitely
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Processing lag** - Increase consumer instances or optimize processing
-2. **Duplicate cache misses** - Check Redis connectivity and TTL settings  
-3. **Transaction deadlocks** - Optimize database queries and locking
-4. **Memory leaks** - Monitor message acknowledgment and cleanup
+1. **Infinite retry loops** - Check error classification logic
+2. **DLT overflow** - Implement DLT message archival
+3. **Circuit breaker stuck open** - Verify recovery conditions
+4. **Lost messages** - Ensure proper offset management during retries
 
 ### Debug Commands
 ```bash
-# Check Redis cache
-redis-cli GET "transfer:processed:MSG-456"
+# Check DLT message count
+kafka-run-class kafka.tools.GetOffsetShell \
+  --broker-list localhost:9092 \
+  --topic order-events-dlt
 
-# Monitor processing metrics
-curl http://localhost:8090/actuator/metrics/kafka.consumer
+# Analyze error patterns
+kafka-console-consumer --topic order-events-dlt \
+  --from-beginning --bootstrap-server localhost:9092 \
+  --property print.headers=true
 
-# Check database transactions
-SELECT * FROM transfers WHERE transfer_id = 'TXN-123';
+# Monitor consumer group lag including DLT consumers
+kafka-consumer-groups --bootstrap-server localhost:9092 \
+  --group dlt-processors --describe
 ```
 
 ## 🚀 Next Steps
-Manual acknowledgment mastered? Time to transform and route messages! Move to [Lesson 10: Message Transformation & Filtering](../lesson_10/README.md) to learn data processing pipelines.
+Error handling mastered? Time to ensure exactly-once processing! Move to [Lesson 9: Manual Acknowledgment & Idempotent Consumers](../lesson_10/README.md) to learn precise message processing control.

@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_9/concept",
   "title": "Concept",
-  "description": "Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing",
+  "description": "Retry Strategies & Dead Letter Topics - Bulletproof Error Handling",
   "source": "@site/../class/modules/lesson_9/concept.md",
   "sourceDirName": "modules/lesson_9",
   "slug": "/modules/lesson_9/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Error Handling & Dead Letter Topics",
+    "title": "Workshop: Consumer Groups & Load Balancing",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_8/"
   },
   "next": {
-    "title": "Workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_9/workshop_9"
+    "title": "Workshop: Error Handling & Dead Letter Topics",
+    "permalink": "/KafkaStarter/curriculum/workshop/lesson_9/"
   }
 }

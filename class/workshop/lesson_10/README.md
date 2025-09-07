@@ -1,574 +1,476 @@
-# Workshop: Message Transformation & Filtering
+# Workshop: Manual Acknowledgment & Idempotent Consumers
 
 ## 🎯 Objective
-Master message transformation patterns, content-based routing, field mapping, data enrichment, and filtering strategies for building flexible data processing pipelines with Kafka.
+Master precise message processing control with manual acknowledgment, implement idempotent consumers for exactly-once semantics, and handle duplicate messages gracefully in production systems.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Message Transformation
-Implement transformations in `transformation/MessageTransformer.kt`
+### Task 1: Manual Acknowledgment Configuration
+Configure manual ack in `config/ManualAckConfig.kt`
 
-### Task 2: Content-Based Filtering
-Build filtering logic in `filtering/ContentBasedFilter.kt`
+### Task 2: Idempotent Consumer Implementation
+Build idempotent consumers in `consumer/IdempotentBankTransferConsumer.kt`
 
-### Task 3: Data Enrichment
-Create enrichment service in `enrichment/DataEnricher.kt`
+### Task 3: Duplicate Detection
+Implement duplicate detection in `deduplication/DuplicateDetector.kt`
 
-### Task 4: Field Mapping
-Implement field mapping in `mapping/FieldMapper.kt`
+### Task 4: Transaction Management
+Handle transactions in `transaction/TransactionManager.kt`
 
-### Task 5: Pipeline Orchestration
-Build processing pipeline in `pipeline/TransformationPipeline.kt`
+### Task 5: Exactly-Once Processing
+Implement exactly-once in `exactlyonce/ExactlyOnceProcessor.kt`
 
-## 🏗️ Transformation Pipeline Architecture
+## 🏗️ Manual Acknowledgment Architecture
 ```mermaid
 graph TB
-    subgraph "Input Sources"
-        RAW[Raw Events<br/>Various formats]
-        LEGACY[Legacy System Events<br/>Old schema format]
-        EXTERNAL[External API Events<br/>Third-party format]
+    subgraph "Message Processing Flow"
+        KAFKA[Kafka Topic<br/>bank-transfers]
+        CONSUMER[Consumer Instance]
+        PROCESSOR[Business Logic<br/>Transfer Processing]
+        DB[(Database<br/>Account Balances)]
+        ACK[Manual Acknowledgment]
+        
+        KAFKA -->|Poll Messages| CONSUMER
+        CONSUMER -->|Process| PROCESSOR
+        PROCESSOR -->|Update| DB
+        DB -->|Success| ACK
+        ACK -->|Commit Offset| KAFKA
+        
+        PROCESSOR -->|Failure| RETRY[Retry Logic]
+        RETRY -->|Max Retries| DLT[Dead Letter Topic]
+        RETRY -->|Retry Success| DB
     end
     
-    subgraph "Transformation Pipeline"
-        VALIDATE[Message Validation<br/>Schema compliance]
-        FILTER[Content-Based Filter<br/>Business rules]
-        TRANSFORM[Field Transformation<br/>Format conversion]
-        ENRICH[Data Enrichment<br/>External data lookup]
-        ROUTE[Content Routing<br/>Destination selection]
+    subgraph "Idempotency Mechanisms"
+        DEDUP[Duplicate Detection<br/>Message ID tracking]
+        CACHE[Idempotency Cache<br/>Redis/Memory]
+        FINGERPRINT[Message Fingerprint<br/>Hash-based detection]
+        
+        CONSUMER --> DEDUP
+        DEDUP --> CACHE
+        DEDUP --> FINGERPRINT
     end
     
-    subgraph "Processing Stages"
-        NORMALIZE[Data Normalization<br/>Standard format]
-        AGGREGATE[Field Aggregation<br/>Computed fields]
-        SPLIT[Message Splitting<br/>One-to-many]
-        MERGE[Message Merging<br/>Many-to-one]
+    subgraph "Exactly-Once Guarantees"
+        TXN[Database Transaction]
+        OFFSET[Offset Management]
+        ATOMIC[Atomic Operations]
+        
+        PROCESSOR --> TXN
+        ACK --> OFFSET
+        TXN --> ATOMIC
+        OFFSET --> ATOMIC
     end
     
-    subgraph "Output Destinations"
-        ANALYTICS[Analytics Topic<br/>Processed events]
-        AUDIT[Audit Topic<br/>Compliance events]
-        ALERTS[Alert Topic<br/>Critical events]
-        DLQ[Dead Letter Queue<br/>Failed transformations]
-    end
-    
-    RAW --> VALIDATE
-    LEGACY --> VALIDATE
-    EXTERNAL --> VALIDATE
-    
-    VALIDATE --> FILTER
-    FILTER --> TRANSFORM
-    TRANSFORM --> ENRICH
-    ENRICH --> ROUTE
-    
-    ROUTE --> NORMALIZE
-    NORMALIZE --> AGGREGATE
-    AGGREGATE --> SPLIT
-    SPLIT --> MERGE
-    
-    MERGE --> ANALYTICS
-    MERGE --> AUDIT
-    MERGE --> ALERTS
-    FILTER --> DLQ
-    
-    style VALIDATE fill:#ff6b6b
-    style FILTER fill:#4ecdc4
-    style TRANSFORM fill:#a8e6cf
-    style ENRICH fill:#ffe66d
+    style ACK fill:#4ecdc4
+    style DEDUP fill:#a8e6cf
+    style TXN fill:#ffe66d
+    style DLT fill:#ff6b6b
 ```
 
-## 🔄 Message Transformation Flow
+## 🔄 Manual Acknowledgment Flow
 ```mermaid
 sequenceDiagram
-    participant Source as Source Topic
-    participant Processor as Transform Processor
-    participant Enricher as Data Enricher
-    participant Router as Content Router
-    participant Target as Target Topic
+    participant Kafka
+    participant Consumer
+    participant BusinessLogic
+    participant Database
+    participant Ack as Acknowledgment
     
-    Source->>Processor: Raw Message
-    Processor->>Processor: Validate Schema
+    Note over Kafka,Ack: Manual Acknowledgment Process
     
-    alt Valid Message
-        Processor->>Processor: Apply Transformations
-        Processor->>Enricher: Enrich with External Data
-        Enricher-->>Processor: Enriched Message
-        Processor->>Router: Route Based on Content
-        Router->>Target: Transformed Message
-    else Invalid Message
-        Processor->>Target: Send to DLQ with Error Details
+    Kafka->>Consumer: Poll() - Get batch of messages
+    Consumer->>Consumer: Disable auto-commit
+    
+    loop For each message
+        Consumer->>BusinessLogic: Process message
+        BusinessLogic->>Database: Perform operations
+        
+        alt Success
+            Database-->>BusinessLogic: Operation completed
+            BusinessLogic-->>Consumer: Success result
+            Consumer->>Ack: acknowledge()
+            Ack->>Kafka: Commit offset for message
+        else Failure
+            Database-->>BusinessLogic: Operation failed
+            BusinessLogic-->>Consumer: Failure result
+            Consumer->>Consumer: Don't acknowledge
+            Note over Consumer: Message will be redelivered
+        end
     end
     
-    Note over Processor: Field mapping, format conversion
-    Note over Enricher: User profiles, product catalogs
-    Note over Router: Topic selection based on rules
+    Note over Consumer,Ack: Only successful messages are committed
 ```
 
 ## 🎯 Key Concepts
 
-### **Message Transformation Patterns**
+### **Manual Acknowledgment Benefits**
+- **Precise Control**: Commit offsets only after successful processing
+- **Fault Tolerance**: Failed messages are automatically retried
+- **Data Integrity**: Prevents message loss during processing failures
+- **Exactly-Once**: Combined with idempotency for exactly-once semantics
 
-#### **1. Field Mapping & Format Conversion**
+### **Idempotency Patterns**
+
+#### **1. Message ID-Based Idempotency**
 ```mermaid
 graph LR
-    INPUT[Input Message<br/>userName: john_doe<br/>emailAddr: john@email.com<br/>accountId: 12345] 
+    MSG[Message<br/>ID: msg-123] --> CHECK{Already Processed?}
+    CHECK -->|No| PROCESS[Process Message]
+    CHECK -->|Yes| SKIP[Skip Processing]
     
-    MAPPING[Field Mapping<br/>userName → user.name<br/>emailAddr → user.email<br/>accountId → account.id]
+    PROCESS --> STORE[Store Message ID]
+    STORE --> RESULT[Return Result]
+    SKIP --> CACHE[Return Cached Result]
     
-    OUTPUT[Output Message<br/>user.name: john_doe<br/>user.email: john@email.com<br/>account.id: 12345]
-    
-    INPUT --> MAPPING
-    MAPPING --> OUTPUT
-    
-    style MAPPING fill:#4ecdc4
+    style PROCESS fill:#4ecdc4
+    style SKIP fill:#ffe66d
+    style CACHE fill:#a8e6cf
 ```
 
-#### **2. Data Enrichment**
+#### **2. Natural Key Idempotency**
+```mermaid
+graph LR
+    TRANSFER[Bank Transfer<br/>Account: 123<br/>Amount: $100] --> UPSERT[Upsert Operation]
+    UPSERT --> BALANCE[Update Balance<br/>Idempotent by nature]
+    
+    style UPSERT fill:#4ecdc4
+    style BALANCE fill:#a8e6cf
+```
+
+#### **3. Fingerprint-Based Detection**
 ```mermaid
 graph TB
-    ORIGINAL[Original Event<br/>userId: 123<br/>productId: 456<br/>action: view]
+    MESSAGE[Original Message] --> HASH[Generate Hash<br/>SHA-256]
+    HASH --> STORE[Store in Cache<br/>TTL: 24 hours]
     
-    ENRICH[Data Enrichment]
+    DUPLICATE[Duplicate Message] --> HASH2[Generate Hash]
+    HASH2 --> CHECK[Check Cache]
+    CHECK -->|Found| REJECT[Reject Duplicate]
+    CHECK -->|Not Found| ACCEPT[Accept Message]
     
-    USER_DB[(User Database)]
-    PRODUCT_DB[(Product Catalog)]
-    
-    ENRICHED[Enriched Event<br/>userId: 123<br/>userName: john_doe<br/>userSegment: premium<br/>productId: 456<br/>productName: Kafka T-Shirt<br/>productCategory: clothing<br/>action: view<br/>timestamp: 2024-01-15T10:30:00Z]
-    
-    ORIGINAL --> ENRICH
-    ENRICH --> USER_DB
-    ENRICH --> PRODUCT_DB
-    USER_DB --> ENRICHED
-    PRODUCT_DB --> ENRICHED
-    
-    style ENRICH fill:#a8e6cf
-    style ENRICHED fill:#4ecdc4
+    style REJECT fill:#ff6b6b
+    style ACCEPT fill:#4ecdc4
 ```
 
-#### **3. Content-Based Filtering**
+## 💰 Bank Transfer Use Case
+
+### Transfer Processing States
 ```mermaid
-flowchart TD
-    MESSAGE[Incoming Message] --> RULES{Apply Filter Rules}
+stateDiagram-v2
+    [*] --> Received: Transfer request received
+    Received --> Validating: Validate transfer details
+    Validating --> Processing: Validation passed
+    Validating --> Failed: Validation failed
+    Processing --> Completed: Transfer successful
+    Processing --> Failed: Transfer failed
+    Processing --> Retrying: Temporary failure
+    Retrying --> Processing: Retry attempt
+    Retrying --> Failed: Max retries exceeded
+    Completed --> [*]
+    Failed --> [*]
     
-    RULES -->|High Value Customer| PRIORITY[Priority Queue]
-    RULES -->|Regular Customer| STANDARD[Standard Queue]
-    RULES -->|Suspicious Activity| SECURITY[Security Queue]
-    RULES -->|Invalid Data| DLQ[Dead Letter Queue]
-    
-    subgraph "Filter Rules"
-        RULE1[customer.tier == 'GOLD']
-        RULE2[order.amount > 1000]
-        RULE3[risk.score > 80]
-        RULE4[validation.errors.length > 0]
-    end
-    
-    style PRIORITY fill:#4ecdc4
-    style SECURITY fill:#ff6b6b
-    style DLQ fill:#ff6b6b
+    note right of Processing: Idempotent operation
+    note right of Retrying: Automatic retry with backoff
 ```
 
-### **Transformation Models**
-
-#### **User Activity Transformation**
+### Bank Transfer Event Model
 ```kotlin
-// Input: Raw user activity event
-data class RawUserActivity(
-    val uid: String,                    // Legacy user ID format
-    val act: String,                    // Abbreviated action
-    val ts: Long,                       // Unix timestamp
-    val attrs: Map<String, String>      // Mixed attributes
-)
-
-// Output: Standardized user activity event  
-data class StandardUserActivity(
-    val user: UserInfo,
-    val activity: ActivityInfo,
-    val metadata: EventMetadata
-)
-
-data class UserInfo(
-    val userId: String,
-    val username: String,
-    val segment: String,
-    val tier: String
-)
-
-data class ActivityInfo(
-    val action: String,
-    val category: String,
-    val resource: String,
-    val timestamp: Instant
-)
-
-data class EventMetadata(
-    val eventId: String,
-    val source: String,
-    val version: String,
-    val correlationId: String
-)
+data class BankTransferEvent(
+    val transferId: String,              // Unique transfer identifier
+    val messageId: String,               // Idempotency key
+    val fromAccount: String,             // Source account
+    val toAccount: String,               // Destination account
+    val amount: BigDecimal,              // Transfer amount
+    val currency: String,                // Currency code
+    val reference: String,               // Transfer reference
+    val timestamp: Instant,              // Event timestamp
+    val correlationId: String,           // Request correlation
+    val version: Int = 1                 // Event version
+) {
+    fun generateFingerprint(): String {
+        return "$transferId:$fromAccount:$toAccount:$amount:$currency".sha256()
+    }
+}
 ```
 
-## ⚙️ Message Transformer Implementation
+## ⚙️ Manual Acknowledgment Configuration
 
-### Core Transformation Engine
+### Consumer Configuration
+```kotlin
+@Configuration
+class ManualAckConsumerConfig {
+    
+    @Bean
+    fun manualAckConsumerFactory(): ConsumerFactory<String, BankTransferEvent> {
+        val props = mapOf(
+            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9092",
+            ConsumerConfig.GROUP_ID_CONFIG to "bank-transfer-processors",
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to JsonDeserializer::class.java,
+            
+            // Manual acknowledgment settings
+            ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to 1,  // Process one at a time
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+            
+            // Performance tuning
+            ConsumerConfig.FETCH_MIN_BYTES_CONFIG to 1,
+            ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG to 1000,
+            ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG to 30000,
+            ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG to 3000
+        )
+        
+        return DefaultKafkaConsumerFactory(props)
+    }
+    
+    @Bean
+    fun manualAckListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, BankTransferEvent> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, BankTransferEvent>()
+        factory.consumerFactory = manualAckConsumerFactory()
+        
+        // Enable manual acknowledgment
+        factory.containerProperties.ackMode = ContainerProperties.AckMode.MANUAL_IMMEDIATE
+        
+        // Configure error handling
+        factory.setCommonErrorHandler(
+            DefaultErrorHandler(
+                DeadLetterPublishingRecoverer(kafkaTemplate()) { record, _ ->
+                    TopicPartition("bank-transfers-dlt", record.partition())
+                }
+            ).apply {
+                setRetryTemplate(retryTemplate())
+            }
+        )
+        
+        return factory
+    }
+}
+```
+
+### Consumer Implementation with Manual Ack
 ```kotlin
 @Component
-class MessageTransformationEngine {
+class BankTransferConsumer {
     
-    fun transform(
-        input: Any,
-        transformationRules: List<TransformationRule>
-    ): TransformationResult {
-        
-        var currentMessage = input
-        val appliedTransformations = mutableListOf<String>()
+    @KafkaListener(
+        topics = ["bank-transfers"],
+        containerFactory = "manualAckListenerContainerFactory"
+    )
+    fun processBankTransfer(
+        @Payload transfer: BankTransferEvent,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
+        acknowledgment: Acknowledgment
+    ) {
+        logger.info("Processing transfer ${transfer.transferId} from $topic:$partition:$offset")
         
         try {
-            for (rule in transformationRules) {
-                if (rule.isApplicable(currentMessage)) {
-                    currentMessage = rule.apply(currentMessage)
-                    appliedTransformations.add(rule.name)
-                }
+            // Check for duplicate
+            if (duplicateDetector.isDuplicate(transfer.messageId)) {
+                logger.info("Duplicate transfer detected: ${transfer.transferId}")
+                acknowledgment.acknowledge() // Acknowledge duplicate
+                return
             }
             
-            return TransformationResult.success(
-                transformedMessage = currentMessage,
-                appliedRules = appliedTransformations
-            )
+            // Process transfer idempotently
+            val result = bankTransferService.processTransfer(transfer)
+            
+            if (result.isSuccess) {
+                // Mark as processed to prevent future duplicates
+                duplicateDetector.markProcessed(transfer.messageId, result)
+                
+                // Acknowledge successful processing
+                acknowledgment.acknowledge()
+                logger.info("Successfully processed transfer: ${transfer.transferId}")
+            } else {
+                // Don't acknowledge - message will be retried
+                logger.warn("Transfer processing failed: ${transfer.transferId}, reason: ${result.errorMessage}")
+            }
             
         } catch (e: Exception) {
-            return TransformationResult.failure(
-                originalMessage = input,
-                error = e.message ?: "Unknown transformation error",
-                appliedRules = appliedTransformations
-            )
-        }
-    }
-}
-
-interface TransformationRule {
-    val name: String
-    fun isApplicable(message: Any): Boolean
-    fun apply(message: Any): Any
-}
-```
-
-### Field Mapping Rules
-```kotlin
-@Component
-class FieldMappingRule : TransformationRule {
-    override val name = "FieldMapping"
-    
-    private val fieldMappings = mapOf(
-        "uid" to "user.userId",
-        "uname" to "user.username", 
-        "email" to "user.email",
-        "act" to "activity.action",
-        "ts" to "activity.timestamp",
-        "prod_id" to "product.productId",
-        "cat" to "product.category"
-    )
-    
-    override fun isApplicable(message: Any): Boolean {
-        return message is Map<*, *> && fieldMappings.keys.any { 
-            message.containsKey(it) 
-        }
-    }
-    
-    override fun apply(message: Any): Any {
-        if (message !is Map<*, *>) return message
-        
-        val result = mutableMapOf<String, Any?>()
-        
-        message.forEach { (key, value) ->
-            val mappedKey = fieldMappings[key.toString()] ?: key.toString()
-            setNestedValue(result, mappedKey, value)
-        }
-        
-        return result
-    }
-    
-    private fun setNestedValue(map: MutableMap<String, Any?>, path: String, value: Any?) {
-        val parts = path.split(".")
-        var current = map
-        
-        for (i in 0 until parts.size - 1) {
-            val part = parts[i]
-            if (!current.containsKey(part)) {
-                current[part] = mutableMapOf<String, Any?>()
-            }
-            @Suppress("UNCHECKED_CAST")
-            current = current[part] as MutableMap<String, Any?>
-        }
-        
-        current[parts.last()] = value
-    }
-}
-```
-
-## 🔍 Content-Based Filtering
-
-### Filter Rule Engine
-```kotlin
-@Component
-class ContentBasedFilterEngine {
-    
-    fun applyFilters(
-        message: Any,
-        filterRules: List<FilterRule>
-    ): FilterResult {
-        
-        val matchedRules = mutableListOf<String>()
-        var routingDestination = "default"
-        
-        for (rule in filterRules) {
-            if (rule.matches(message)) {
-                matchedRules.add(rule.name)
-                routingDestination = rule.destination
-                
-                if (rule.isTerminal) {
-                    break // Stop processing on terminal rule
-                }
-            }
-        }
-        
-        return FilterResult(
-            shouldProcess = matchedRules.isNotEmpty(),
-            destination = routingDestination,
-            matchedRules = matchedRules,
-            metadata = mapOf(
-                "filterAppliedAt" to Instant.now(),
-                "rulesEvaluated" to filterRules.size
-            )
-        )
-    }
-}
-
-interface FilterRule {
-    val name: String
-    val destination: String
-    val isTerminal: Boolean
-    fun matches(message: Any): Boolean
-}
-```
-
-### Business Rule Examples
-```kotlin
-@Component
-class HighValueCustomerFilter : FilterRule {
-    override val name = "HighValueCustomer"
-    override val destination = "high-priority-topic"
-    override val isTerminal = false
-    
-    override fun matches(message: Any): Boolean {
-        return when (message) {
-            is Map<*, *> -> {
-                val customerTier = message["customer.tier"] as? String
-                val orderAmount = message["order.amount"] as? Number
-                
-                customerTier == "GOLD" || 
-                customerTier == "PLATINUM" || 
-                (orderAmount?.toDouble() ?: 0.0) > 1000.0
-            }
-            is StandardUserActivity -> {
-                message.user.tier in listOf("GOLD", "PLATINUM")
-            }
-            else -> false
-        }
-    }
-}
-
-@Component  
-class SecurityAlertFilter : FilterRule {
-    override val name = "SecurityAlert"
-    override val destination = "security-alerts-topic"
-    override val isTerminal = true // Terminal rule - stops further processing
-    
-    override fun matches(message: Any): Boolean {
-        return when (message) {
-            is Map<*, *> -> {
-                val riskScore = message["risk.score"] as? Number
-                val suspiciousFlags = message["security.flags"] as? List<*>
-                
-                (riskScore?.toInt() ?: 0) > 80 ||
-                (suspiciousFlags?.size ?: 0) > 0
-            }
-            else -> false
+            logger.error("Error processing transfer: ${transfer.transferId}", e)
+            // Don't acknowledge - let error handler manage retries
         }
     }
 }
 ```
 
-## 🌟 Data Enrichment Service
+## 🔍 Duplicate Detection Implementation
 
-### User Profile Enrichment
+### Redis-Based Duplicate Detector
 ```kotlin
 @Component
-class UserProfileEnricher {
+class DuplicateDetector {
     
     @Autowired
-    private lateinit var userProfileService: UserProfileService
+    private lateinit var redisTemplate: RedisTemplate<String, String>
     
-    @Autowired
-    private lateinit var cacheManager: CacheManager
+    private val duplicateKeyPrefix = "transfer:processed:"
+    private val defaultTtl = Duration.ofHours(24)
     
-    fun enrichWithUserProfile(message: Any): Any {
-        return when (message) {
-            is Map<*, *> -> enrichMapMessage(message)
-            is StandardUserActivity -> enrichUserActivity(message)
-            else -> message
-        }
+    fun isDuplicate(messageId: String): Boolean {
+        val key = duplicateKeyPrefix + messageId
+        return redisTemplate.hasKey(key)
     }
     
-    private fun enrichUserActivity(activity: StandardUserActivity): StandardUserActivity {
-        val userId = activity.user.userId
-        val cachedProfile = getCachedUserProfile(userId)
-        
-        val profile = cachedProfile ?: run {
-            val fetchedProfile = userProfileService.getUserProfile(userId)
-            cacheUserProfile(userId, fetchedProfile)
-            fetchedProfile
-        }
-        
-        return activity.copy(
-            user = activity.user.copy(
-                username = profile.username,
-                segment = profile.segment,
-                tier = profile.tier
+    fun markProcessed(messageId: String, result: TransferResult, ttl: Duration = defaultTtl) {
+        val key = duplicateKeyPrefix + messageId
+        val value = objectMapper.writeValueAsString(
+            ProcessedTransfer(
+                messageId = messageId,
+                result = result,
+                processedAt = Instant.now()
             )
         )
+        
+        redisTemplate.opsForValue().set(key, value, ttl)
+        logger.debug("Marked transfer as processed: $messageId")
     }
     
-    @Cacheable("userProfiles", key = "#userId")
-    private fun getCachedUserProfile(userId: String): UserProfile? {
-        return cacheManager.getCache("userProfiles")?.get(userId, UserProfile::class.java)
+    fun getProcessedResult(messageId: String): TransferResult? {
+        val key = duplicateKeyPrefix + messageId
+        val value = redisTemplate.opsForValue().get(key)
+        
+        return value?.let { 
+            val processed = objectMapper.readValue(it, ProcessedTransfer::class.java)
+            processed.result
+        }
     }
     
-    private fun cacheUserProfile(userId: String, profile: UserProfile) {
-        cacheManager.getCache("userProfiles")?.put(userId, profile)
+    fun removeProcessedMarker(messageId: String) {
+        val key = duplicateKeyPrefix + messageId
+        redisTemplate.delete(key)
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Message transformation correctly maps fields between formats
-- [ ] Content-based filtering routes messages to appropriate destinations  
-- [ ] Data enrichment enhances messages with external data
-- [ ] Field mapping handles nested object transformations
-- [ ] Pipeline processes messages without data loss
-- [ ] Performance meets throughput requirements (&gt;1000 msg/sec)
-- [ ] Error handling captures and routes failed transformations
+- [ ] Manual acknowledgment working correctly - failed messages are retried
+- [ ] Idempotent consumer handles duplicate messages gracefully
+- [ ] Bank transfer processing maintains data consistency
+- [ ] Duplicate detection prevents double processing
+- [ ] Exactly-once semantics achieved for critical operations
+- [ ] Performance impact of manual ack is acceptable
+- [ ] Error scenarios (network issues, DB failures) handled properly
 
 ## 🚀 Getting Started
 
-### 1. Configure Transformation Pipeline
+### 1. Configure Manual Acknowledgment
 ```kotlin
 @Service
-class TransformationPipelineService {
+class BankTransferService {
     
-    @KafkaListener(topics = ["raw-events"])
-    fun processRawEvent(
-        @Payload rawEvent: String,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
-    ) {
-        try {
-            // Parse raw message
-            val parsedMessage = objectMapper.readValue(rawEvent, Map::class.java)
+    @Transactional
+    fun processTransfer(transfer: BankTransferEvent): TransferResult {
+        return try {
+            // Validate transfer
+            validateTransfer(transfer)
             
-            // Apply transformations
-            val transformationRules = getTransformationRules(topic)
-            val transformResult = transformationEngine.transform(parsedMessage, transformationRules)
-            
-            if (transformResult.isSuccess) {
-                // Apply filters
-                val filterRules = getFilterRules()
-                val filterResult = filterEngine.applyFilters(transformResult.transformedMessage, filterRules)
-                
-                if (filterResult.shouldProcess) {
-                    // Enrich data
-                    val enrichedMessage = dataEnricher.enrich(transformResult.transformedMessage)
-                    
-                    // Send to destination
-                    kafkaTemplate.send(filterResult.destination, enrichedMessage)
-                    
-                    logger.info("Successfully processed message to ${filterResult.destination}")
-                }
-            } else {
-                // Send to DLQ with error details
-                sendToDeadLetterQueue(rawEvent, transformResult.error)
+            // Check account balances
+            val fromAccount = accountService.getAccount(transfer.fromAccount)
+            if (fromAccount.balance < transfer.amount) {
+                return TransferResult.failure("Insufficient balance")
             }
             
+            // Perform transfer (idempotent operations)
+            accountService.debitAccount(transfer.fromAccount, transfer.amount)
+            accountService.creditAccount(transfer.toAccount, transfer.amount)
+            
+            // Record transfer
+            transferRepository.recordTransfer(transfer)
+            
+            TransferResult.success(transfer.transferId)
+            
         } catch (e: Exception) {
-            logger.error("Failed to process raw event", e)
-            sendToDeadLetterQueue(rawEvent, e.message)
+            logger.error("Transfer processing failed", e)
+            TransferResult.failure("Processing error: ${e.message}")
         }
     }
 }
 ```
 
-### 2. Test Transformation Pipeline
+### 2. Test Duplicate Handling
 ```bash
-# Send raw event
-kafka-console-producer --topic raw-events --bootstrap-server localhost:9092 \
-  --property "parse.key=true" --property "key.separator=:"
+# Send same transfer twice
+curl -X POST http://localhost:8090/api/transfers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transferId": "TXN-123",
+    "messageId": "MSG-456", 
+    "fromAccount": "ACC-111",
+    "toAccount": "ACC-222",
+    "amount": 100.00,
+    "currency": "USD"
+  }'
 
-# Input: user-123:{"uid":"123","act":"view","ts":1645123456,"prod_id":"456"}
-
-# Monitor transformed output
-kafka-console-consumer --topic analytics-events --from-beginning --bootstrap-server localhost:9092
-kafka-console-consumer --topic high-priority-topic --from-beginning --bootstrap-server localhost:9092
+# Send exact duplicate (should be detected)
+curl -X POST http://localhost:8090/api/transfers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transferId": "TXN-123",
+    "messageId": "MSG-456",
+    "fromAccount": "ACC-111", 
+    "toAccount": "ACC-222",
+    "amount": 100.00,
+    "currency": "USD"
+  }'
 ```
 
-### 3. Monitor Transformation Metrics
+### 3. Monitor Processing
 ```bash
-# Check processing metrics
-curl http://localhost:8090/actuator/metrics/kafka.transformation
+# Check processed transfers
+redis-cli KEYS "transfer:processed:*"
 
-# View transformation rules
-curl http://localhost:8090/api/transformation/rules
+# Monitor consumer group
+kafka-consumer-groups --bootstrap-server localhost:9092 \
+  --group bank-transfer-processors --describe
 
-# Check enrichment cache
-curl http://localhost:8090/api/enrichment/cache/stats
+# Check dead letter topic
+kafka-console-consumer --topic bank-transfers-dlt \
+  --from-beginning --bootstrap-server localhost:9092
 ```
 
 ## 🎯 Best Practices
 
-### Transformation Design
-- **Keep transformations stateless** for scalability
-- **Use schemas** to validate input and output formats
-- **Cache enrichment data** to reduce external service calls
-- **Handle missing fields** gracefully with defaults
+### Manual Acknowledgment
+- **Process one message at a time** for critical operations
+- **Use transactions** to ensure atomicity
+- **Handle retries gracefully** with exponential backoff
+- **Monitor processing lag** to ensure performance
 
-### Performance Optimization
-- **Batch transformations** when possible
-- **Use appropriate serialization** for performance
-- **Monitor transformation latency** and optimize bottlenecks
-- **Implement circuit breakers** for external enrichment services
+### Idempotency Design
+- **Use business-meaningful keys** when possible
+- **Cache results** for quick duplicate detection
+- **Set appropriate TTLs** to prevent cache bloat
+- **Handle cache failures** gracefully
 
 ### Error Handling
-- **Validate inputs** before transformation
-- **Preserve original messages** in error scenarios
-- **Use dead letter queues** for failed transformations
-- **Include transformation metadata** in output messages
+- **Distinguish retryable vs non-retryable errors**
+- **Implement circuit breakers** for downstream services
+- **Use dead letter topics** for poison messages
+- **Monitor error rates** and alert on anomalies
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Slow transformations** - Check enrichment service latency and caching
-2. **Data loss** - Verify error handling and dead letter queue setup
-3. **Memory leaks** - Monitor object creation in transformation rules
-4. **Cache misses** - Tune cache TTL and eviction policies
+1. **Processing lag** - Increase consumer instances or optimize processing
+2. **Duplicate cache misses** - Check Redis connectivity and TTL settings  
+3. **Transaction deadlocks** - Optimize database queries and locking
+4. **Memory leaks** - Monitor message acknowledgment and cleanup
 
 ### Debug Commands
 ```bash
-# Check transformation cache
-redis-cli INFO keyspace
+# Check Redis cache
+redis-cli GET "transfer:processed:MSG-456"
 
-# Monitor transformation performance
-curl http://localhost:8090/actuator/metrics/transformation.time
+# Monitor processing metrics
+curl http://localhost:8090/actuator/metrics/kafka.consumer
 
-# View DLQ messages
-kafka-console-consumer --topic transformation-dlq --from-beginning --bootstrap-server localhost:9092
+# Check database transactions
+SELECT * FROM transfers WHERE transfer_id = 'TXN-123';
 ```
 
 ## 🚀 Next Steps
-Message transformation mastered? Time to build notification systems! Move to [Lesson 11: Fan-out Pattern & Notification Systems](../lesson_11/README.md) to learn one-to-many messaging patterns.
+Manual acknowledgment mastered? Time to transform and route messages! Move to [Lesson 10: Message Transformation & Filtering](../lesson_11/README.md) to learn data processing pipelines.

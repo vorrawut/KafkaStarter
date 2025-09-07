@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_18/concept",
   "title": "Concept",
-  "description": "Kafka Security & ACLs - Production Security Implementation",
+  "description": "Building a Real-time Dashboard Application - Complete Analytics System",
   "source": "@site/../class/modules/lesson_18/concept.md",
   "sourceDirName": "modules/lesson_18",
   "slug": "/modules/lesson_18/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Building a Real-time Dashboard Application",
+    "title": "Workshop: Local State Stores & Fault Tolerance",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_17/"
   },
   "next": {
-    "title": "Workshop: Kafka Security & ACLs",
+    "title": "Workshop: Building a Real-time Dashboard Application",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_18/"
   }
 }

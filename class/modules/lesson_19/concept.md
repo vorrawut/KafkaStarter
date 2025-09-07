@@ -1,884 +1,619 @@
 # Concept
 
-## Observability & Monitoring - Production Operations Excellence
+## Kafka Security & ACLs - Production Security Implementation
 
 ## 🎯 Learning Objectives
 
 After completing this lesson, you will:
-- **Master** the three pillars of observability: metrics, logs, and traces
-- **Implement** comprehensive Kafka monitoring strategies
-- **Build** production-ready dashboards and alerting systems
-- **Design** effective SLIs, SLOs, and error budgets
-- **Operate** Kafka clusters with confidence and reliability
+- **Understand** Kafka security architecture and threat models
+- **Implement** SSL/TLS encryption for secure communication
+- **Configure** SASL authentication mechanisms
+- **Design** ACL-based authorization strategies
+- **Deploy** secure Kafka clusters in production environments
 
-## 📊 Observability Overview
+## 🔐 Kafka Security Overview
 
-### The Three Pillars of Observability
+### Security Pillars
 
 ```mermaid
 graph TB
-    subgraph "Observability Pillars"
-        METRICS[📊 Metrics<br/>What is happening?<br/>Quantitative measurements]
-        LOGS[📝 Logs<br/>What happened?<br/>Event records]
-        TRACES[🔍 Traces<br/>How did it happen?<br/>Request journey]
+    subgraph "Kafka Security Framework"
+        ENCRYPTION[Encryption<br/>SSL/TLS Transport Security]
+        AUTHENTICATION[Authentication<br/>SASL User Verification]
+        AUTHORIZATION[Authorization<br/>ACL Access Control]
+        AUDIT[Auditing<br/>Security Event Logging]
     end
     
-    subgraph "Data Collection"
-        INSTRUMENTATION[Application Instrumentation<br/>Micrometer, OpenTelemetry]
-        AGENTS[Collection Agents<br/>Prometheus, Fluentd, Jaeger]
-        EXPORTERS[Data Exporters<br/>JMX, Log files, Trace spans]
+    subgraph "Threat Protection"
+        NETWORK[Network Attacks<br/>Man-in-the-middle, Eavesdropping]
+        IDENTITY[Identity Attacks<br/>Impersonation, Credential theft]
+        ACCESS[Access Attacks<br/>Privilege escalation, Data breach]
+        COMPLIANCE[Compliance<br/>Regulatory requirements]
     end
     
-    subgraph "Storage & Analysis"
-        TSDB[Time Series Database<br/>Prometheus, InfluxDB]
-        LOG_STORE[Log Storage<br/>Elasticsearch, Loki]
-        TRACE_STORE[Trace Storage<br/>Jaeger, Zipkin]
-    end
+    ENCRYPTION --> NETWORK
+    AUTHENTICATION --> IDENTITY
+    AUTHORIZATION --> ACCESS
+    AUDIT --> COMPLIANCE
     
-    subgraph "Visualization & Alerting"
-        DASHBOARDS[Dashboards<br/>Grafana, Kibana]
-        ALERTS[Alerting<br/>AlertManager, PagerDuty]
-        ANALYSIS[Analysis Tools<br/>Query builders, Correlation]
-    end
-    
-    METRICS --> INSTRUMENTATION
-    LOGS --> INSTRUMENTATION
-    TRACES --> INSTRUMENTATION
-    
-    INSTRUMENTATION --> AGENTS
-    AGENTS --> EXPORTERS
-    
-    EXPORTERS --> TSDB
-    EXPORTERS --> LOG_STORE
-    EXPORTERS --> TRACE_STORE
-    
-    TSDB --> DASHBOARDS
-    LOG_STORE --> DASHBOARDS
-    TRACE_STORE --> DASHBOARDS
-    
-    DASHBOARDS --> ALERTS
-    ALERTS --> ANALYSIS
-    
-    style METRICS fill:#ff6b6b
-    style LOGS fill:#4ecdc4
-    style TRACES fill:#a8e6cf
-    style DASHBOARDS fill:#ffe66d
+    style ENCRYPTION fill:#ff6b6b
+    style AUTHENTICATION fill:#4ecdc4
+    style AUTHORIZATION fill:#a8e6cf
+    style AUDIT fill:#ffe66d
 ```
 
-### Kafka-Specific Observability Architecture
+### Security Components Architecture
 
 ```mermaid
 graph TB
-    subgraph "Kafka Cluster"
-        BROKER1[Broker 1<br/>JMX Metrics]
-        BROKER2[Broker 2<br/>JMX Metrics]
-        BROKER3[Broker 3<br/>JMX Metrics]
-        ZK[Zookeeper<br/>JMX Metrics]
-    end
-    
     subgraph "Client Applications"
-        PRODUCER[Producer Apps<br/>Application metrics]
-        CONSUMER[Consumer Apps<br/>Processing metrics]
-        STREAMS[Streams Apps<br/>Topology metrics]
-        CONNECT[Kafka Connect<br/>Connector metrics]
+        PRODUCER[Producer<br/>SSL + SASL]
+        CONSUMER[Consumer<br/>SSL + SASL]
+        ADMIN[Admin Client<br/>SSL + SASL]
     end
     
-    subgraph "Monitoring Infrastructure"
-        JMX_EXPORTER[JMX Exporter<br/>Converts JMX to Prometheus]
-        APP_METRICS[Application Metrics<br/>Micrometer integration]
-        LOG_SHIPPER[Log Shipper<br/>Filebeat, Fluentd]
-        TRACE_AGENT[Trace Agent<br/>Jaeger agent]
+    subgraph "Kafka Cluster Security"
+        BROKER1[Broker 1<br/>SSL Listener + ACLs]
+        BROKER2[Broker 2<br/>SSL Listener + ACLs]
+        BROKER3[Broker 3<br/>SSL Listener + ACLs]
     end
     
-    subgraph "Observability Stack"
-        PROMETHEUS[Prometheus<br/>Metrics storage & alerting]
-        GRAFANA[Grafana<br/>Visualization & dashboards]
-        ELASTICSEARCH[Elasticsearch<br/>Log storage & search]
-        KIBANA[Kibana<br/>Log analysis]
-        JAEGER[Jaeger<br/>Distributed tracing]
+    subgraph "Authentication Providers"
+        LDAP[LDAP Server<br/>Centralized users]
+        KERBEROS[Kerberos KDC<br/>Enterprise auth]
+        PLAIN[SASL/PLAIN<br/>Simple credentials]
+        OAUTH[OAuth 2.0<br/>Token-based auth]
     end
     
-    subgraph "Alerting & Notification"
-        ALERT_MANAGER[AlertManager<br/>Alert routing]
-        PAGERDUTY[PagerDuty<br/>Incident management]
-        SLACK[Slack<br/>Team notifications]
-        EMAIL[Email Alerts<br/>Critical notifications]
+    subgraph "Certificate Authority"
+        CA[Certificate Authority<br/>SSL Certificate Management]
+        KEYSTORE[Keystores<br/>Private keys]
+        TRUSTSTORE[Truststores<br/>Public certificates]
     end
     
-    BROKER1 --> JMX_EXPORTER
-    BROKER2 --> JMX_EXPORTER
-    BROKER3 --> JMX_EXPORTER
-    ZK --> JMX_EXPORTER
+    PRODUCER -.->|SSL Handshake| BROKER1
+    CONSUMER -.->|SSL Handshake| BROKER2
+    ADMIN -.->|SSL Handshake| BROKER3
     
-    PRODUCER --> APP_METRICS
-    CONSUMER --> APP_METRICS
-    STREAMS --> APP_METRICS
-    CONNECT --> APP_METRICS
+    BROKER1 --> LDAP
+    BROKER2 --> KERBEROS
+    BROKER3 --> OAUTH
     
-    PRODUCER --> LOG_SHIPPER
-    CONSUMER --> LOG_SHIPPER
-    PRODUCER --> TRACE_AGENT
-    CONSUMER --> TRACE_AGENT
+    BROKER1 --> CA
+    BROKER2 --> KEYSTORE
+    BROKER3 --> TRUSTSTORE
     
-    JMX_EXPORTER --> PROMETHEUS
-    APP_METRICS --> PROMETHEUS
-    LOG_SHIPPER --> ELASTICSEARCH
-    TRACE_AGENT --> JAEGER
-    
-    PROMETHEUS --> GRAFANA
-    PROMETHEUS --> ALERT_MANAGER
-    ELASTICSEARCH --> KIBANA
-    
-    ALERT_MANAGER --> PAGERDUTY
-    ALERT_MANAGER --> SLACK
-    ALERT_MANAGER --> EMAIL
-    
-    style PROMETHEUS fill:#ff6b6b
-    style GRAFANA fill:#4ecdc4
-    style ALERT_MANAGER fill:#a8e6cf
-    style JAEGER fill:#ffe66d
+    style BROKER1 fill:#ff6b6b
+    style LDAP fill:#4ecdc4
+    style CA fill:#a8e6cf
 ```
 
-## 📈 Kafka Metrics Strategy
+## 🔑 SSL/TLS Implementation
 
-### Critical Kafka Metrics Hierarchy
-
-```mermaid
-graph TB
-    subgraph "Business Metrics (Level 1)"
-        THROUGHPUT[Message Throughput<br/>messages/second]
-        LATENCY[End-to-End Latency<br/>ms (p95, p99)]
-        AVAILABILITY[Service Availability<br/>uptime percentage]
-        ERROR_RATE[Error Rate<br/>errors/total requests]
-    end
-    
-    subgraph "Service Metrics (Level 2)"
-        PRODUCER_RATE[Producer Rate<br/>records/second]
-        CONSUMER_LAG[Consumer Lag<br/>messages behind]
-        PARTITION_COUNT[Partition Count<br/>per topic]
-        BROKER_HEALTH[Broker Health<br/>up/down status]
-    end
-    
-    subgraph "Infrastructure Metrics (Level 3)"
-        CPU_USAGE[CPU Usage<br/>percentage]
-        MEMORY_USAGE[Memory Usage<br/>heap utilization]
-        DISK_USAGE[Disk Usage<br/>log segment growth]
-        NETWORK_IO[Network I/O<br/>bytes in/out]
-    end
-    
-    subgraph "JVM Metrics (Level 4)"
-        GC_TIME[Garbage Collection<br/>pause time]
-        GC_FREQUENCY[GC Frequency<br/>collections/minute]
-        HEAP_SIZE[Heap Size<br/>used vs allocated]
-        THREAD_COUNT[Thread Count<br/>active threads]
-    end
-    
-    THROUGHPUT --> PRODUCER_RATE
-    LATENCY --> CONSUMER_LAG
-    AVAILABILITY --> BROKER_HEALTH
-    ERROR_RATE --> PARTITION_COUNT
-    
-    PRODUCER_RATE --> CPU_USAGE
-    CONSUMER_LAG --> MEMORY_USAGE
-    BROKER_HEALTH --> DISK_USAGE
-    PARTITION_COUNT --> NETWORK_IO
-    
-    CPU_USAGE --> GC_TIME
-    MEMORY_USAGE --> GC_FREQUENCY
-    DISK_USAGE --> HEAP_SIZE
-    NETWORK_IO --> THREAD_COUNT
-    
-    style THROUGHPUT fill:#ff6b6b
-    style PRODUCER_RATE fill:#4ecdc4
-    style CPU_USAGE fill:#a8e6cf
-    style GC_TIME fill:#ffe66d
-```
-
-### Producer Metrics Deep Dive
-
-**Key Producer Metrics**
-```properties
-# Throughput and Performance
-kafka.producer:type=producer-metrics,client-id=*,name=record-send-rate
-kafka.producer:type=producer-metrics,client-id=*,name=record-send-total
-kafka.producer:type=producer-metrics,client-id=*,name=batch-size-avg
-kafka.producer:type=producer-metrics,client-id=*,name=batch-size-max
-
-# Latency and Timing
-kafka.producer:type=producer-metrics,client-id=*,name=record-queue-time-avg
-kafka.producer:type=producer-metrics,client-id=*,name=record-queue-time-max
-kafka.producer:type=producer-topic-metrics,client-id=*,topic=*,name=record-send-rate
-
-# Error and Retry Metrics
-kafka.producer:type=producer-metrics,client-id=*,name=record-error-rate
-kafka.producer:type=producer-metrics,client-id=*,name=record-retry-rate
-kafka.producer:type=producer-metrics,client-id=*,name=record-error-total
-```
-
-### Consumer Metrics Deep Dive
-
-**Key Consumer Metrics**
-```properties
-# Consumption Performance
-kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*,name=records-consumed-rate
-kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*,name=records-consumed-total
-kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*,name=bytes-consumed-rate
-
-# Lag and Offset Metrics
-kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*,topic=*,partition=*,name=records-lag
-kafka.consumer:type=consumer-fetch-manager-metrics,client-id=*,topic=*,partition=*,name=records-lag-max
-kafka.consumer:type=consumer-coordinator-metrics,client-id=*,name=commit-latency-avg
-
-# Processing Metrics
-kafka.consumer:type=consumer-coordinator-metrics,client-id=*,name=sync-time-avg
-kafka.consumer:type=consumer-coordinator-metrics,client-id=*,name=heartbeat-rate
-kafka.consumer:type=consumer-coordinator-metrics,client-id=*,name=join-time-avg
-```
-
-### Broker Metrics Deep Dive
-
-**Critical Broker Metrics**
-```properties
-# Request Handling
-kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*
-kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*
-kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*
-kafka.network:type=RequestMetrics,name=RequestsPerSec,request=*
-
-# Performance and Latency
-kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
-kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
-kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent
-
-# Storage and Log Metrics
-kafka.log:type=LogFlushStats,name=LogFlushRateAndTimeMs
-kafka.log:type=LogSize,name=Size,topic=*,partition=*
-kafka.server:type=ReplicaManager,name=LeaderCount
-kafka.server:type=ReplicaManager,name=PartitionCount
-```
-
-## 📊 Dashboard Design Patterns
-
-### Executive Dashboard
-
-```mermaid
-graph TB
-    subgraph "Executive Dashboard - High Level KPIs"
-        HEALTH[🟢 System Health<br/&gt;99.9% uptime]
-        THROUGHPUT[📈 Message Throughput<br/&gt;50K msg/sec]
-        LATENCY[⚡ Avg Latency<br/&gt;5ms p95]
-        ERRORS[🚨 Error Rate<br/&gt;0.01%]
-    end
-    
-    subgraph "Business Impact Metrics"
-        REVENUE[💰 Revenue Impact<br/>$1.2M/hour processed]
-        CUSTOMERS[👥 Active Users<br/&gt;50K concurrent]
-        ORDERS[🛒 Orders/minute<br/&gt;1,200 orders/min]
-        ALERTS[⚠️ Active Alerts<br/&gt;2 warnings]
-    end
-    
-    subgraph "Trend Analysis"
-        HOURLY[📊 Hourly Trends<br/>Last 24 hours]
-        DAILY[📅 Daily Trends<br/>Last 30 days]
-        CAPACITY[📏 Capacity Planning<br/>Current: 60% utilization]
-        FORECAST[🔮 Growth Forecast<br/&gt;20% monthly growth]
-    end
-    
-    HEALTH --> REVENUE
-    THROUGHPUT --> CUSTOMERS
-    LATENCY --> ORDERS
-    ERRORS --> ALERTS
-    
-    REVENUE --> HOURLY
-    CUSTOMERS --> DAILY
-    ORDERS --> CAPACITY
-    ALERTS --> FORECAST
-    
-    style HEALTH fill:#4ecdc4
-    style THROUGHPUT fill:#a8e6cf
-    style REVENUE fill:#ffe66d
-    style HOURLY fill:#ffa8e6
-```
-
-### Operational Dashboard
-
-```mermaid
-graph TB
-    subgraph "Cluster Health Overview"
-        BROKER_STATUS[Broker Status<br/&gt;3/3 brokers online]
-        PARTITION_STATUS[Partition Status<br/&gt;150 partitions healthy]
-        REPLICATION[Replication Status<br/>In-sync replicas: 100%]
-        CONTROLLER[Controller Status<br/>Active controller: broker-1]
-    end
-    
-    subgraph "Performance Metrics"
-        PRODUCER_METRICS[Producer Metrics<br/>Send rate, batch size, errors]
-        CONSUMER_METRICS[Consumer Metrics<br/>Lag, throughput, commits]
-        BROKER_METRICS[Broker Metrics<br/>Request rate, response time]
-        NETWORK_METRICS[Network Metrics<br/>Bytes in/out, connections]
-    end
-    
-    subgraph "Resource Utilization"
-        CPU_CHART[CPU Usage<br/>Per broker utilization]
-        MEMORY_CHART[Memory Usage<br/>Heap and off-heap memory]
-        DISK_CHART[Disk Usage<br/>Log directory space]
-        NETWORK_CHART[Network I/O<br/>Bandwidth utilization]
-    end
-    
-    subgraph "Alert Summary"
-        CRITICAL_ALERTS[🔴 Critical: 0]
-        WARNING_ALERTS[🟡 Warning: 2]
-        INFO_ALERTS[🔵 Info: 5]
-        ALERT_TRENDS[Alert Trends<br/>Last 7 days]
-    end
-    
-    BROKER_STATUS --> PRODUCER_METRICS
-    PARTITION_STATUS --> CONSUMER_METRICS
-    REPLICATION --> BROKER_METRICS
-    CONTROLLER --> NETWORK_METRICS
-    
-    PRODUCER_METRICS --> CPU_CHART
-    CONSUMER_METRICS --> MEMORY_CHART
-    BROKER_METRICS --> DISK_CHART
-    NETWORK_METRICS --> NETWORK_CHART
-    
-    CPU_CHART --> CRITICAL_ALERTS
-    MEMORY_CHART --> WARNING_ALERTS
-    DISK_CHART --> INFO_ALERTS
-    NETWORK_CHART --> ALERT_TRENDS
-    
-    style BROKER_STATUS fill:#ff6b6b
-    style PRODUCER_METRICS fill:#4ecdc4
-    style CPU_CHART fill:#a8e6cf
-    style CRITICAL_ALERTS fill:#ffe66d
-```
-
-### Application-Specific Dashboard
-
-```mermaid
-graph TB
-    subgraph "Application Performance"
-        APP_THROUGHPUT[Application Throughput<br/>Events processed/sec]
-        APP_LATENCY[Processing Latency<br/>End-to-end timing]
-        APP_ERRORS[Application Errors<br/>Business logic failures]
-        APP_HEALTH[Health Status<br/>Service availability]
-    end
-    
-    subgraph "Kafka Integration"
-        KAFKA_PRODUCER[Producer Performance<br/>Send rate and latency]
-        KAFKA_CONSUMER[Consumer Performance<br/>Lag and processing rate]
-        KAFKA_ERRORS[Kafka Errors<br/>Connection and protocol errors]
-        KAFKA_OFFSETS[Offset Management<br/>Commit frequency and lag]
-    end
-    
-    subgraph "Business Metrics"
-        ORDER_RATE[Order Processing Rate<br/>Orders completed/minute]
-        PAYMENT_SUCCESS[Payment Success Rate<br/>Successful payments %]
-        NOTIFICATION_DELIVERY[Notification Delivery<br/>Success rate by channel]
-        USER_ACTIVITY[User Activity<br/>Active sessions]
-    end
-    
-    subgraph "Dependencies"
-        DATABASE_HEALTH[Database Health<br/>Connection pool status]
-        EXTERNAL_APIS[External API Health<br/>Response times and errors]
-        CACHE_HEALTH[Cache Health<br/>Hit rate and latency]
-        SERVICE_MESH[Service Mesh<br/>Inter-service communication]
-    end
-    
-    APP_THROUGHPUT --> KAFKA_PRODUCER
-    APP_LATENCY --> KAFKA_CONSUMER
-    APP_ERRORS --> KAFKA_ERRORS
-    APP_HEALTH --> KAFKA_OFFSETS
-    
-    KAFKA_PRODUCER --> ORDER_RATE
-    KAFKA_CONSUMER --> PAYMENT_SUCCESS
-    KAFKA_ERRORS --> NOTIFICATION_DELIVERY
-    KAFKA_OFFSETS --> USER_ACTIVITY
-    
-    ORDER_RATE --> DATABASE_HEALTH
-    PAYMENT_SUCCESS --> EXTERNAL_APIS
-    NOTIFICATION_DELIVERY --> CACHE_HEALTH
-    USER_ACTIVITY --> SERVICE_MESH
-    
-    style APP_THROUGHPUT fill:#ff6b6b
-    style KAFKA_PRODUCER fill:#4ecdc4
-    style ORDER_RATE fill:#a8e6cf
-    style DATABASE_HEALTH fill:#ffe66d
-```
-
-## 📝 Structured Logging Strategy
-
-### Log Level Strategy
-
-```mermaid
-graph TB
-    subgraph "Log Levels & Use Cases"
-        ERROR[ERROR Level<br/>System failures, exceptions<br/>Always captured]
-        WARN[WARN Level<br/>Degraded performance, retries<br/>Production monitoring]
-        INFO[INFO Level<br/>Business events, milestones<br/>Audit trail]
-        DEBUG[DEBUG Level<br/>Detailed execution flow<br/>Development only]
-        TRACE[TRACE Level<br/>Very detailed debugging<br/>Troubleshooting only]
-    end
-    
-    subgraph "Production Logging"
-        STRUCTURED[Structured Format<br/>JSON with consistent fields]
-        CORRELATION[Correlation IDs<br/>Request tracing]
-        CONTEXT[Contextual Information<br/>User, session, transaction]
-        SAMPLING[Log Sampling<br/>Reduce volume in high traffic]
-    end
-    
-    subgraph "Log Processing Pipeline"
-        COLLECTION[Log Collection<br/>Filebeat, Fluentd]
-        PARSING[Log Parsing<br/>Field extraction]
-        ENRICHMENT[Log Enrichment<br/>Add metadata]
-        STORAGE[Log Storage<br/>Elasticsearch, Loki]
-    end
-    
-    ERROR --> STRUCTURED
-    WARN --> CORRELATION
-    INFO --> CONTEXT
-    DEBUG --> SAMPLING
-    
-    STRUCTURED --> COLLECTION
-    CORRELATION --> PARSING
-    CONTEXT --> ENRICHMENT
-    SAMPLING --> STORAGE
-    
-    style ERROR fill:#ff6b6b
-    style STRUCTURED fill:#4ecdc4
-    style COLLECTION fill:#a8e6cf
-```
-
-### Kafka-Specific Logging Patterns
-
-**Producer Logging Example**
-```json
-{
-  "timestamp": "2024-01-15T10:30:00.123Z",
-  "level": "INFO",
-  "service": "order-service",
-  "component": "kafka-producer",
-  "event": "message_sent",
-  "topic": "order-events",
-  "partition": 2,
-  "offset": 12345,
-  "key": "order-67890",
-  "correlationId": "req-abc-123",
-  "userId": "user-456",
-  "orderId": "order-67890",
-  "processingTime": 15,
-  "batchSize": 100,
-  "retryCount": 0
-}
-```
-
-**Consumer Logging Example**
-```json
-{
-  "timestamp": "2024-01-15T10:30:00.234Z",
-  "level": "INFO", 
-  "service": "payment-service",
-  "component": "kafka-consumer",
-  "event": "message_processed",
-  "topic": "order-events",
-  "partition": 2,
-  "offset": 12345,
-  "key": "order-67890",
-  "correlationId": "req-abc-123",
-  "consumerGroup": "payment-processors",
-  "processingTime": 85,
-  "businessResult": "payment_successful",
-  "lag": 5
-}
-```
-
-## 🔍 Distributed Tracing Implementation
-
-### Trace Context Flow
+### Certificate Management Strategy
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant OrderAPI as Order API
-    participant Producer as Kafka Producer
-    participant Kafka
-    participant Consumer as Payment Consumer
-    participant PaymentAPI as Payment API
-    participant Database
+    participant CA as Certificate Authority
+    participant Broker as Kafka Broker
+    participant Client as Kafka Client
     
-    Note over Client,Database: Distributed Trace Flow
+    Note over CA,Client: SSL/TLS Setup Process
     
-    Client->>OrderAPI: POST /orders (trace-id: abc-123)
-    OrderAPI->>OrderAPI: Create order (span: order-creation)
+    CA->>CA: Generate CA Certificate
+    CA->>Broker: Issue Broker Certificate
+    CA->>Client: Issue Client Certificate
     
-    OrderAPI->>Producer: Send order event (span: kafka-send)
-    Producer->>Kafka: Publish message (inject trace context)
-    Producer-->>OrderAPI: Send confirmation
-    OrderAPI-->>Client: Order created
+    Client->>Broker: SSL Handshake Request
+    Broker->>Client: Send Broker Certificate
+    Client->>Client: Verify Certificate Chain
+    Client->>Broker: Send Client Certificate
+    Broker->>Broker: Verify Client Certificate
+    Broker->>Client: SSL Handshake Complete
     
-    Kafka->>Consumer: Deliver message (extract trace context)
-    Consumer->>Consumer: Process payment (span: payment-processing)
-    Consumer->>PaymentAPI: Charge payment (span: payment-api-call)
-    PaymentAPI->>Database: Store payment (span: db-operation)
-    Database-->>PaymentAPI: Success
-    PaymentAPI-->>Consumer: Payment successful
-    Consumer->>Producer: Publish payment event (span: payment-event)
+    Note over Client,Broker: Encrypted Communication
     
-    Note over Client,Database: Complete trace: abc-123 with 6 spans
+    Client->>Broker: Encrypted Kafka Protocol
+    Broker->>Client: Encrypted Response
 ```
 
-### Trace Data Structure
+### SSL Configuration Patterns
 
-```json
-{
-  "traceId": "abc-123-def-456",
-  "spans": [
-    {
-      "spanId": "span-001",
-      "parentSpanId": null,
-      "operationName": "order-creation",
-      "service": "order-api",
-      "startTime": "2024-01-15T10:30:00.000Z",
-      "duration": 250,
-      "tags": {
-        "http.method": "POST",
-        "http.url": "/api/orders",
-        "order.id": "order-67890",
-        "customer.id": "user-456"
-      }
-    },
-    {
-      "spanId": "span-002", 
-      "parentSpanId": "span-001",
-      "operationName": "kafka-send",
-      "service": "order-api",
-      "startTime": "2024-01-15T10:30:00.150Z",
-      "duration": 25,
-      "tags": {
-        "messaging.system": "kafka",
-        "messaging.destination": "order-events",
-        "messaging.kafka.partition": 2
-      }
-    }
-  ]
-}
+**Server Configuration**
+```properties
+# Broker SSL Configuration
+listeners=SSL://localhost:9093
+security.inter.broker.protocol=SSL
+ssl.keystore.location=/etc/kafka/ssl/kafka.server.keystore.jks
+ssl.keystore.password=server-keystore-password
+ssl.key.password=server-key-password
+ssl.truststore.location=/etc/kafka/ssl/kafka.server.truststore.jks
+ssl.truststore.password=server-truststore-password
+ssl.client.auth=required
+ssl.enabled.protocols=TLSv1.2,TLSv1.3
+ssl.cipher.suites=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 ```
 
-## 🚨 Alerting Strategy
+**Client Configuration**
+```properties
+# Producer/Consumer SSL Configuration
+bootstrap.servers=localhost:9093
+security.protocol=SSL
+ssl.truststore.location=/etc/kafka/ssl/kafka.client.truststore.jks
+ssl.truststore.password=client-truststore-password
+ssl.keystore.location=/etc/kafka/ssl/kafka.client.keystore.jks
+ssl.keystore.password=client-keystore-password
+ssl.key.password=client-key-password
+```
 
-### Alert Hierarchy and Escalation
+## 🔐 SASL Authentication
+
+### Authentication Mechanisms Comparison
 
 ```mermaid
 graph TB
-    subgraph "Alert Severity Levels"
-        CRITICAL[🔴 CRITICAL<br/>System down or data loss<br/>Immediate response required]
-        HIGH[🟠 HIGH<br/>Degraded performance<br/>Response within 15 min]
-        MEDIUM[🟡 MEDIUM<br/>Warning conditions<br/>Response within 1 hour]
-        LOW[🔵 LOW<br/>Informational<br/>Next business day]
+    subgraph "SASL Mechanisms"
+        PLAIN[SASL/PLAIN<br/>Username/Password<br/>Simple but less secure]
+        SCRAM[SASL/SCRAM<br/>Salted Challenge Response<br/>Better password security]
+        GSSAPI[SASL/GSSAPI<br/>Kerberos Integration<br/>Enterprise standard]
+        OAUTH[SASL/OAUTHBEARER<br/>Token-based auth<br/>Modern standard]
     end
     
-    subgraph "Alert Channels"
-        PAGERDUTY[📱 PagerDuty<br/>Critical & High alerts<br/&gt;24/7 on-call rotation]
-        SLACK[💬 Slack<br/>All alert levels<br/>Team notifications]
-        EMAIL[📧 Email<br/>Medium & Low alerts<br/>Non-urgent notifications]
-        DASHBOARD[📊 Dashboard<br/>Visual indicators<br/>Status overview]
+    subgraph "Security Levels"
+        LOW[Low Security<br/>Development only]
+        MEDIUM[Medium Security<br/>Internal systems]
+        HIGH[High Security<br/>Production systems]
+        ENTERPRISE[Enterprise Security<br/>Compliance requirements]
+    end
+    
+    PLAIN --> LOW
+    SCRAM --> MEDIUM
+    GSSAPI --> HIGH
+    OAUTH --> ENTERPRISE
+    
+    style PLAIN fill:#ff6b6b
+    style SCRAM fill:#ffe66d
+    style GSSAPI fill:#a8e6cf
+    style OAUTH fill:#4ecdc4
+```
+
+### SASL Configuration Examples
+
+**SASL/SCRAM Configuration**
+```properties
+# Broker SASL Configuration
+listeners=SASL_SSL://localhost:9094
+security.inter.broker.protocol=SASL_SSL
+sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
+sasl.enabled.mechanisms=SCRAM-SHA-512
+
+# JAAS Configuration
+listener.name.sasl_ssl.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+```
+
+**Client SASL Configuration**
+```properties
+# Producer/Consumer SASL Configuration
+bootstrap.servers=localhost:9094
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+  username="kafka-user" \
+  password="secure-password";
+```
+
+## 🛡️ Access Control Lists (ACLs)
+
+### ACL Permission Model
+
+```mermaid
+graph TB
+    subgraph "ACL Components"
+        PRINCIPAL[Principal<br/>User or Service Account]
+        RESOURCE[Resource<br/>Topic, Group, Cluster]
+        OPERATION[Operation<br/>Read, Write, Create, Delete]
+        PERMISSION[Permission<br/>Allow or Deny]
+    end
+    
+    subgraph "Resource Types"
+        TOPIC[Topic Resources<br/>Message data access]
+        GROUP[Consumer Group<br/>Offset management]
+        CLUSTER[Cluster Resources<br/>Admin operations]
+        TXNID[Transaction ID<br/>Transactional operations]
+    end
+    
+    subgraph "Operations"
+        READ[Read<br/>Consume messages]
+        WRITE[Write<br/>Produce messages]
+        CREATE[Create<br/>Topic creation]
+        DELETE[Delete<br/>Resource deletion]
+        ALTER[Alter<br/>Configuration changes]
+        DESCRIBE[Describe<br/>Metadata access]
+    end
+    
+    PRINCIPAL --> RESOURCE
+    RESOURCE --> OPERATION
+    OPERATION --> PERMISSION
+    
+    RESOURCE --> TOPIC
+    RESOURCE --> GROUP
+    RESOURCE --> CLUSTER
+    
+    OPERATION --> READ
+    OPERATION --> WRITE
+    OPERATION --> CREATE
+    
+    style PRINCIPAL fill:#ff6b6b
+    style RESOURCE fill:#4ecdc4
+    style OPERATION fill:#a8e6cf
+    style PERMISSION fill:#ffe66d
+```
+
+### ACL Management Examples
+
+**Topic Access Control**
+```bash
+# Grant producer access to specific topic
+kafka-acls --bootstrap-server localhost:9094 \
+  --command-config client-ssl.properties \
+  --add \
+  --allow-principal User:order-producer \
+  --operation Write \
+  --topic order-events
+
+# Grant consumer access to topic and group
+kafka-acls --bootstrap-server localhost:9094 \
+  --command-config client-ssl.properties \
+  --add \
+  --allow-principal User:order-consumer \
+  --operation Read \
+  --topic order-events
+
+kafka-acls --bootstrap-server localhost:9094 \
+  --command-config client-ssl.properties \
+  --add \
+  --allow-principal User:order-consumer \
+  --operation Read \
+  --group order-processing-group
+```
+
+**Administrative Access Control**
+```bash
+# Grant cluster admin privileges
+kafka-acls --bootstrap-server localhost:9094 \
+  --command-config client-ssl.properties \
+  --add \
+  --allow-principal User:kafka-admin \
+  --operation All \
+  --cluster
+
+# Grant topic creation privileges
+kafka-acls --bootstrap-server localhost:9094 \
+  --command-config client-ssl.properties \
+  --add \
+  --allow-principal User:app-deployer \
+  --operation Create \
+  --resource-pattern-type prefixed \
+  --topic app-
+```
+
+## 🔍 Security Monitoring & Auditing
+
+### Security Event Monitoring
+
+```mermaid
+graph TB
+    subgraph "Security Events"
+        AUTH_EVENTS[Authentication Events<br/>Login success/failure]
+        AUTHZ_EVENTS[Authorization Events<br/>ACL allow/deny]
+        SSL_EVENTS[SSL Events<br/>Handshake success/failure]
+        ADMIN_EVENTS[Admin Events<br/>Configuration changes]
+    end
+    
+    subgraph "Monitoring Infrastructure"
+        LOGS[Security Logs<br/>Structured logging]
+        METRICS[Security Metrics<br/>Prometheus integration]
+        ALERTS[Security Alerts<br/>Real-time notifications]
+        SIEM[SIEM Integration<br/>Security analytics]
     end
     
     subgraph "Response Actions"
-        IMMEDIATE[🚨 Immediate Response<br/>< 5 minutes<br/>Wake up on-call engineer]
-        URGENT[⚡ Urgent Response<br/>< 15 minutes<br/>High priority ticket]
-        STANDARD[📋 Standard Response<br/>< 1 hour<br/>Normal priority ticket]
-        INFORMATIONAL[ℹ️ Informational<br/>Next business day<br/>Monitoring only]
+        BLOCK[Block Access<br/>Automatic blocking]
+        INVESTIGATE[Investigation<br/>Security analysis]
+        REMEDIATE[Remediation<br/>Fix vulnerabilities]
+        REPORT[Compliance Reporting<br/>Audit trail]
     end
     
-    CRITICAL --> PAGERDUTY
-    HIGH --> PAGERDUTY
-    MEDIUM --> SLACK
-    LOW --> EMAIL
+    AUTH_EVENTS --> LOGS
+    AUTHZ_EVENTS --> METRICS
+    SSL_EVENTS --> ALERTS
+    ADMIN_EVENTS --> SIEM
     
-    PAGERDUTY --> IMMEDIATE
-    PAGERDUTY --> URGENT
-    SLACK --> STANDARD
-    EMAIL --> INFORMATIONAL
+    LOGS --> BLOCK
+    METRICS --> INVESTIGATE
+    ALERTS --> REMEDIATE
+    SIEM --> REPORT
     
-    ALL_ALERTS[All Alerts] --> DASHBOARD
-    
-    style CRITICAL fill:#ff6b6b
-    style PAGERDUTY fill:#4ecdc4
-    style IMMEDIATE fill:#a8e6cf
+    style AUTH_EVENTS fill:#ff6b6b
+    style LOGS fill:#4ecdc4
+    style BLOCK fill:#a8e6cf
 ```
 
-### Kafka-Specific Alert Rules
+### Security Configuration Monitoring
 
-**Critical Alerts**
-```yaml
-# Broker Down Alert
-- alert: KafkaBrokerDown
-  expr: up{job="kafka-broker"} == 0
-  for: 1m
-  severity: critical
-  description: "Kafka broker {{ $labels.instance }} is down"
-
-# High Consumer Lag Alert  
-- alert: KafkaConsumerLagHigh
-  expr: kafka_consumer_lag_max > 10000
-  for: 5m
-  severity: critical
-  description: "Consumer lag is {{ $value }} messages"
-
-# Disk Space Critical
-- alert: KafkaDiskSpaceCritical
-  expr: (kafka_log_size / kafka_log_capacity) > 0.9
-  for: 2m
-  severity: critical
-  description: "Kafka disk usage is {{ $value }}%"
+```properties
+# Security-related JMX metrics to monitor
+kafka.server:type=KafkaRequestHandlerPool,name=RequestHandlerAvgIdlePercent
+kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent
+kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
+kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
+kafka.controller:type=KafkaController,name=ActiveControllerCount
 ```
 
-**Warning Alerts**
-```yaml
-# High Error Rate
-- alert: KafkaHighErrorRate
-  expr: rate(kafka_server_errors_total[5m]) > 0.01
-  for: 5m
-  severity: warning
-  description: "Kafka error rate is {{ $value }}/sec"
+## 🏢 Enterprise Integration Patterns
 
-# Memory Usage High
-- alert: KafkaMemoryUsageHigh
-  expr: kafka_jvm_memory_used / kafka_jvm_memory_max > 0.8
-  for: 10m
-  severity: warning
-  description: "Kafka memory usage is {{ $value }}%"
+### Identity Provider Integration
 
-# Slow Request Processing
-- alert: KafkaSlowRequests
-  expr: kafka_request_time_99th_percentile > 100
-  for: 15m
-  severity: warning
-  description: "99th percentile request time is {{ $value }}ms"
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant Kafka as Kafka Broker
+    participant LDAP as LDAP Server
+    participant OAuth as OAuth Provider
+    
+    Note over App,OAuth: OAuth Authentication Flow
+    
+    App->>OAuth: Request Access Token
+    OAuth->>LDAP: Validate User Credentials
+    LDAP-->>OAuth: User Authentication Result
+    OAuth-->>App: Access Token
+    
+    App->>Kafka: Connect with Access Token
+    Kafka->>OAuth: Validate Token
+    OAuth-->>Kafka: Token Validation Result
+    Kafka-->>App: Connection Established
+    
+    Note over App,Kafka: Secure Kafka Communication
 ```
 
-## 📊 SLIs, SLOs, and Error Budgets
-
-### Service Level Definitions
+### Multi-Tenant Security Model
 
 ```mermaid
 graph TB
-    subgraph "SLI - Service Level Indicators"
-        AVAILABILITY[Availability SLI<br/>Successful requests / Total requests]
-        LATENCY[Latency SLI<br/>Requests < 100ms / Total requests]
-        THROUGHPUT[Throughput SLI<br/>Messages processed / Time period]
-        QUALITY[Quality SLI<br/>Valid messages / Total messages]
+    subgraph "Tenant A"
+        APP_A[Application A]
+        TOPICS_A[Topics: tenant-a-*]
+        USERS_A[Users: tenant-a-users]
     end
     
-    subgraph "SLO - Service Level Objectives"
-        AVAIL_SLO[Availability SLO<br/&gt;99.9% uptime per month]
-        LATENCY_SLO[Latency SLO<br/&gt;95% of requests < 100ms]
-        THROUGHPUT_SLO[Throughput SLO<br/>≥ 10K messages/second]
-        QUALITY_SLO[Quality SLO<br/&gt;99.99% message delivery success]
+    subgraph "Tenant B"
+        APP_B[Application B]
+        TOPICS_B[Topics: tenant-b-*]
+        USERS_B[Users: tenant-b-users]
     end
     
-    subgraph "Error Budget Management"
-        BUDGET_CALC[Error Budget Calculation<br/>(1 - SLO) × Time Period]
-        BUDGET_CONSUMPTION[Budget Consumption<br/>Track against actual performance]
-        BUDGET_ALERTS[Budget Alerts<br/>Alert when budget consumed]
-        BUDGET_POLICY[Budget Policy<br/>Actions when budget exhausted]
+    subgraph "Shared Infrastructure"
+        KAFKA[Kafka Cluster<br/>Shared brokers]
+        ACL_ENGINE[ACL Engine<br/>Tenant isolation]
+        MONITOR[Monitoring<br/>Per-tenant metrics]
     end
     
-    AVAILABILITY --> AVAIL_SLO
-    LATENCY --> LATENCY_SLO
-    THROUGHPUT --> THROUGHPUT_SLO
-    QUALITY --> QUALITY_SLO
+    APP_A --> KAFKA
+    APP_B --> KAFKA
     
-    AVAIL_SLO --> BUDGET_CALC
-    LATENCY_SLO --> BUDGET_CONSUMPTION
-    THROUGHPUT_SLO --> BUDGET_ALERTS
-    QUALITY_SLO --> BUDGET_POLICY
+    KAFKA --> ACL_ENGINE
+    ACL_ENGINE --> TOPICS_A
+    ACL_ENGINE --> TOPICS_B
     
-    style AVAILABILITY fill:#ff6b6b
-    style AVAIL_SLO fill:#4ecdc4
-    style BUDGET_CALC fill:#a8e6cf
+    KAFKA --> MONITOR
+    MONITOR --> USERS_A
+    MONITOR --> USERS_B
+    
+    style ACL_ENGINE fill:#ff6b6b
+    style KAFKA fill:#4ecdc4
+    style MONITOR fill:#a8e6cf
 ```
 
-### Error Budget Example
+## 🎯 Security Best Practices
 
-**Monthly Error Budget Calculation**
+### Defense in Depth Strategy
+
+1. **Network Security**
+   - Use VPCs and security groups
+   - Implement network segmentation
+   - Configure firewalls and load balancers
+   - Monitor network traffic
+
+2. **Transport Security**
+   - Enable SSL/TLS for all communication
+   - Use strong cipher suites
+   - Implement certificate rotation
+   - Monitor SSL handshake failures
+
+3. **Authentication & Authorization**
+   - Implement strong authentication (SASL/SCRAM or better)
+   - Use principle of least privilege for ACLs
+   - Regular access reviews and cleanup
+   - Monitor authentication failures
+
+4. **Operational Security**
+   - Secure configuration management
+   - Regular security updates
+   - Vulnerability scanning
+   - Incident response procedures
+
+### Security Checklist
+
+**🔐 Authentication**
+- [ ] SASL authentication enabled for all clients
+- [ ] Strong passwords or certificate-based auth
+- [ ] Regular credential rotation
+- [ ] Failed authentication monitoring
+
+**🔒 Authorization**
+- [ ] ACLs configured for all resources
+- [ ] Principle of least privilege applied
+- [ ] Regular ACL reviews and cleanup
+- [ ] Authorization failure monitoring
+
+**🔑 Encryption**
+- [ ] SSL/TLS enabled for all communication
+- [ ] Strong cipher suites configured
+- [ ] Certificate management process
+- [ ] Regular certificate rotation
+
+**📊 Monitoring**
+- [ ] Security event logging enabled
+- [ ] Real-time security monitoring
+- [ ] Automated alerting for security events
+- [ ] Regular security audits
+
+## 🚀 Production Implementation
+
+### Secure Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "DMZ"
+        LB[Load Balancer<br/>SSL Termination]
+        PROXY[Kafka Proxy<br/>Authentication gateway]
+    end
+    
+    subgraph "Application Tier"
+        APP1[Application 1<br/>mTLS client]
+        APP2[Application 2<br/>mTLS client]
+        APP3[Application 3<br/>mTLS client]
+    end
+    
+    subgraph "Kafka Tier"
+        BROKER1[Broker 1<br/>SSL + SASL]
+        BROKER2[Broker 2<br/>SSL + SASL]
+        BROKER3[Broker 3<br/>SSL + SASL]
+    end
+    
+    subgraph "Management Tier"
+        MONITOR[Monitoring<br/>Security dashboards]
+        VAULT[Secret Vault<br/>Credential management]
+        CA[Certificate Authority<br/>PKI management]
+    end
+    
+    APP1 --> LB
+    APP2 --> LB
+    APP3 --> LB
+    
+    LB --> PROXY
+    PROXY --> BROKER1
+    PROXY --> BROKER2
+    PROXY --> BROKER3
+    
+    BROKER1 --> VAULT
+    BROKER2 --> VAULT
+    BROKER3 --> VAULT
+    
+    MONITOR --> BROKER1
+    CA --> BROKER1
+    
+    style LB fill:#ff6b6b
+    style PROXY fill:#4ecdc4
+    style VAULT fill:#a8e6cf
+    style CA fill:#ffe66d
 ```
-SLO: 99.9% availability
-Error Budget: (100% - 99.9%) = 0.1%
-Monthly Downtime Budget: 0.1% × 30 days = 43.2 minutes
 
-Week 1: 5 minutes downtime (11.6% budget consumed)
-Week 2: 2 minutes downtime (4.6% budget consumed)  
-Week 3: 1 minute downtime (2.3% budget consumed)
-Week 4: Budget remaining = 43.2 - 8 = 35.2 minutes
+### Security Automation
 
-Budget Consumption Rate: 18.5% after 3 weeks
-Projected Monthly Consumption: 24.7% (within budget)
+**Certificate Automation**
+```bash
+#!/bin/bash
+# Automated certificate rotation script
+
+# Generate new certificates
+./generate-certificates.sh
+
+# Update keystores
+./update-keystores.sh
+
+# Rolling restart of brokers
+./rolling-restart.sh
+
+# Verify security health
+./security-health-check.sh
 ```
 
-## 🛠️ Monitoring Infrastructure Setup
-
-### Prometheus Configuration
-
+**ACL Management Automation**
 ```yaml
-# prometheus.yml
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-rule_files:
-  - "kafka_alerts.yml"
-  - "application_alerts.yml"
-
-scrape_configs:
-  # Kafka Brokers (via JMX Exporter)
-  - job_name: 'kafka-broker'
-    static_configs:
-      - targets: ['kafka-1:9308', 'kafka-2:9308', 'kafka-3:9308']
-    scrape_interval: 10s
-    metrics_path: /metrics
-
-  # Kafka Producer Applications
-  - job_name: 'kafka-producers'
-    kubernetes_sd_configs:
-      - role: pod
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-        action: replace
-        target_label: __metrics_path__
-        regex: (.+)
-
-  # Kafka Consumer Applications  
-  - job_name: 'kafka-consumers'
-    static_configs:
-      - targets: ['consumer-app-1:8080', 'consumer-app-2:8080']
-    metrics_path: /actuator/prometheus
-    scrape_interval: 10s
+# GitOps-based ACL management
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-acls
+data:
+  acls.yaml: |
+    users:
+      - name: order-service
+        topics:
+          - name: order-events
+            operations: [READ, WRITE]
+        groups:
+          - name: order-processing
+            operations: [READ]
 ```
 
-### Grafana Dashboard Configuration
+## 📈 Security Metrics & KPIs
 
-```json
-{
-  "dashboard": {
-    "title": "Kafka Cluster Overview",
-    "panels": [
-      {
-        "title": "Message Throughput",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "sum(rate(kafka_server_brokertopicmetrics_messagesin_total[5m]))",
-            "legendFormat": "Messages In/sec"
-          },
-          {
-            "expr": "sum(rate(kafka_server_brokertopicmetrics_messagesout_total[5m]))", 
-            "legendFormat": "Messages Out/sec"
-          }
-        ]
-      },
-      {
-        "title": "Consumer Lag",
-        "type": "graph",
-        "targets": [
-          {
-            "expr": "kafka_consumer_lag_max",
-            "legendFormat": "Max Lag - {{consumer_group}}"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+### Key Security Metrics
 
-## 🔧 Operational Runbooks
+1. **Authentication Metrics**
+   - Authentication success rate (target: &gt;99.9%)
+   - Authentication failure rate (alert: &gt;1%)
+   - Authentication latency (target: &lt;100ms)
 
-### Common Incident Response Procedures
+2. **Authorization Metrics**
+   - ACL evaluation success rate (target: &gt;99.9%)
+   - Unauthorized access attempts (alert: &gt;0)
+   - ACL rule coverage (target: 100%)
 
-**High Consumer Lag Runbook**
-```markdown
-## High Consumer Lag Incident Response
+3. **Encryption Metrics**
+   - SSL handshake success rate (target: &gt;99.9%)
+   - SSL handshake latency (target: &lt;200ms)
+   - Certificate expiration monitoring (alert: &lt;30 days)
 
-### Immediate Actions (< 5 minutes)
-1. Check consumer group status
-   ```bash
-   kafka-consumer-groups --bootstrap-server kafka:9092 \
-     --group payment-processors --describe
-   ```
+4. **Security Health Metrics**
+   - Security configuration compliance (target: 100%)
+   - Vulnerability scan results (target: 0 high/critical)
+   - Security incident response time (target: &lt;1 hour)
 
-2. Identify lagging partitions
-   ```bash
-   kafka-consumer-groups --bootstrap-server kafka:9092 \
-     --group payment-processors --describe | sort -k5 -nr
-   ```
+## 🔍 Troubleshooting Common Security Issues
 
-3. Check consumer application health
-   ```bash
-   curl http://consumer-app:8080/actuator/health
-   ```
+### SSL/TLS Issues
+- Certificate validation failures
+- Cipher suite mismatches
+- Certificate expiration
+- Trust store configuration errors
 
-### Investigation Steps (< 15 minutes)
-1. Review consumer application logs
-2. Check for processing errors or exceptions
-3. Verify downstream dependencies (database, APIs)
-4. Monitor resource utilization (CPU, memory)
+### SASL Authentication Issues
+- Incorrect credentials or configuration
+- JAAS configuration problems
+- Kerberos ticket expiration
+- Network connectivity issues
 
-### Resolution Actions
-1. Scale consumer instances if needed
-2. Reset consumer offsets if corruption suspected
-3. Restart consumer applications if unhealthy
-4. Implement temporary backpressure if necessary
-```
-
-**Broker Down Runbook**
-```markdown
-## Broker Down Incident Response
-
-### Immediate Actions (< 2 minutes)
-1. Verify broker status
-   ```bash
-   kafka-broker-api-versions --bootstrap-server kafka-1:9092
-   ```
-
-2. Check cluster metadata
-   ```bash
-   kafka-metadata-shell --snapshot /kafka-logs/__cluster_metadata-0/00000000000000000000.log
-   ```
-
-### Recovery Steps
-1. Attempt broker restart
-   ```bash
-   systemctl restart kafka
-   ```
-
-2. Monitor partition reassignment
-   ```bash
-   kafka-reassign-partitions --bootstrap-server kafka:9092 --list
-   ```
-
-3. Verify leader election completion
-   ```bash
-   kafka-topics --bootstrap-server kafka:9092 --describe
-   ```
-```
+### ACL Authorization Issues
+- Missing or incorrect ACL rules
+- Principal name mismatches
+- Resource pattern matching errors
+- Permission inheritance problems
 
 ## 🎯 Key Takeaways
 
-✅ **Comprehensive Observability**: Implement metrics, logs, and traces for complete system visibility  
-✅ **Proactive Monitoring**: Use SLIs, SLOs, and error budgets to manage service reliability  
-✅ **Effective Alerting**: Design alert hierarchies that minimize noise while ensuring rapid response  
-✅ **Operational Excellence**: Build runbooks and automation for common incident scenarios  
-✅ **Continuous Improvement**: Use observability data to optimize performance and reliability  
+✅ **Comprehensive Security**: Implement defense in depth with encryption, authentication, and authorization  
+✅ **Enterprise Integration**: Seamlessly integrate with existing identity and security infrastructure  
+✅ **Operational Excellence**: Automate security processes and monitoring for production environments  
+✅ **Compliance Ready**: Meet regulatory requirements with proper auditing and access controls  
+✅ **Performance Aware**: Balance security with performance requirements  
 
 ## 🚀 Next Steps
 
-Ready to deploy to production? Move to [Lesson 20: Deployment & Scaling Best Practices](../lesson_20/) to learn production deployment strategies.
+Ready to implement production monitoring? Move to [Lesson 19: Observability & Monitoring](../lesson_20/concept) to learn comprehensive system observability.
 
 ---
 
-*"You can't manage what you can't measure. This lesson provides the observability foundation for operating reliable, scalable Kafka systems in production."*
+*Security is not a feature, it's a requirement. This lesson provides the foundation for building secure, compliant Kafka systems that protect your data and meet enterprise security standards.*

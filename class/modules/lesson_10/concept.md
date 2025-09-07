@@ -1,709 +1,612 @@
 # Concept
 
-## Message Transformation & Filtering - Building Data Processing Pipelines
+## Manual Acknowledgment & Idempotent Consumers - Exactly-Once Processing
 
 ## 🎯 Objective
 
-Master message transformation and filtering patterns to build powerful data processing pipelines. Learn to transform, enrich, route, and filter messages based on content and business rules, creating flexible and maintainable event-driven architectures.
+Master exactly-once processing patterns through manual acknowledgment, idempotent consumers, and duplicate prevention strategies. Build resilient systems that handle message processing failures gracefully while maintaining data consistency.
 
-## 🔄 **The Power of Message Transformation**
+## ⚠️ **The Challenge: At-Least-Once vs Exactly-Once**
 
-Message transformation enables you to:
-- **Adapt** message formats between services
-- **Enrich** messages with additional data
-- **Filter** messages based on business rules
-- **Route** messages to appropriate destinations
-- **Aggregate** related messages into summaries
+Kafka provides **at-least-once delivery** by default, which can lead to duplicate processing:
 
 ```mermaid
-graph LR
-    subgraph "Data Processing Pipeline"
-        INPUT[Raw Events]
-        
-        subgraph "Transformation Layer"
-            VALIDATE[Validate]
-            ENRICH[Enrich]
-            TRANSFORM[Transform]
-            FILTER[Filter]
-            ROUTE[Route]
-        end
-        
-        subgraph "Output Destinations"
-            ORDERS[Order Topic]
-            ANALYTICS[Analytics Topic]
-            ALERTS[Alert Topic]
-            DLT[Dead Letter Topic]
-        end
+graph TB
+    subgraph "At-Least-Once Delivery Problem"
+        PRODUCER[Producer sends message]
+        KAFKA[Kafka stores message]
+        CONSUMER[Consumer processes message]
+        ACK[Consumer commits offset]
+        FAILURE[❌ Commit fails]
+        REPROCESS[🔄 Message reprocessed]
+        DUPLICATE[💥 Duplicate processing]
     end
     
-    INPUT --> VALIDATE
-    VALIDATE --> ENRICH
-    ENRICH --> TRANSFORM
-    TRANSFORM --> FILTER
-    FILTER --> ROUTE
+    PRODUCER --> KAFKA
+    KAFKA --> CONSUMER
+    CONSUMER --> ACK
+    ACK --> FAILURE
+    FAILURE --> REPROCESS
+    REPROCESS --> DUPLICATE
     
-    ROUTE --> ORDERS
-    ROUTE --> ANALYTICS
-    ROUTE --> ALERTS
-    ROUTE --> DLT
-    
-    style TRANSFORM fill:#e3f2fd
-    style FILTER fill:#e8f5e8
-    style ROUTE fill:#fff3e0
+    style FAILURE fill:#ffebee
+    style DUPLICATE fill:#ffebee
 ```
 
-## 🔧 **Message Transformation Patterns**
+**Common scenarios causing duplicates:**
+- Network failures during offset commits
+- Consumer restarts before committing
+- Rebalancing during processing
+- Timeout during external service calls
 
-### 1. **Field Mapping and Data Type Conversion**
+## 🎯 **Manual Acknowledgment: Taking Control**
+
+Manual acknowledgment gives you precise control over when messages are marked as consumed.
+
+### 1. **Enabling Manual Acknowledgment**
+
+```yaml
+spring:
+  kafka:
+    consumer:
+      enable-auto-commit: false  # Disable automatic offset commits
+      group-id: manual-ack-group
+    listener:
+      ack-mode: manual_immediate  # Acknowledge immediately when called
+      # ack-mode: manual          # Acknowledge when listener method completes
+```
+
+### 2. **Basic Manual Acknowledgment Pattern**
 
 ```kotlin
 @Component
-class MessageTransformer {
+class ManualAckConsumer {
     
-    fun transformUserEvent(rawEvent: Map<String, Any>): UserEvent {
-        return UserEvent(
-            userId = rawEvent["user_id"]?.toString() ?: throw ValidationException("Missing user_id"),
-            email = rawEvent["email_address"]?.toString()?.lowercase() ?: "",
-            firstName = rawEvent["first_name"]?.toString()?.trim() ?: "",
-            lastName = rawEvent["last_name"]?.toString()?.trim() ?: "",
-            age = (rawEvent["age"] as? Number)?.toInt() ?: 0,
-            isActive = when (rawEvent["status"]?.toString()?.uppercase()) {
-                "ACTIVE", "ENABLED", "1", "TRUE" -> true
-                else -> false
-            },
-            registrationDate = parseDate(rawEvent["reg_date"]),
-            metadata = extractMetadata(rawEvent)
-        )
-    }
+    private val logger = LoggerFactory.getLogger(ManualAckConsumer::class.java)
     
-    private fun parseDate(dateValue: Any?): Instant {
-        return when (dateValue) {
-            is String -> {
-                try {
-                    Instant.parse(dateValue)
-                } catch (e: Exception) {
-                    // Try different formats
-                    SimpleDateFormat("yyyy-MM-dd").parse(dateValue).toInstant()
-                }
-            }
-            is Number -> Instant.ofEpochMilli(dateValue.toLong())
-            else -> Instant.now()
-        }
-    }
-    
-    private fun extractMetadata(rawEvent: Map<String, Any>): Map<String, String> {
-        return rawEvent.filterKeys { it.startsWith("meta_") }
-            .mapKeys { it.key.removePrefix("meta_") }
-            .mapValues { it.value.toString() }
-    }
-}
-```
-
-### 2. **Message Enrichment with External Data**
-
-```kotlin
-@Component
-class MessageEnricher {
-    
-    @Autowired
-    private lateinit var userService: UserService
-    
-    @Autowired
-    private lateinit var locationService: LocationService
-    
-    @Autowired
-    private lateinit var cacheManager: CacheManager
-    
-    @Cacheable("user-profiles")
-    fun enrichWithUserProfile(event: OrderEvent): EnrichedOrderEvent {
-        val userProfile = userService.getUserProfile(event.customerId)
-        val locationInfo = locationService.getLocationInfo(userProfile.zipCode)
-        
-        return EnrichedOrderEvent(
-            orderId = event.orderId,
-            customerId = event.customerId,
-            orderAmount = event.orderAmount,
-            items = event.items,
-            
-            // Enriched data
-            customerTier = userProfile.tier,
-            customerLifetimeValue = userProfile.lifetimeValue,
-            customerSegment = userProfile.segment,
-            shippingRegion = locationInfo.region,
-            timeZone = locationInfo.timeZone,
-            estimatedDeliveryDays = calculateDeliveryTime(locationInfo),
-            
-            // Computed fields
-            isHighValueOrder = event.orderAmount > userProfile.averageOrderValue * 2,
-            riskScore = calculateRiskScore(event, userProfile),
-            eligiblePromotions = findEligiblePromotions(event, userProfile),
-            
-            originalEvent = event
-        )
-    }
-    
-    @Async
-    fun enrichWithRealTimeData(event: UserActivityEvent): CompletableFuture<EnrichedUserActivityEvent> {
-        return CompletableFuture.supplyAsync {
-            val recentActivity = userService.getRecentActivity(event.userId, Duration.ofHours(24))
-            val deviceInfo = deviceService.getDeviceInfo(event.deviceId)
-            val sessionData = sessionService.getSessionData(event.sessionId)
-            
-            EnrichedUserActivityEvent(
-                userId = event.userId,
-                activityType = event.activityType,
-                timestamp = event.timestamp,
-                
-                // Real-time enrichment
-                sessionDuration = sessionData.duration,
-                pageViewsInSession = sessionData.pageViews,
-                deviceType = deviceInfo.type,
-                browserInfo = deviceInfo.browser,
-                isReturnUser = recentActivity.isNotEmpty(),
-                activityScore = calculateActivityScore(recentActivity),
-                
-                originalEvent = event
-            )
-        }
-    }
-}
-```
-
-### 3. **Conditional Message Transformation**
-
-```kotlin
-@Component
-class ConditionalTransformer {
-    
-    fun transformBasedOnEventType(event: GenericEvent): List<SpecificEvent> {
-        return when (event.eventType) {
-            "USER_REGISTRATION" -> listOf(
-                transformToUserCreatedEvent(event),
-                transformToWelcomeEmailEvent(event),
-                transformToAnalyticsEvent(event)
-            )
-            
-            "ORDER_PLACED" -> listOf(
-                transformToOrderEvent(event),
-                transformToInventoryUpdateEvent(event),
-                transformToPaymentProcessingEvent(event)
-            )
-            
-            "PAYMENT_COMPLETED" -> listOf(
-                transformToOrderConfirmationEvent(event),
-                transformToShippingEvent(event),
-                transformToLoyaltyPointsEvent(event)
-            )
-            
-            else -> {
-                logger.warn("Unknown event type: ${event.eventType}")
-                emptyList()
-            }
-        }
-    }
-    
-    fun transformBasedOnContent(event: OrderEvent): OrderEvent {
-        return event.copy(
-            // Apply business rules based on content
-            priority = when {
-                event.orderAmount > 1000 -> OrderPriority.HIGH
-                event.items.any { it.category == "URGENT" } -> OrderPriority.HIGH
-                event.customerTier == "PREMIUM" -> OrderPriority.MEDIUM
-                else -> OrderPriority.NORMAL
-            },
-            
-            shippingMethod = when {
-                event.orderAmount > 500 -> ShippingMethod.EXPRESS
-                event.deliveryDate.isBefore(LocalDate.now().plusDays(2)) -> ShippingMethod.OVERNIGHT
-                else -> ShippingMethod.STANDARD
-            },
-            
-            discountApplied = when {
-                event.customerTier == "PREMIUM" && event.orderAmount > 200 -> 0.10
-                event.items.size > 5 -> 0.05
-                else -> 0.0
-            }
-        )
-    }
-}
-```
-
-## 🔍 **Message Filtering Patterns**
-
-### 1. **Content-Based Filtering**
-
-```kotlin
-@Component
-class MessageFilter {
-    
-    fun isValidOrder(order: OrderEvent): Boolean {
-        return order.orderAmount > 0 &&
-               order.customerId.isNotBlank() &&
-               order.items.isNotEmpty() &&
-               order.items.all { it.quantity > 0 && it.price > 0 }
-    }
-    
-    fun shouldProcessForRegion(event: OrderEvent, targetRegion: String): Boolean {
-        return event.shippingAddress.region == targetRegion
-    }
-    
-    fun isHighPriorityEvent(event: GenericEvent): Boolean {
-        return when {
-            event.eventType == "SECURITY_ALERT" -> true
-            event.eventType == "PAYMENT_FAILURE" -> true
-            event.eventType == "ORDER_CANCELLED" && 
-                (event.data["orderAmount"] as? Double ?: 0.0) > 1000 -> true
-            event.data["priority"]?.toString()?.uppercase() == "HIGH" -> true
-            else -> false
-        }
-    }
-    
-    fun filterByTimeWindow(events: List<TimestampedEvent>, windowHours: Int): List<TimestampedEvent> {
-        val cutoff = Instant.now().minus(windowHours.toLong(), ChronoUnit.HOURS)
-        return events.filter { it.timestamp.isAfter(cutoff) }
-    }
-}
-
-@Component
-class BusinessRuleFilter {
-    
-    fun shouldProcessPayment(payment: PaymentEvent): PaymentFilterResult {
-        val reasons = mutableListOf<String>()
-        
-        // Amount validation
-        when {
-            payment.amount <= 0 -> reasons.add("Invalid amount: ${payment.amount}")
-            payment.amount > 10000 -> reasons.add("Amount exceeds daily limit")
-        }
-        
-        // Customer validation
-        if (payment.customerId.isBlank()) {
-            reasons.add("Missing customer ID")
-        }
-        
-        // Currency validation
-        if (payment.currency !in listOf("USD", "EUR", "GBP")) {
-            reasons.add("Unsupported currency: ${payment.currency}")
-        }
-        
-        // Fraud check
-        if (isSuspiciousTransaction(payment)) {
-            reasons.add("Transaction flagged for review")
-        }
-        
-        return PaymentFilterResult(
-            shouldProcess = reasons.isEmpty(),
-            reasons = reasons,
-            action = if (reasons.isEmpty()) FilterAction.PROCESS else FilterAction.REJECT
-        )
-    }
-    
-    private fun isSuspiciousTransaction(payment: PaymentEvent): Boolean {
-        // Implement fraud detection logic
-        return payment.amount > 5000 && 
-               payment.metadata["deviceFingerprint"] == null
-    }
-}
-```
-
-### 2. **Predicate-Based Filtering**
-
-```kotlin
-@Component
-class PredicateFilters {
-    
-    // User activity filters
-    val activeUsersOnly: (UserEvent) -> Boolean = { user ->
-        user.lastLoginDate.isAfter(Instant.now().minus(30, ChronoUnit.DAYS))
-    }
-    
-    val premiumUsersOnly: (UserEvent) -> Boolean = { user ->
-        user.subscriptionTier in listOf("PREMIUM", "ENTERPRISE")
-    }
-    
-    val newUsersOnly: (UserEvent) -> Boolean = { user ->
-        user.registrationDate.isAfter(Instant.now().minus(7, ChronoUnit.DAYS))
-    }
-    
-    // Order filters
-    val highValueOrders: (OrderEvent) -> Boolean = { order ->
-        order.orderAmount > 500.0
-    }
-    
-    val internationalOrders: (OrderEvent) -> Boolean = { order ->
-        order.shippingAddress.country != "US"
-    }
-    
-    val rushOrders: (OrderEvent) -> Boolean = { order ->
-        order.requestedDeliveryDate.isBefore(LocalDate.now().plusDays(2))
-    }
-    
-    // Composite filters
-    fun createCompositeFilter(vararg predicates: (OrderEvent) -> Boolean): (OrderEvent) -> Boolean {
-        return { event ->
-            predicates.all { it(event) }
-        }
-    }
-    
-    fun createAnyFilter(vararg predicates: (OrderEvent) -> Boolean): (OrderEvent) -> Boolean {
-        return { event ->
-            predicates.any { it(event) }
-        }
-    }
-    
-    // Usage example
-    fun getFilteredEvents(events: List<OrderEvent>): FilteredEvents {
-        val highValueInternational = createCompositeFilter(highValueOrders, internationalOrders)
-        val priorityOrders = createAnyFilter(highValueOrders, rushOrders)
-        
-        return FilteredEvents(
-            highValueInternational = events.filter(highValueInternational),
-            priorityOrders = events.filter(priorityOrders),
-            standardOrders = events.filterNot(priorityOrders)
-        )
-    }
-}
-```
-
-## 🎯 **Message Routing Patterns**
-
-### 1. **Content-Based Routing**
-
-```kotlin
-@Component
-class MessageRouter {
-    
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
-    
-    fun routeOrderEvent(order: OrderEvent) {
-        when {
-            order.orderAmount > 1000 -> {
-                // High-value orders get special processing
-                kafkaTemplate.send("high-value-orders", order.orderId, order)
-                kafkaTemplate.send("fraud-check-queue", order.orderId, order)
-            }
-            
-            order.shippingAddress.country != "US" -> {
-                kafkaTemplate.send("international-orders", order.orderId, order)
-            }
-            
-            order.items.any { it.category == "ELECTRONICS" } -> {
-                kafkaTemplate.send("electronics-orders", order.orderId, order)
-                kafkaTemplate.send("warranty-processing", order.orderId, order)
-            }
-            
-            else -> {
-                kafkaTemplate.send("standard-orders", order.orderId, order)
-            }
-        }
-        
-        // Always send to analytics
-        kafkaTemplate.send("order-analytics", order.orderId, order)
-    }
-    
-    fun routeUserEvent(user: UserEvent) {
-        val routes = mutableListOf<String>()
-        
-        // Determine routing based on user properties
-        when (user.eventType) {
-            "USER_CREATED" -> {
-                routes.add("welcome-email-queue")
-                routes.add("user-analytics")
-                if (user.referralCode != null) {
-                    routes.add("referral-processing")
-                }
-            }
-            
-            "USER_UPGRADED" -> {
-                routes.add("subscription-management")
-                routes.add("billing-updates")
-                routes.add("feature-notifications")
-            }
-            
-            "USER_DELETED" -> {
-                routes.add("account-cleanup")
-                routes.add("data-purge-queue")
-            }
-        }
-        
-        // Send to all determined routes
-        routes.forEach { topic ->
-            kafkaTemplate.send(topic, user.userId, user)
-        }
-    }
-}
-```
-
-### 2. **Dynamic Routing with Rules Engine**
-
-```kotlin
-@Component
-class RulesBasedRouter {
-    
-    data class RoutingRule(
-        val name: String,
-        val condition: (Any) -> Boolean,
-        val targetTopics: List<String>,
-        val priority: Int = 0
-    )
-    
-    private val routingRules = listOf(
-        RoutingRule(
-            name = "high-value-payment",
-            condition = { event -> 
-                (event as? PaymentEvent)?.amount?.let { it > 1000 } == true 
-            },
-            targetTopics = listOf("high-value-payments", "fraud-analysis"),
-            priority = 10
-        ),
-        
-        RoutingRule(
-            name = "failed-payment",
-            condition = { event ->
-                (event as? PaymentEvent)?.status == PaymentStatus.FAILED
-            },
-            targetTopics = listOf("payment-failures", "retry-queue"),
-            priority = 5
-        ),
-        
-        RoutingRule(
-            name = "international-user",
-            condition = { event ->
-                (event as? UserEvent)?.country?.let { it != "US" } == true
-            },
-            targetTopics = listOf("international-users", "compliance-check"),
-            priority = 3
-        )
-    )
-    
-    fun routeMessage(event: Any): List<String> {
-        return routingRules
-            .filter { it.condition(event) }
-            .sortedByDescending { it.priority }
-            .flatMap { it.targetTopics }
-            .distinct()
-    }
-    
-    fun addRoutingRule(rule: RoutingRule) {
-        // In a real implementation, this would update the rules in a thread-safe way
-        // and possibly persist to a configuration store
-    }
-}
-```
-
-## 🔄 **Stream Processing Implementation**
-
-### 1. **Transformation Pipeline Consumer**
-
-```kotlin
-@Component
-class TransformationPipelineConsumer {
-    
-    @Autowired
-    private lateinit var messageTransformer: MessageTransformer
-    
-    @Autowired
-    private lateinit var messageEnricher: MessageEnricher
-    
-    @Autowired
-    private lateinit var messageFilter: MessageFilter
-    
-    @Autowired
-    private lateinit var messageRouter: MessageRouter
-    
-    @KafkaListener(topics = ["raw-events"])
-    fun processRawEvent(
-        @Payload rawEvent: Map<String, Any>,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+    @KafkaListener(topics = ["payment-events"])
+    fun processPayment(
+        @Payload payment: PaymentEvent,
+        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
         acknowledgment: Acknowledgment
     ) {
         try {
-            // Step 1: Transform raw data to structured event
-            val structuredEvent = messageTransformer.transformUserEvent(rawEvent)
+            logger.info("Processing payment ${payment.paymentId} from partition $partition at offset $offset")
             
-            // Step 2: Enrich with additional data
-            val enrichedEvent = messageEnricher.enrichWithUserProfile(structuredEvent)
+            // Step 1: Validate payment
+            validatePayment(payment)
             
-            // Step 3: Apply business rules and filters
-            if (messageFilter.isValidOrder(enrichedEvent)) {
-                
-                // Step 4: Route to appropriate destinations
-                messageRouter.routeOrderEvent(enrichedEvent)
-                
-                logger.info("Successfully processed and routed event: ${enrichedEvent.orderId}")
-            } else {
-                logger.warn("Event failed validation: ${enrichedEvent.orderId}")
-                kafkaTemplate.send("invalid-events", enrichedEvent.orderId, enrichedEvent)
-            }
+            // Step 2: Process with external service
+            val result = paymentGateway.processPayment(payment)
+            
+            // Step 3: Update database
+            paymentRepository.save(result)
+            
+            // Step 4: Send confirmation
+            notificationService.sendConfirmation(payment.customerId, result)
+            
+            // ✅ Only acknowledge after ALL steps succeed
+            acknowledgment.acknowledge()
+            logger.info("Successfully processed and acknowledged payment ${payment.paymentId}")
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process payment ${payment.paymentId}, will retry", e)
+            // Don't acknowledge - message will be redelivered
+        }
+    }
+}
+```
+
+### 3. **Advanced Acknowledgment Patterns**
+
+```kotlin
+@Component
+class AdvancedAckConsumer {
+    
+    @KafkaListener(topics = ["order-events"])
+    fun processOrder(
+        @Payload order: OrderEvent,
+        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
+        acknowledgment: Acknowledgment
+    ) {
+        val processingId = UUID.randomUUID().toString()
+        
+        try {
+            // Create processing record for tracking
+            val processingRecord = ProcessingRecord(
+                id = processingId,
+                messageId = order.orderId,
+                partition = partition,
+                offset = offset,
+                status = ProcessingStatus.IN_PROGRESS,
+                startTime = Instant.now()
+            )
+            
+            processingTracker.save(processingRecord)
+            
+            // Process order
+            val result = processOrderWithRetries(order)
+            
+            // Update processing record
+            processingTracker.updateStatus(processingId, ProcessingStatus.COMPLETED)
+            
+            // Acknowledge only after successful completion and tracking
+            acknowledgment.acknowledge()
+            
+        } catch (e: RetryableException) {
+            logger.warn("Retryable error processing order ${order.orderId}", e)
+            processingTracker.updateStatus(processingId, ProcessingStatus.FAILED_RETRYABLE)
+            // Don't acknowledge - allow retry
+            
+        } catch (e: NonRetryableException) {
+            logger.error("Non-retryable error processing order ${order.orderId}", e)
+            processingTracker.updateStatus(processingId, ProcessingStatus.FAILED_PERMANENT)
+            
+            // Send to dead letter topic
+            deadLetterProducer.send(order, e)
+            
+            // Acknowledge to prevent reprocessing
+            acknowledgment.acknowledge()
+        }
+    }
+}
+```
+
+## 🔒 **Idempotent Consumers: Preventing Duplicate Processing**
+
+Idempotent processing ensures the same message can be processed multiple times with the same result.
+
+```mermaid
+graph TB
+    subgraph "Idempotent Processing Pattern"
+        MSG[Incoming Message<br/>ID: msg-123]
+        CHECK[Check Processing History]
+        PROCESS[Process Message]
+        STORE[Store Processing Record]
+        ACK[Acknowledge Message]
+        SKIP[Skip Processing<br/>Already Handled]
+        
+        subgraph "Deduplication Store"
+            DB[(Database<br/>Processing Records)]
+            CACHE[Redis Cache<br/>Recent Messages]
+            TABLE[message_id | status | timestamp]
+        end
+    end
+    
+    MSG --> CHECK
+    CHECK -->|Not Found| PROCESS
+    CHECK -->|Found: Completed| SKIP
+    CHECK -->|Found: In Progress| SKIP
+    PROCESS --> STORE
+    STORE --> ACK
+    SKIP --> ACK
+    
+    CHECK -.->|Query| DB
+    CHECK -.->|Fast Lookup| CACHE
+    STORE -.->|Insert/Update| TABLE
+    
+    style SKIP fill:#e8f5e8
+    style PROCESS fill:#fff3e0
+    style STORE fill:#e3f2fd
+    style CHECK fill:#f3e5f5
+```
+
+### 1. **Message Deduplication Strategies**
+
+#### **Strategy 1: Unique Message IDs**
+
+```kotlin
+@Component
+class IdempotentPaymentProcessor {
+    
+    private val processedMessages = ConcurrentHashMap<String, PaymentResult>()
+    
+    @KafkaListener(topics = ["payment-requests"])
+    fun processPayment(
+        @Payload payment: PaymentEvent,
+        acknowledgment: Acknowledgment
+    ) {
+        val messageId = payment.messageId // Unique identifier
+        
+        // Check if already processed
+        val existingResult = processedMessages[messageId]
+        if (existingResult != null) {
+            logger.info("Payment $messageId already processed, returning cached result")
+            acknowledgment.acknowledge()
+            return
+        }
+        
+        try {
+            // Process payment
+            val result = paymentService.processPayment(payment)
+            
+            // Cache result for deduplication
+            processedMessages[messageId] = result
             
             acknowledgment.acknowledge()
             
         } catch (e: Exception) {
-            logger.error("Failed to process raw event", e)
-            kafkaTemplate.send("processing-errors", rawEvent.toString(), rawEvent)
-            acknowledgment.acknowledge() // Acknowledge to prevent retry loops
+            logger.error("Failed to process payment $messageId", e)
+            // Don't acknowledge on failure
         }
     }
 }
 ```
 
-### 2. **Parallel Processing Pipeline**
+#### **Strategy 2: Database-Based Deduplication**
 
 ```kotlin
+@Entity
+data class ProcessedMessage(
+    @Id val messageId: String,
+    val topic: String,
+    val partition: Int,
+    val offset: Long,
+    val processedAt: Instant,
+    val result: String? = null
+)
+
 @Component
-class ParallelTransformationProcessor {
+class DatabaseIdempotentConsumer {
     
-    @Async("kafkaExecutor")
-    @KafkaListener(
-        topics = ["user-events"],
-        concurrency = "3"
-    )
-    fun processUserEventPipeline(
+    @Autowired
+    private lateinit var processedMessageRepository: ProcessedMessageRepository
+    
+    @Transactional
+    @KafkaListener(topics = ["user-events"])
+    fun processUserEvent(
         @Payload event: UserEvent,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
         acknowledgment: Acknowledgment
     ) {
-        CompletableFuture.allOf(
-            processForAnalytics(event),
-            processForNotifications(event),
-            processForRecommendations(event)
-        ).whenComplete { _, exception ->
-            if (exception == null) {
-                acknowledgment.acknowledge()
-            } else {
-                logger.error("Parallel processing failed for user ${event.userId}", exception)
-            }
+        val messageId = event.eventId
+        
+        // Check if already processed (atomic check-and-set)
+        val existing = processedMessageRepository.findByMessageId(messageId)
+        if (existing != null) {
+            logger.info("Event $messageId already processed at ${existing.processedAt}")
+            acknowledgment.acknowledge()
+            return
         }
-    }
-    
-    @Async
-    private fun processForAnalytics(event: UserEvent): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            val analyticsEvent = transformToAnalyticsEvent(event)
-            kafkaTemplate.send("user-analytics", event.userId, analyticsEvent)
-        }
-    }
-    
-    @Async
-    private fun processForNotifications(event: UserEvent): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            if (shouldSendNotification(event)) {
-                val notificationEvent = transformToNotificationEvent(event)
-                kafkaTemplate.send("notifications", event.userId, notificationEvent)
-            }
-        }
-    }
-    
-    @Async
-    private fun processForRecommendations(event: UserEvent): CompletableFuture<Void> {
-        return CompletableFuture.runAsync {
-            val recommendationData = transformToRecommendationData(event)
-            kafkaTemplate.send("recommendation-engine", event.userId, recommendationData)
+        
+        try {
+            // Process the event
+            val result = userService.processUserEvent(event)
+            
+            // Record processing in same transaction
+            processedMessageRepository.save(ProcessedMessage(
+                messageId = messageId,
+                topic = topic,
+                partition = partition,
+                offset = offset,
+                processedAt = Instant.now(),
+                result = result.toString()
+            ))
+            
+            acknowledgment.acknowledge()
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process user event $messageId", e)
+            // Transaction will rollback, no acknowledgment
         }
     }
 }
 ```
 
-## 📊 **Monitoring and Metrics**
+### 2. **Exactly-Once Semantics with Kafka Transactions**
 
-### 1. **Transformation Metrics**
+```kotlin
+@Configuration
+@EnableTransactionManagement
+class TransactionalKafkaConfig {
+    
+    @Bean
+    fun transactionalProducerFactory(): ProducerFactory<String, Any> {
+        val props = HashMap<String, Any>()
+        props[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+        props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JsonSerializer::class.java
+        
+        // Enable transactions
+        props[ProducerConfig.TRANSACTIONAL_ID_CONFIG] = "tx-producer-${UUID.randomUUID()}"
+        props[ProducerConfig.ACKS_CONFIG] = "all"
+        props[ProducerConfig.RETRIES_CONFIG] = Int.MAX_VALUE
+        props[ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG] = true
+        
+        return DefaultKafkaProducerFactory(props)
+    }
+    
+    @Bean
+    fun transactionalKafkaTemplate(): KafkaTemplate<String, Any> {
+        return KafkaTemplate(transactionalProducerFactory())
+    }
+    
+    @Bean
+    fun transactionalConsumerFactory(): ConsumerFactory<String, Any> {
+        val props = HashMap<String, Any>()
+        props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
+        props[ConsumerConfig.GROUP_ID_CONFIG] = "transactional-group"
+        
+        // Enable read committed for exactly-once
+        props[ConsumerConfig.ISOLATION_LEVEL_CONFIG] = "read_committed"
+        props[ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG] = false
+        
+        return DefaultKafkaConsumerFactory(props)
+    }
+}
+
+@Component
+class TransactionalConsumer {
+    
+    @Autowired
+    private lateinit var transactionalKafkaTemplate: KafkaTemplate<String, Any>
+    
+    @KafkaListener(
+        topics = ["order-events"],
+        containerFactory = "kafkaListenerContainerFactory"
+    )
+    @KafkaTransactional
+    fun processOrderTransactionally(
+        @Payload order: OrderEvent,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            // All operations within this method are part of the same transaction
+            
+            // 1. Process order
+            val processedOrder = orderService.processOrder(order)
+            
+            // 2. Send confirmation message (transactional)
+            transactionalKafkaTemplate.send("order-confirmations", processedOrder)
+            
+            // 3. Send inventory update (transactional)
+            val inventoryUpdate = InventoryUpdate(order.items)
+            transactionalKafkaTemplate.send("inventory-updates", inventoryUpdate)
+            
+            // 4. Acknowledge original message
+            acknowledgment.acknowledge()
+            
+            // Transaction commits automatically if no exception
+            
+        } catch (e: Exception) {
+            logger.error("Transaction failed for order ${order.orderId}", e)
+            // Transaction will rollback automatically
+            throw e
+        }
+    }
+}
+```
+
+## 🔄 **Advanced Acknowledgment Modes**
+
+### 1. **Batch Acknowledgment**
 
 ```kotlin
 @Component
-class TransformationMetrics {
+class BatchAckConsumer {
     
-    private val transformationCounter = Counter.builder("kafka.transformations")
-        .description("Count of message transformations")
+    @KafkaListener(
+        topics = ["analytics-events"],
+        containerFactory = "batchKafkaListenerContainerFactory"
+    )
+    fun processBatch(
+        @Payload batch: List<AnalyticsEvent>,
+        acknowledgment: Acknowledgment
+    ) {
+        val successfullyProcessed = mutableListOf<AnalyticsEvent>()
+        val failed = mutableListOf<Pair<AnalyticsEvent, Exception>>()
+        
+        batch.forEach { event ->
+            try {
+                analyticsService.processEvent(event)
+                successfullyProcessed.add(event)
+            } catch (e: Exception) {
+                failed.add(event to e)
+                logger.error("Failed to process analytics event ${event.eventId}", e)
+            }
+        }
+        
+        if (failed.isEmpty()) {
+            // All messages processed successfully
+            acknowledgment.acknowledge()
+            logger.info("Successfully processed batch of ${batch.size} events")
+        } else {
+            // Some messages failed - decide on strategy
+            val failureRate = failed.size.toDouble() / batch.size
+            
+            if (failureRate < 0.1) { // Less than 10% failure rate
+                // Acknowledge batch but send failed messages to DLT
+                failed.forEach { (event, exception) ->
+                    deadLetterProducer.send(event, exception)
+                }
+                acknowledgment.acknowledge()
+                logger.warn("Processed batch with ${failed.size} failures sent to DLT")
+            } else {
+                // High failure rate - don't acknowledge, let batch retry
+                logger.error("High failure rate in batch (${failed.size}/${batch.size}), will retry entire batch")
+            }
+        }
+    }
+}
+```
+
+### 2. **Conditional Acknowledgment**
+
+```kotlin
+@Component
+class ConditionalAckConsumer {
+    
+    @KafkaListener(topics = ["notification-events"])
+    fun processNotification(
+        @Payload notification: NotificationEvent,
+        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
+        acknowledgment: Acknowledgment
+    ) {
+        try {
+            val result = notificationService.sendNotification(notification)
+            
+            when (result.status) {
+                NotificationStatus.DELIVERED -> {
+                    // Success - acknowledge immediately
+                    acknowledgment.acknowledge()
+                    logger.info("Notification ${notification.id} delivered successfully")
+                }
+                
+                NotificationStatus.RATE_LIMITED -> {
+                    // Temporary issue - don't acknowledge, will retry later
+                    logger.warn("Rate limited for notification ${notification.id}, will retry")
+                    // Don't call acknowledgment.acknowledge()
+                }
+                
+                NotificationStatus.INVALID_RECIPIENT -> {
+                    // Permanent failure - acknowledge to prevent retry
+                    acknowledgment.acknowledge()
+                    deadLetterProducer.send(notification, "Invalid recipient")
+                    logger.error("Invalid recipient for notification ${notification.id}")
+                }
+                
+                NotificationStatus.FAILED -> {
+                    // Check retry count
+                    val retryCount = notification.retryCount ?: 0
+                    if (retryCount < 3) {
+                        // Retry with backoff
+                        scheduleRetry(notification, retryCount + 1)
+                        acknowledgment.acknowledge()
+                    } else {
+                        // Max retries reached
+                        acknowledgment.acknowledge()
+                        deadLetterProducer.send(notification, "Max retries exceeded")
+                    }
+                }
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Unexpected error processing notification ${notification.id}", e)
+            // Don't acknowledge on unexpected errors
+        }
+    }
+}
+```
+
+## 📊 **Monitoring & Observability**
+
+### 1. **Acknowledgment Metrics**
+
+```kotlin
+@Component
+class AckMetricsCollector {
+    
+    private val ackCounter = Counter.builder("kafka.acknowledgments")
+        .description("Count of message acknowledgments")
         .register(Metrics.globalRegistry)
     
-    private val transformationTimer = Timer.builder("kafka.transformation.time")
-        .description("Time to transform messages")
+    private val processingTimer = Timer.builder("kafka.message.processing.time")
+        .description("Time to process messages")
         .register(Metrics.globalRegistry)
     
-    private val filterCounter = Counter.builder("kafka.filters.applied")
-        .description("Count of filter applications")
+    private val duplicateCounter = Counter.builder("kafka.duplicates.detected")
+        .description("Count of duplicate messages detected")
         .register(Metrics.globalRegistry)
     
-    fun recordTransformation(transformationType: String, success: Boolean, duration: Duration) {
-        transformationCounter.increment(
+    fun recordAcknowledgment(topic: String, success: Boolean) {
+        ackCounter.increment(
             Tags.of(
-                Tag.of("type", transformationType),
+                Tag.of("topic", topic),
                 Tag.of("status", if (success) "success" else "failure")
             )
         )
-        
-        transformationTimer.record(duration)
     }
     
-    fun recordFilter(filterName: String, passed: Boolean, itemCount: Int) {
-        filterCounter.increment(
-            Tags.of(
-                Tag.of("filter", filterName),
-                Tag.of("result", if (passed) "passed" else "filtered"),
-                Tag.of("item_count", itemCount.toString())
-            )
-        )
+    fun recordDuplicateDetected(topic: String, messageId: String) {
+        duplicateCounter.increment(Tag.of("topic", topic))
+        logger.warn("Duplicate message detected: topic=$topic, messageId=$messageId")
+    }
+    
+    fun <T> timeProcessing(topic: String, operation: () -> T): T {
+        return processingTimer.recordCallable(Tags.of(Tag.of("topic", topic)), operation)!!
     }
 }
 ```
 
-### 2. **Pipeline Health Monitoring**
+### 2. **Consumer Lag and Acknowledgment Tracking**
 
 ```kotlin
 @Component
-class PipelineHealthMonitor {
+class ConsumerLagMonitor {
     
-    @Scheduled(fixedRate = 60000) // Every minute
-    fun monitorPipelineHealth() {
-        val metrics = collectPipelineMetrics()
+    @Scheduled(fixedRate = 30000) // Every 30 seconds
+    fun monitorConsumerLag() {
+        val groups = listOf("manual-ack-group", "transactional-group", "idempotent-group")
         
-        // Check for anomalies
-        if (metrics.errorRate > 0.05) { // 5% error rate
-            logger.warn("High error rate detected in transformation pipeline: ${metrics.errorRate}")
+        groups.forEach { groupId ->
+            try {
+                val lag = calculateConsumerLag(groupId)
+                
+                if (lag > 1000) {
+                    logger.warn("High consumer lag detected for group $groupId: $lag messages")
+                    // Could trigger scaling or alerting
+                }
+                
+                // Record metric
+                Metrics.globalRegistry.gauge("kafka.consumer.lag", Tags.of(Tag.of("group", groupId)), lag.toDouble())
+                
+            } catch (e: Exception) {
+                logger.error("Failed to monitor consumer lag for group $groupId", e)
+            }
+        }
+    }
+    
+    @EventListener
+    fun handleAcknowledgmentEvent(event: AcknowledgmentEvent) {
+        val timeSinceReceived = System.currentTimeMillis() - event.receivedTimestamp
+        
+        if (timeSinceReceived > 30000) { // More than 30 seconds
+            logger.warn("Slow acknowledgment detected: ${timeSinceReceived}ms for message ${event.messageId}")
         }
         
-        if (metrics.averageProcessingTime > Duration.ofSeconds(10)) {
-            logger.warn("Slow processing detected: ${metrics.averageProcessingTime}")
-        }
-        
-        // Update health metrics
-        Metrics.globalRegistry.gauge("kafka.pipeline.error_rate", metrics.errorRate)
-        Metrics.globalRegistry.gauge("kafka.pipeline.throughput", metrics.throughput)
-        Metrics.globalRegistry.gauge("kafka.pipeline.processing_time", metrics.averageProcessingTime.toMillis())
+        Metrics.globalRegistry.timer("kafka.acknowledgment.delay")
+            .record(timeSinceReceived, TimeUnit.MILLISECONDS)
     }
 }
 ```
 
 ## ✅ **Best Practices Summary**
 
-### 🔄 **Transformation Design**
-- **Keep transformations simple** and focused on single responsibilities
-- **Make transformations idempotent** to handle reprocessing
-- **Use schema validation** to ensure data quality
-- **Implement comprehensive error handling** with proper logging
+### 🎯 **Manual Acknowledgment**
+- **Only acknowledge after complete processing** including all side effects
+- **Handle exceptions carefully** - distinguish retryable vs permanent errors
+- **Use transactions** when updating multiple systems
+- **Monitor acknowledgment delays** to detect processing bottlenecks
 
-### 🔍 **Filtering Strategy**
-- **Apply filters early** in the pipeline to reduce processing load
-- **Use composable predicates** for flexible filter combinations
-- **Monitor filter effectiveness** to optimize rules
-- **Provide bypass mechanisms** for testing and debugging
+### 🔒 **Idempotent Processing**
+- **Use unique message IDs** for deduplication
+- **Implement atomic check-and-process** operations
+- **Cache processing results** when appropriate
+- **Clean up old deduplication records** to prevent memory leaks
 
-### 🎯 **Routing Efficiency**
-- **Use content-based routing** to minimize unnecessary processing
-- **Implement dynamic routing** for flexible message flow
-- **Cache routing decisions** when possible
-- **Monitor routing patterns** to optimize topic design
+### 📊 **Monitoring & Operations**
+- **Track duplicate detection rates** to measure idempotency effectiveness
+- **Monitor consumer lag** specifically for manual ack consumers
+- **Alert on acknowledgment delays** that could indicate processing issues
+- **Measure processing times** to optimize performance
 
-### 📊 **Pipeline Operations**
-- **Monitor transformation performance** and success rates
-- **Implement circuit breakers** for external service calls
-- **Use async processing** for independent transformations
-- **Track message lineage** for debugging and auditing
+### 🔧 **Error Handling**
+- **Classify errors** as retryable vs permanent
+- **Implement proper backoff** for retryable errors
+- **Use dead letter topics** for permanent failures
+- **Log correlation IDs** for message tracking
 
 ## 🚀 **What's Next?**
 
-You've mastered message transformation and filtering! Next, learn about implementing fan-out patterns in [Lesson 11: Fan-out Pattern - Notification Systems](../lesson_11/concept.md), where you'll build systems that distribute single events to multiple consumers for parallel processing.
+You've mastered exactly-once processing patterns! Next, learn about transforming and enriching messages in [Lesson 10: Message Transformation & Filtering](../lesson_11/concept.md), where you'll implement data processing pipelines and message routing strategies.
 
 ---
 
-*Message transformation and filtering are the building blocks of sophisticated event-driven architectures. These patterns enable you to build flexible, maintainable systems that can adapt to changing business requirements while maintaining data quality and processing efficiency.*
+*Manual acknowledgment and idempotent processing are critical for building reliable, consistent Kafka applications. These patterns ensure your systems handle failures gracefully while maintaining data integrity and preventing duplicate processing.*

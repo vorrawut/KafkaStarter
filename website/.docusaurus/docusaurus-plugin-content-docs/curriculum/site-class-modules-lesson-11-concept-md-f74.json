@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_11/concept",
   "title": "Concept",
-  "description": "Fan-out Pattern - Notification Systems & Parallel Processing",
+  "description": "Message Transformation & Filtering - Building Data Processing Pipelines",
   "source": "@site/../class/modules/lesson_11/concept.md",
   "sourceDirName": "modules/lesson_11",
   "slug": "/modules/lesson_11/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Message Transformation & Filtering",
+    "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_10/"
   },
   "next": {
-    "title": "Workshop: Fan-out Pattern & Notification Systems",
+    "title": "Workshop: Message Transformation & Filtering",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_11/"
   }
 }

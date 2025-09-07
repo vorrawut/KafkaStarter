@@ -1,14 +1,14 @@
 {
-  "id": "modules/lesson_5/workshop_5",
+  "id": "modules/lesson_5/workshop",
   "title": "Workshop",
   "description": "Schema Registry with Avro & Protobuf",
-  "source": "@site/../class/modules/lesson_5/workshop_5.md",
+  "source": "@site/../class/modules/lesson_5/workshop.md",
   "sourceDirName": "modules/lesson_5",
-  "slug": "/modules/lesson_5/workshop_5",
-  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop_5",
+  "slug": "/modules/lesson_5/workshop",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/workshop",
   "draft": false,
   "unlisted": false,
-  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/workshop_5.md",
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/workshop.md",
   "tags": [],
   "version": "current",
   "frontMatter": {},
@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
   },
   "next": {
-    "title": "Workshop: Schema Registry & Evolution",
+    "title": "Workshop: Topics, Partitions & Offsets",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_5/"
   }
 }

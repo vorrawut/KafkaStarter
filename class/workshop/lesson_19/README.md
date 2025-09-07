@@ -1,720 +1,507 @@
-# Workshop: Observability & Monitoring
+# Workshop: Kafka Security & ACLs
 
 ## 🎯 Objective
-Implement comprehensive observability for production Kafka systems including metrics collection, distributed tracing, structured logging, alerting, and real-time dashboards for operational excellence.
+Implement production-grade security for Kafka clusters including SSL/TLS encryption, SASL authentication, and Access Control Lists (ACLs) for comprehensive authorization.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Metrics Collection
-Implement metrics in `metrics/KafkaMetricsCollector.kt`
+### Task 1: SSL/TLS Configuration
+Configure SSL encryption in `security/SSLConfigManager.kt`
 
-### Task 2: Distributed Tracing
-Build tracing in `tracing/DistributedTracer.kt`
+### Task 2: SASL Authentication
+Implement SASL authentication in `security/SASLAuthManager.kt`
 
-### Task 3: Structured Logging
-Create logging framework in `logging/StructuredLogger.kt`
+### Task 3: ACL Management
+Build ACL management in `security/ACLManager.kt`
 
-### Task 4: Health Monitoring
-Implement health checks in `health/SystemHealthMonitor.kt`
+### Task 4: Principal Mapping
+Configure principal mapping in `security/PrincipalMapper.kt`
 
-### Task 5: Alert Management
-Build alerting in `alerting/AlertManager.kt`
+### Task 5: Security Monitoring
+Monitor security events in `security/SecurityMonitor.kt`
 
-## 🏗️ Observability Architecture
+## 🔐 Kafka Security Architecture
 ```mermaid
 graph TB
-    subgraph "Kafka Infrastructure"
-        KAFKA[Kafka Brokers<br/>JMX metrics exposed]
-        ZK[Zookeeper<br/>Health monitoring]
-        SR[Schema Registry<br/>Schema metrics]
-        CONNECT[Kafka Connect<br/>Connector metrics]
+    subgraph "Clients"
+        PROD[Producer<br/>SSL + SASL]
+        CONS[Consumer<br/>SSL + SASL]
+        ADMIN[Admin Client<br/>SSL + SASL]
     end
     
-    subgraph "Application Layer"
-        PRODUCER[Producer Apps<br/>Custom metrics]
-        CONSUMER[Consumer Apps<br/>Processing metrics]
-        STREAMS[Streams Apps<br/>Topology metrics]
-        REST[REST APIs<br/>HTTP metrics]
+    subgraph "Kafka Cluster"
+        subgraph "Security Layer"
+            SSL[SSL/TLS Encryption<br/>Port 9093]
+            SASL[SASL Authentication<br/>PLAIN/SCRAM/GSSAPI]
+            ACL[Access Control Lists<br/>Topic/Group/Cluster]
+        end
+        
+        subgraph "Brokers"
+            B1[Broker 1<br/>Security Enabled]
+            B2[Broker 2<br/>Security Enabled]
+            B3[Broker 3<br/>Security Enabled]
+        end
+        
+        subgraph "Authorization"
+            AUTHORIZER[ACL Authorizer]
+            PRINCIPAL[Principal Extractor]
+        end
     end
     
-    subgraph "Metrics Collection"
-        JMX[JMX Exporter<br/>Kafka metrics]
-        MICROMETER[Micrometer<br/>Application metrics]
-        PROMETHEUS[Prometheus<br/>Metrics storage]
-        CUSTOM[Custom Collectors<br/>Business metrics]
+    subgraph "Security Management"
+        CA[Certificate Authority]
+        KEYSTORE[Keystores & Truststores]
+        USERDB[User Database<br/>SCRAM Credentials]
     end
     
-    subgraph "Tracing Infrastructure"
-        JAEGER[Jaeger<br/>Trace collection]
-        ZIPKIN[Zipkin<br/>Trace visualization]
-        SLEUTH[Spring Cloud Sleuth<br/>Auto-instrumentation]
-        OTEL[OpenTelemetry<br/>Vendor-neutral tracing]
-    end
+    PROD -->|Encrypted| SSL
+    CONS -->|Encrypted| SSL
+    ADMIN -->|Encrypted| SSL
     
-    subgraph "Logging Pipeline"
-        LOGBACK[Logback<br/>Structured logging]
-        FLUENTD[Fluentd<br/>Log collection]
-        ELASTICSEARCH[Elasticsearch<br/>Log storage]
-        KIBANA[Kibana<br/>Log analysis]
-    end
+    SSL --> SASL
+    SASL --> ACL
+    ACL --> AUTHORIZER
+    AUTHORIZER --> PRINCIPAL
     
-    subgraph "Monitoring & Alerting"
-        GRAFANA[Grafana<br/>Dashboards]
-        ALERT_MANAGER[AlertManager<br/>Alert routing]
-        PAGERDUTY[PagerDuty<br/>Incident management]
-        SLACK[Slack<br/>Team notifications]
-    end
+    PRINCIPAL --> B1
+    PRINCIPAL --> B2
+    PRINCIPAL --> B3
     
-    KAFKA --> JMX
-    PRODUCER --> MICROMETER
-    CONSUMER --> MICROMETER
-    STREAMS --> MICROMETER
-    REST --> MICROMETER
+    CA --> KEYSTORE
+    USERDB --> SASL
     
-    JMX --> PROMETHEUS
-    MICROMETER --> PROMETHEUS
-    CUSTOM --> PROMETHEUS
-    
-    PRODUCER --> SLEUTH
-    CONSUMER --> SLEUTH
-    SLEUTH --> JAEGER
-    SLEUTH --> ZIPKIN
-    
-    PRODUCER --> LOGBACK
-    CONSUMER --> LOGBACK
-    LOGBACK --> FLUENTD
-    FLUENTD --> ELASTICSEARCH
-    
-    PROMETHEUS --> GRAFANA
-    PROMETHEUS --> ALERT_MANAGER
-    ELASTICSEARCH --> KIBANA
-    
-    ALERT_MANAGER --> PAGERDUTY
-    ALERT_MANAGER --> SLACK
-    
-    style PROMETHEUS fill:#ff6b6b
-    style GRAFANA fill:#4ecdc4
-    style JAEGER fill:#a8e6cf
-    style ELASTICSEARCH fill:#ffe66d
+    style SSL fill:#ff6b6b
+    style SASL fill:#4ecdc4
+    style ACL fill:#a8e6cf
+    style AUTHORIZER fill:#ffe66d
 ```
 
-## 📊 Comprehensive Metrics Strategy
+## 🔒 Security Layers
 
-### Three Pillars of Observability
+### 1. **Encryption (SSL/TLS)**
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Kafka
+    
+    Note over Client,Kafka: SSL Handshake
+    Client->>Kafka: ClientHello + Supported Ciphers
+    Kafka->>Client: ServerHello + Certificate
+    Client->>Client: Verify Certificate
+    Client->>Kafka: Key Exchange + Finished
+    Kafka->>Client: Finished
+    
+    Note over Client,Kafka: Encrypted Communication
+    Client->>Kafka: Encrypted Produce Request
+    Kafka->>Client: Encrypted Produce Response
+    Client->>Kafka: Encrypted Fetch Request
+    Kafka->>Client: Encrypted Fetch Response
+```
+
+### 2. **Authentication (SASL)**
 ```mermaid
 graph TB
-    subgraph "Metrics (What's Happening)"
-        BUSINESS[Business Metrics<br/>Orders/sec, Revenue/hour]
-        APPLICATION[Application Metrics<br/>Latency, Throughput, Errors]
-        INFRASTRUCTURE[Infrastructure Metrics<br/>CPU, Memory, Disk, Network]
-        KAFKA_METRICS[Kafka Metrics<br/>Producer rate, Consumer lag, Partition count]
+    subgraph "SASL Mechanisms"
+        PLAIN[SASL_PLAIN<br/>Username/Password]
+        SCRAM[SASL_SCRAM<br/>Secure Hash-based]
+        GSSAPI[SASL_GSSAPI<br/>Kerberos]
+        OAUTH[SASL_OAUTHBEARER<br/>OAuth 2.0]
     end
     
-    subgraph "Logs (What Happened)"
-        STRUCTURED[Structured Logs<br/>JSON format with context]
-        AUDIT[Audit Logs<br/>Security and compliance]
-        ERROR[Error Logs<br/>Exceptions and failures]
-        CORRELATION[Correlation IDs<br/>Request tracing]
+    subgraph "Authentication Flow"
+        CLIENT[Client] --> AUTH[Authentication]
+        AUTH --> VERIFY[Verify Credentials]
+        VERIFY -->|Success| SESSION[Establish Session]
+        VERIFY -->|Failure| REJECT[Reject Connection]
     end
     
-    subgraph "Traces (How It Happened)"
-        DISTRIBUTED[Distributed Traces<br/>Cross-service calls]
-        SPANS[Spans<br/>Individual operations]
-        CONTEXT[Trace Context<br/>Baggage and tags]
-        SAMPLING[Sampling Strategy<br/>Performance optimization]
+    subgraph "Credential Storage"
+        FILE[File-based<br/>jaas.conf]
+        ZK[Zookeeper<br/>SCRAM users]
+        LDAP[LDAP/AD<br/>Enterprise]
+        DB[Database<br/>Custom]
     end
     
-    subgraph "Dashboards & Alerts"
-        REAL_TIME[Real-time Dashboards<br/>Live system status]
-        ALERTS[Intelligent Alerts<br/>Threshold-based notifications]
-        RUNBOOKS[Automated Runbooks<br/>Self-healing systems]
-        INCIDENTS[Incident Management<br/>Response coordination]
+    PLAIN --> FILE
+    SCRAM --> ZK
+    GSSAPI --> LDAP
+    OAUTH --> DB
+    
+    style AUTH fill:#ff6b6b
+    style SESSION fill:#4ecdc4
+    style REJECT fill:#ff6b6b
+```
+
+### 3. **Authorization (ACLs)**
+```mermaid
+graph TB
+    subgraph "ACL Resources"
+        TOPIC[Topic<br/>read/write/create]
+        GROUP[Consumer Group<br/>read]
+        CLUSTER[Cluster<br/>create/alter]
+        TXID[TransactionalId<br/>write/describe]
     end
     
-    BUSINESS --> REAL_TIME
-    APPLICATION --> ALERTS
-    INFRASTRUCTURE --> ALERTS
-    KAFKA_METRICS --> REAL_TIME
+    subgraph "ACL Operations"
+        READ[Read<br/>Consume messages]
+        WRITE[Write<br/>Produce messages]
+        CREATE[Create<br/>Create topics]
+        DELETE[Delete<br/>Delete topics]
+        ALTER[Alter<br/>Modify configs]
+        DESCRIBE[Describe<br/>View metadata]
+    end
     
-    STRUCTURED --> INCIDENTS
-    AUDIT --> INCIDENTS
-    ERROR --> ALERTS
+    subgraph "Principal Types"
+        USER[User<br/>cn=alice]
+        SERVICE[Service Account<br/>service-analytics]
+        APPLICATION[Application<br/>app-orders]
+    end
     
-    DISTRIBUTED --> REAL_TIME
-    SPANS --> INCIDENTS
+    USER --> READ
+    SERVICE --> WRITE
+    APPLICATION --> CREATE
     
-    REAL_TIME --> RUNBOOKS
-    ALERTS --> INCIDENTS
+    READ --> TOPIC
+    WRITE --> TOPIC
+    CREATE --> CLUSTER
     
-    style BUSINESS fill:#ff6b6b
-    style STRUCTURED fill:#4ecdc4
-    style DISTRIBUTED fill:#a8e6cf
-    style REAL_TIME fill:#ffe66d
+    style USER fill:#4ecdc4
+    style SERVICE fill:#a8e6cf
+    style APPLICATION fill:#ffe66d
 ```
 
-## 📈 Kafka-Specific Metrics
+## ⚙️ SSL/TLS Configuration
 
-### Producer Metrics
-```kotlin
-@Component
-class KafkaProducerMetrics {
-    
-    private val meterRegistry: MeterRegistry
-    private val producerMetrics = ConcurrentHashMap<String, Timer>()
-    
-    @EventListener
-    fun handleProducerSendStart(event: ProducerSendStartEvent) {
-        val timer = Timer.start(meterRegistry)
-        producerMetrics[event.correlationId] = timer
-        
-        // Track send attempts
-        meterRegistry.counter(
-            "kafka.producer.send.attempts",
-            "topic", event.topic,
-            "partition", event.partition?.toString() ?: "unknown"
-        ).increment()
-    }
-    
-    @EventListener
-    fun handleProducerSendSuccess(event: ProducerSendSuccessEvent) {
-        val timer = producerMetrics.remove(event.correlationId)
-        timer?.stop(Timer.Sample.start(meterRegistry).stop(
-            Timer.builder("kafka.producer.send.duration")
-                .tag("topic", event.topic)
-                .tag("status", "success")
-                .register(meterRegistry)
-        ))
-        
-        // Track batch size
-        meterRegistry.gauge(
-            "kafka.producer.batch.size",
-            Tags.of("topic", event.topic),
-            event.batchSize
-        )
-        
-        // Track record size
-        meterRegistry.summary(
-            "kafka.producer.record.size",
-            "topic", event.topic
-        ).record(event.recordSize.toDouble())
-    }
-    
-    @EventListener
-    fun handleProducerSendFailure(event: ProducerSendFailureEvent) {
-        val timer = producerMetrics.remove(event.correlationId)
-        timer?.stop(Timer.Sample.start(meterRegistry).stop(
-            Timer.builder("kafka.producer.send.duration")
-                .tag("topic", event.topic)
-                .tag("status", "failure")
-                .tag("error", event.exception.javaClass.simpleName)
-                .register(meterRegistry)
-        ))
-        
-        // Track error types
-        meterRegistry.counter(
-            "kafka.producer.errors",
-            "topic", event.topic,
-            "error.type", event.exception.javaClass.simpleName
-        ).increment()
-    }
-}
+### Certificate Generation
+```bash
+# Create Certificate Authority (CA)
+keytool -keystore kafka.server.keystore.jks -alias localhost \
+  -validity 365 -genkey -keyalg RSA
+
+# Export certificate
+keytool -keystore kafka.server.keystore.jks -alias localhost \
+  -certreq -file cert-file
+
+# Sign certificate with CA
+openssl x509 -req -CA ca-cert -CAkey ca-key \
+  -in cert-file -out cert-signed -days 365 -CAcreateserial
+
+# Import signed certificate
+keytool -keystore kafka.server.keystore.jks -alias CARoot \
+  -import -file ca-cert
+keytool -keystore kafka.server.keystore.jks -alias localhost \
+  -import -file cert-signed
+
+# Create truststore
+keytool -keystore kafka.server.truststore.jks -alias CARoot \
+  -import -file ca-cert
 ```
 
-### Consumer Metrics
-```kotlin
-@Component
-class KafkaConsumerMetrics {
-    
-    @Autowired
-    private lateinit var meterRegistry: MeterRegistry
-    
-    @Scheduled(fixedDelay = 30000) // Every 30 seconds
-    fun collectConsumerLagMetrics() {
-        AdminClient.create(adminConfig).use { adminClient ->
-            try {
-                val consumerGroups = adminClient.listConsumerGroups().all().get()
-                
-                consumerGroups.forEach { group ->
-                    if (group.state() == ConsumerGroupState.STABLE) {
-                        val groupDescription = adminClient.describeConsumerGroups(listOf(group.groupId()))
-                            .all().get()[group.groupId()]
-                        
-                        val assignments = groupDescription?.members()?.flatMap { 
-                            it.assignment().topicPartitions() 
-                        } ?: emptyList()
-                        
-                        val endOffsets = adminClient.listOffsets(
-                            assignments.associateWith { OffsetSpec.latest() }
-                        ).all().get()
-                        
-                        val groupOffsets = adminClient.listConsumerGroupOffsets(group.groupId())
-                            .partitionsToOffsetAndMetadata().get()
-                        
-                        assignments.forEach { tp ->
-                            val endOffset = endOffsets[tp]?.offset() ?: 0
-                            val currentOffset = groupOffsets[tp]?.offset() ?: 0
-                            val lag = endOffset - currentOffset
-                            
-                            meterRegistry.gauge(
-                                "kafka.consumer.lag",
-                                Tags.of(
-                                    "group", group.groupId(),
-                                    "topic", tp.topic(),
-                                    "partition", tp.partition().toString()
-                                ),
-                                lag.toDouble()
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("Failed to collect consumer lag metrics", e)
-            }
-        }
-    }
-    
-    @KafkaListener(topics = [".*"], topicPattern = ".*")
-    fun recordProcessingMetrics(
-        @Payload message: Any,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
-        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
-        @Header(KafkaHeaders.OFFSET) offset: Long
-    ) {
-        // Record message processing
-        meterRegistry.counter(
-            "kafka.consumer.messages.processed",
-            "topic", topic,
-            "partition", partition.toString()
-        ).increment()
-        
-        // Record processing time
-        val processingTimer = Timer.start(meterRegistry)
-        // Processing happens in actual listener
-        processingTimer.stop(
-            Timer.builder("kafka.consumer.processing.duration")
-                .tag("topic", topic)
-                .register(meterRegistry)
-        )
-    }
-}
+### Broker SSL Configuration
+```properties
+# SSL Settings
+listeners=PLAINTEXT://localhost:9092,SSL://localhost:9093
+security.inter.broker.protocol=SSL
+ssl.keystore.location=/etc/kafka/ssl/kafka.server.keystore.jks
+ssl.keystore.password=kafka-password
+ssl.key.password=kafka-password
+ssl.truststore.location=/etc/kafka/ssl/kafka.server.truststore.jks
+ssl.truststore.password=kafka-password
+
+# SSL Protocol Configuration
+ssl.enabled.protocols=TLSv1.2,TLSv1.3
+ssl.keystore.type=JKS
+ssl.truststore.type=JKS
+ssl.client.auth=none
+ssl.endpoint.identification.algorithm=
 ```
 
-## 🔍 Distributed Tracing Implementation
+## 🔑 SASL Authentication
 
-### Tracing Configuration
-```kotlin
-@Configuration
-class TracingConfiguration {
-    
-    @Bean
-    fun jaegerTracer(): io.jaegertracing.Configuration {
-        return io.jaegertracing.Configuration("kafka-starter")
-            .withSampler(
-                io.jaegertracing.Configuration.SamplerConfiguration()
-                    .withType("const")
-                    .withParam(1) // Sample all traces in development
-            )
-            .withReporter(
-                io.jaegertracing.Configuration.ReporterConfiguration()
-                    .withLogSpans(true)
-                    .withFlushInterval(1000)
-                    .withMaxQueueSize(10000)
-                    .withSender(
-                        io.jaegertracing.Configuration.SenderConfiguration()
-                            .withAgentHost("localhost")
-                            .withAgentPort(6831)
-                    )
-            )
-    }
-    
-    @Bean
-    fun kafkaTracingInterceptor(): KafkaTracingInterceptor {
-        return KafkaTracingInterceptor()
-    }
-}
+### SASL_SCRAM Configuration
+```properties
+# SASL Settings
+listeners=SASL_SSL://localhost:9094
+security.inter.broker.protocol=SASL_SSL
+sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
+sasl.enabled.mechanisms=SCRAM-SHA-256,SCRAM-SHA-512
 
-@Component
-class KafkaTracingInterceptor : ProducerInterceptor<String, Any>, ConsumerInterceptor<String, Any> {
-    
-    private val tracer = GlobalTracer.get()
-    
-    override fun onSend(record: ProducerRecord<String, Any>): ProducerRecord<String, Any> {
-        val span = tracer.activeSpan()
-        
-        if (span != null) {
-            // Inject trace context into Kafka headers
-            val headers = record.headers()
-            tracer.inject(
-                span.context(),
-                Format.Builtin.TEXT_MAP,
-                HeadersTextMapExtract(headers)
-            )
-            
-            // Add span tags
-            span.setTag("kafka.topic", record.topic())
-            span.setTag("kafka.partition", record.partition()?.toString() ?: "unknown")
-            span.setTag("kafka.key", record.key() ?: "null")
-            span.setTag("component", "kafka-producer")
-        }
-        
-        return record
-    }
-    
-    override fun onConsume(records: ConsumerRecords<String, Any>): ConsumerRecords<String, Any> {
-        records.forEach { record ->
-            // Extract trace context from Kafka headers
-            val spanContext = tracer.extract(
-                Format.Builtin.TEXT_MAP,
-                HeadersTextMapExtract(record.headers())
-            )
-            
-            // Create child span for message processing
-            val spanBuilder = tracer.buildSpan("kafka-message-processing")
-                .withTag("kafka.topic", record.topic())
-                .withTag("kafka.partition", record.partition().toString())
-                .withTag("kafka.offset", record.offset().toString())
-                .withTag("component", "kafka-consumer")
-            
-            if (spanContext != null) {
-                spanBuilder.asChildOf(spanContext)
-            }
-            
-            val span = spanBuilder.start()
-            tracer.activateSpan(span).use {
-                // Span will be active during message processing
-            }
-        }
-        
-        return records
-    }
-}
+# JAAS Configuration
+listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
+listener.name.sasl_ssl.scram-sha-512.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required;
 ```
 
-### Cross-Service Tracing
-```kotlin
-@Service
-class OrderProcessingService {
-    
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
-    
-    @Traced(operationName = "order-processing")
-    fun processOrder(order: Order): OrderResult {
-        val span = tracer.activeSpan()
-        span?.setTag("order.id", order.id)
-        span?.setTag("order.amount", order.totalAmount.toString())
-        span?.setTag("customer.id", order.customerId)
-        
-        return try {
-            // Step 1: Validate order
-            val validationSpan = tracer.buildSpan("validate-order")
-                .asChildOf(span)
-                .start()
-            
-            tracer.activateSpan(validationSpan).use {
-                validateOrder(order)
-                validationSpan.setTag("validation.result", "success")
-            }
-            
-            // Step 2: Process payment
-            val paymentSpan = tracer.buildSpan("process-payment")
-                .asChildOf(span)
-                .start()
-            
-            val paymentResult = tracer.activateSpan(paymentSpan).use {
-                val result = paymentService.processPayment(order)
-                paymentSpan.setTag("payment.result", result.status.name)
-                paymentSpan.setTag("payment.amount", result.amount.toString())
-                result
-            }
-            
-            // Step 3: Publish order event
-            val eventSpan = tracer.buildSpan("publish-order-event")
-                .asChildOf(span)
-                .start()
-            
-            tracer.activateSpan(eventSpan).use {
-                val orderEvent = OrderProcessedEvent(
-                    orderId = order.id,
-                    status = OrderStatus.PROCESSED,
-                    traceId = span?.context()?.toTraceId() ?: "unknown"
-                )
-                
-                kafkaTemplate.send("order-events", order.id, orderEvent)
-                eventSpan.setTag("event.published", true)
-            }
-            
-            OrderResult.success(order.id)
-            
-        } catch (e: Exception) {
-            span?.setTag("error", true)
-            span?.setTag("error.message", e.message ?: "Unknown error")
-            span?.log(mapOf("event" to "error", "error.object" to e))
-            
-            OrderResult.failure(order.id, e.message ?: "Processing failed")
-        }
-    }
-}
+### User Management
+```bash
+# Create SCRAM users
+kafka-configs --bootstrap-server localhost:9094 \
+  --alter --add-config 'SCRAM-SHA-256=[password=alice-secret]' \
+  --entity-type users --entity-name alice
+
+kafka-configs --bootstrap-server localhost:9094 \
+  --alter --add-config 'SCRAM-SHA-512=[password=bob-secret]' \
+  --entity-type users --entity-name bob
+
+# List users
+kafka-configs --bootstrap-server localhost:9094 \
+  --describe --entity-type users
 ```
 
-## 📝 Structured Logging Framework
+## 🛡️ Access Control Lists (ACLs)
 
-### Logging Configuration
-```kotlin
-@Configuration
-class LoggingConfiguration {
-    
-    @Bean
-    fun structuredLogger(): StructuredLogger {
-        return StructuredLogger()
-    }
-    
-    @Bean
-    fun logbackEncoderCustomizer(): LogbackEncoderCustomizer {
-        return LogbackEncoderCustomizer { encoder ->
-            if (encoder is JsonEncoder) {
-                encoder.includeContext = true
-                encoder.includeMdc = true
-                encoder.includeStructuredArguments = true
-            }
-        }
-    }
-}
+### ACL Management
+```bash
+# Grant read access to topic
+kafka-acls --bootstrap-server localhost:9094 \
+  --add --allow-principal User:alice \
+  --operation Read --topic orders
 
-@Component
-class StructuredLogger {
+# Grant write access to topic
+kafka-acls --bootstrap-server localhost:9094 \
+  --add --allow-principal User:bob \
+  --operation Write --topic orders
+
+# Grant consumer group access
+kafka-acls --bootstrap-server localhost:9094 \
+  --add --allow-principal User:alice \
+  --operation Read --group order-consumers
+
+# Grant admin access
+kafka-acls --bootstrap-server localhost:9094 \
+  --add --allow-principal User:admin \
+  --operation All --cluster kafka-cluster
+
+# List ACLs
+kafka-acls --bootstrap-server localhost:9094 --list
+```
+
+### ACL Patterns
+```mermaid
+graph TB
+    subgraph "Topic ACL Patterns"
+        LITERAL[Literal Match<br/>orders]
+        PREFIX[Prefix Match<br/>orders.*]
+        WILDCARD[Wildcard Match<br/>*]
+    end
     
-    private val logger = LoggerFactory.getLogger(StructuredLogger::class.java)
+    subgraph "Principal Patterns"
+        USER_LITERAL[User:alice]
+        USER_PREFIX[User:service-*]
+        GROUP_PATTERN[Group:developers]
+    end
     
-    fun logOrderEvent(
-        level: Level,
-        event: String,
-        orderId: String,
-        customerId: String?,
-        details: Map<String, Any> = emptyMap()
-    ) {
-        MDC.put("event.type", event)
-        MDC.put("order.id", orderId)
-        MDC.put("customer.id", customerId ?: "unknown")
-        MDC.put("timestamp", Instant.now().toString())
-        
-        val logData = mapOf(
-            "event" to event,
-            "orderId" to orderId,
-            "customerId" to customerId,
-            "details" to details,
-            "traceId" to getCurrentTraceId(),
-            "spanId" to getCurrentSpanId()
-        )
-        
-        when (level) {
-            Level.INFO -> logger.info(marker("ORDER_EVENT"), "{}", logData)
-            Level.WARN -> logger.warn(marker("ORDER_EVENT"), "{}", logData)
-            Level.ERROR -> logger.error(marker("ORDER_EVENT"), "{}", logData)
-            else -> logger.debug(marker("ORDER_EVENT"), "{}", logData)
-        }
-        
-        MDC.clear()
-    }
+    subgraph "Permission Types"
+        ALLOW[Allow<br/>Grant access]
+        DENY[Deny<br/>Explicit denial]
+    end
     
-    fun logKafkaEvent(
-        level: Level,
-        operation: String,
-        topic: String,
-        partition: Int?,
-        offset: Long?,
-        key: String?,
-        error: Throwable? = null
-    ) {
-        MDC.put("operation", operation)
-        MDC.put("topic", topic)
-        MDC.put("partition", partition?.toString() ?: "unknown")
-        MDC.put("offset", offset?.toString() ?: "unknown")
-        MDC.put("message.key", key ?: "null")
-        
-        val logData = mutableMapOf<String, Any>(
-            "operation" to operation,
-            "topic" to topic,
-            "partition" to (partition ?: -1),
-            "offset" to (offset ?: -1),
-            "messageKey" to (key ?: "null"),
-            "traceId" to getCurrentTraceId(),
-            "timestamp" to Instant.now()
-        )
-        
-        if (error != null) {
-            logData["error"] = mapOf(
-                "type" to error.javaClass.simpleName,
-                "message" to (error.message ?: "No error message"),
-                "stackTrace" to error.stackTraceToString()
-            )
-        }
-        
-        when (level) {
-            Level.ERROR -> logger.error(marker("KAFKA_EVENT"), "{}", logData, error)
-            Level.WARN -> logger.warn(marker("KAFKA_EVENT"), "{}", logData)
-            Level.INFO -> logger.info(marker("KAFKA_EVENT"), "{}", logData)
-            else -> logger.debug(marker("KAFKA_EVENT"), "{}", logData)
-        }
-        
-        MDC.clear()
-    }
+    subgraph "Operation Scope"
+        RESOURCE_OP[Resource Operations<br/>Read/Write/Create]
+        ADMIN_OP[Admin Operations<br/>Alter/Delete/Describe]
+        CLUSTER_OP[Cluster Operations<br/>ClusterAction]
+    end
     
-    private fun getCurrentTraceId(): String {
-        return tracer.activeSpan()?.context()?.toTraceId() ?: "no-trace"
-    }
-    
-    private fun getCurrentSpanId(): String {
-        return tracer.activeSpan()?.context()?.toSpanId() ?: "no-span"
-    }
-    
-    private fun marker(name: String): Marker {
-        return MarkerFactory.getMarker(name)
-    }
-}
+    style ALLOW fill:#4ecdc4
+    style DENY fill:#ff6b6b
+    style ADMIN_OP fill:#ffe66d
 ```
 
 ## ✅ Success Criteria
-- [ ] Comprehensive metrics collection for all Kafka components
-- [ ] Distributed tracing works across microservices and Kafka
-- [ ] Structured logging provides actionable insights
-- [ ] Health monitoring detects issues before they impact users
-- [ ] Alerting system notifies teams of critical issues
-- [ ] Dashboards provide real-time visibility into system health
-- [ ] Performance impact of observability is minimal (&lt;5% overhead)
+- [ ] SSL/TLS encryption working for all client-broker communication
+- [ ] SASL authentication successfully authenticates users
+- [ ] ACLs properly restrict access based on user permissions
+- [ ] Security monitoring captures authentication and authorization events
+- [ ] Certificate rotation procedures documented and tested
+- [ ] Performance impact of security measures within acceptable limits
+- [ ] Integration with existing identity management systems working
 
 ## 🚀 Getting Started
 
-### 1. Configure Observability Stack
-```yaml
-# docker-compose-observability.yml
-version: '3.8'
-services:
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "16686:16686"
-      - "6831:6831/udp"
-    environment:
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-      
-  elasticsearch:
-    image: elasticsearch:7.10.0
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      
-  kibana:
-    image: kibana:7.10.0
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
+### 1. Configure Security Properties
+```kotlin
+@Configuration
+class KafkaSecurityConfig {
+    
+    @Bean
+    fun secureProducerFactory(): ProducerFactory<String, Any> {
+        val props = mapOf(
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to "localhost:9094",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
+            
+            // SSL Configuration
+            CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "SASL_SSL",
+            SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to "/etc/kafka/ssl/kafka.client.truststore.jks",
+            SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to "client-password",
+            SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to "/etc/kafka/ssl/kafka.client.keystore.jks",
+            SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to "client-password",
+            SslConfigs.SSL_KEY_PASSWORD_CONFIG to "client-password",
+            
+            // SASL Configuration
+            SaslConfigs.SASL_MECHANISM to "SCRAM-SHA-256",
+            SaslConfigs.SASL_JAAS_CONFIG to "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"alice\" password=\"alice-secret\";"
+        )
+        
+        return DefaultKafkaProducerFactory(props)
+    }
+}
 ```
 
-### 2. Test Observability
+### 2. Test Secure Connection
 ```bash
-# Start observability stack
-docker-compose -f docker-compose-observability.yml up -d
+# Test with correct credentials
+kafka-console-producer --bootstrap-server localhost:9094 \
+  --topic orders \
+  --producer.config client-secure.properties
 
-# Generate test load
-curl -X POST http://localhost:8090/api/orders/generate-load \
-  -d '{"orderCount": 1000, "ratePerSecond": 50}'
-
-# Check metrics
-curl http://localhost:9090/api/v1/query?query=kafka_producer_send_total
-
-# View traces
-open http://localhost:16686
-
-# Check logs
-curl http://localhost:9200/logs-*/_search?q=level:ERROR
+# Test with wrong credentials (should fail)
+kafka-console-producer --bootstrap-server localhost:9094 \
+  --topic orders \
+  --producer.config client-wrong.properties
 ```
 
-### 3. Configure Dashboards
+### 3. Monitor Security Events
 ```bash
-# Import Kafka dashboard
-curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
-  -H "Content-Type: application/json" \
-  -d @kafka-dashboard.json
+# Check server logs for security events
+tail -f kafka-server.log | grep -i "authentication\|authorization"
 
-# Import application metrics dashboard
-curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
-  -H "Content-Type: application/json" \
-  -d @application-dashboard.json
+# Monitor ACL violations
+tail -f kafka-authorizer.log | grep -i "denied"
+```
+
+## 📊 Security Monitoring
+
+### Security Metrics
+```mermaid
+graph TB
+    subgraph "Authentication Metrics"
+        AM1[Successful Logins/min]
+        AM2[Failed Logins/min]
+        AM3[Authentication Latency]
+        AM4[Active Sessions]
+    end
+    
+    subgraph "Authorization Metrics"
+        AZ1[ACL Permits/min]
+        AZ2[ACL Denials/min]
+        AZ3[Authorization Latency]
+        AZ4[Privilege Escalation Attempts]
+    end
+    
+    subgraph "SSL/TLS Metrics"
+        SM1[SSL Handshake Latency]
+        SM2[Certificate Expiry Alerts]
+        SM3[Cipher Suite Usage]
+        SM4[Protocol Version Distribution]
+    end
+    
+    subgraph "Security Alerts"
+        SA1[Brute Force Detection]
+        SA2[Unusual Access Patterns]
+        SA3[Certificate Near Expiry]
+        SA4[Unauthorized Admin Access]
+    end
+    
+    AM2 --> SA1
+    AZ2 --> SA2
+    SM2 --> SA3
+    AZ4 --> SA4
+    
+    style AM2 fill:#ff6b6b
+    style AZ2 fill:#ff6b6b
+    style SA1 fill:#ff6b6b
+    style SA4 fill:#ff6b6b
+```
+
+### Security Health Check
+```kotlin
+@Component
+class SecurityHealthIndicator : HealthIndicator {
+    
+    override fun health(): Health {
+        return try {
+            val sslHandshakeLatency = measureSSLHandshakeLatency()
+            val authFailureRate = calculateAuthFailureRate()
+            val aclDenialRate = calculateACLDenialRate()
+            
+            when {
+                authFailureRate > 10.0 -> {
+                    Health.down()
+                        .withDetail("reason", "High authentication failure rate")
+                        .withDetail("failureRate", authFailureRate)
+                        .build()
+                }
+                aclDenialRate > 5.0 -> {
+                    Health.degraded()
+                        .withDetail("reason", "High ACL denial rate")
+                        .withDetail("denialRate", aclDenialRate)
+                        .build()
+                }
+                sslHandshakeLatency > 1000 -> {
+                    Health.degraded()
+                        .withDetail("reason", "High SSL handshake latency")
+                        .withDetail("latency", sslHandshakeLatency)
+                        .build()
+                }
+                else -> {
+                    Health.up()
+                        .withDetail("sslLatency", sslHandshakeLatency)
+                        .withDetail("authFailureRate", authFailureRate)
+                        .withDetail("aclDenialRate", aclDenialRate)
+                        .build()
+                }
+            }
+        } catch (e: Exception) {
+            Health.down(e).build()
+        }
+    }
+}
 ```
 
 ## 🎯 Best Practices
 
-### Metrics Strategy
-- **Focus on business metrics** first (orders/sec, revenue/hour)
-- **Use RED method** (Rate, Errors, Duration) for services
-- **Use USE method** (Utilization, Saturation, Errors) for resources
-- **Implement SLIs and SLOs** for service level objectives
+### Certificate Management
+- **Use proper CA hierarchy** - separate root and intermediate CAs
+- **Implement certificate rotation** - automate renewal before expiry
+- **Monitor certificate health** - track expiry dates and validation
+- **Secure key storage** - use hardware security modules when possible
 
-### Logging Strategy
-- **Use structured logging** with consistent format
-- **Include correlation IDs** for request tracing
-- **Log at appropriate levels** to reduce noise
-- **Implement log sampling** for high-volume systems
+### Authentication Strategy
+- **Choose appropriate SASL mechanism** - SCRAM for most use cases
+- **Implement password policies** - strong passwords and regular rotation
+- **Use service accounts** - dedicated accounts for applications
+- **Monitor authentication patterns** - detect unusual login behaviors
 
-### Tracing Strategy
-- **Sample traces intelligently** to balance coverage and performance
-- **Use semantic tags** for meaningful searchability
-- **Implement baggage** for cross-cutting concerns
-- **Monitor trace latency** to ensure performance
+### Authorization Design
+- **Principle of least privilege** - grant minimum required permissions
+- **Use resource patterns** - leverage prefix/wildcard matching
+- **Regular ACL audits** - review and clean up unused permissions
+- **Document permission models** - maintain clear authorization matrix
 
 ## 🔍 Troubleshooting
 
-### Common Issues
-1. **High cardinality metrics** - Limit tag values and use sampling
-2. **Trace sampling gaps** - Adjust sampling rates for critical paths
-3. **Log volume explosion** - Implement log levels and filtering
-4. **Performance impact** - Monitor observability overhead
+### Common Security Issues
+1. **SSL handshake failures** - Check certificate validity and trust chains
+2. **Authentication failures** - Verify JAAS configuration and credentials
+3. **Authorization denials** - Check ACL permissions and principal mapping
+4. **Performance impact** - Monitor latency introduced by security layers
 
 ### Debug Commands
 ```bash
-# Check Prometheus targets
-curl http://localhost:9090/api/v1/targets
+# Test SSL connection
+openssl s_client -connect localhost:9093 -verify_return_error
 
-# Query specific metrics
-curl 'http://localhost:9090/api/v1/query?query=kafka_consumer_lag_max'
+# Verify certificate
+keytool -list -v -keystore kafka.server.keystore.jks
 
-# Search traces by service
-curl 'http://localhost:16686/api/traces?service=order-service&limit=10'
+# Check SASL configuration
+kafka-configs --bootstrap-server localhost:9094 \
+  --describe --entity-type users --entity-name alice
 
-# Check Elasticsearch indices
-curl http://localhost:9200/_cat/indices?v
+# Debug ACL issues
+kafka-acls --bootstrap-server localhost:9094 \
+  --list --principal User:alice
 ```
 
 ## 🚀 Next Steps
-Congratulations! You've completed the comprehensive Kafka Mastery Curriculum! You now have the skills to:
-
-✅ **Design** event-driven architectures from scratch  
-✅ **Build** production-ready Kafka applications  
-✅ **Scale** systems to handle millions of events  
-✅ **Secure** clusters with enterprise-grade security  
-✅ **Monitor** and operate Kafka in production  
-✅ **Deploy** with confidence using modern DevOps practices  
-
-## 🎓 **CURRICULUM COMPLETE!**
-
-You've mastered all 20 lessons of Kafka expertise. Time to build amazing systems! 🚀
+Security implemented? Time to monitor everything! Move to [Lesson 19: Observability & Monitoring](../lesson_20/README.md) to learn comprehensive monitoring and alerting for production Kafka systems.

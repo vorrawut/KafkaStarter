@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_14/README",
-  "title": "Workshop: Kafka Streams API Introduction",
+  "title": "Workshop: Request-Reply Patterns with Kafka",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_14/README.md",
   "sourceDirName": "workshop/lesson_14",
@@ -14,7 +14,7 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Concept",
+    "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_14/concept"
   },
   "next": {

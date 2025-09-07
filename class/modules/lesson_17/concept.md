@@ -1,1017 +1,924 @@
 # Concept
 
-## Building a Real-time Dashboard Application - Complete Analytics System
+## Local State Stores & Fault Tolerance - Persistent State Management
+
 
 ## 🎯 Objective
 
-Build a comprehensive real-time dashboard application that demonstrates all Kafka Streams concepts learned so far. Create an end-to-end analytics system with live data processing, interactive visualizations, and real-time insights that scales to handle millions of events.
+Master local state stores in Kafka Streams for building robust, stateful applications with persistent data storage, fault tolerance, and disaster recovery capabilities. Learn to optimize state management for performance and reliability in production environments.
 
-## 📊 **Real-time Dashboard Architecture**
+## 🗃️ **State Stores: The Foundation of Stateful Processing**
 
-Integrate all Kafka Streams components into a production-ready analytics platform.
+State stores enable Kafka Streams applications to maintain persistent state that survives application restarts and failures.
 
 ```mermaid
 graph TB
-    subgraph "Real-time Analytics Dashboard System"
-        subgraph "Data Sources"
-            WEB_EVENTS[Web Events]
-            MOBILE_EVENTS[Mobile Events]
-            IOT_SENSORS[IoT Sensors]
-            TRANSACTION[Transactions]
-            USER_ACTIONS[User Actions]
+    subgraph "Kafka Streams State Management"
+        subgraph "Application Instance"
+            TOPOLOGY[Stream Topology]
+            
+            subgraph "State Stores"
+                KV_STORE[Key-Value Store]
+                WINDOW_STORE[Window Store]
+                SESSION_STORE[Session Store]
+                CUSTOM_STORE[Custom Store]
+            end
+            
+            LOCAL_DISK[Local Disk Storage]
         end
         
-        subgraph "Kafka Streams Processing"
-            ENRICHMENT[Event Enrichment]
-            AGGREGATION[Real-time Aggregation]
-            WINDOWING[Time Windows]
-            JOINS[Stream Joins]
-            ALERTS[Alert Generation]
+        subgraph "Kafka Cluster"
+            CHANGELOG[Changelog Topics]
+            INPUT_TOPICS[Input Topics]
+            OUTPUT_TOPICS[Output Topics]
         end
         
-        subgraph "State Management"
-            KV_STORES[Key-Value Stores]
-            WINDOW_STORES[Window Stores]
-            SESSION_STORES[Session Stores]
-        end
-        
-        subgraph "Dashboard Backend"
-            QUERY_API[Interactive Query API]
-            WEBSOCKET[WebSocket Server]
-            METRICS_API[Metrics API]
-            ALERT_API[Alert Management]
-        end
-        
-        subgraph "Frontend Dashboard"
-            LIVE_CHARTS[Live Charts]
-            REAL_TIME_METRICS[Real-time Metrics]
-            ALERT_PANEL[Alert Panel]
-            DRILL_DOWN[Drill-down Views]
-        end
-        
-        subgraph "External Systems"
-            NOTIFICATION[Notification Service]
-            STORAGE[Data Warehouse]
-            MONITORING[Monitoring]
+        subgraph "Fault Tolerance"
+            STANDBY[Standby Replicas]
+            RESTORE[Restore Process]
+            REBALANCE[Rebalancing]
         end
     end
     
-    WEB_EVENTS --> ENRICHMENT
-    MOBILE_EVENTS --> ENRICHMENT
-    IOT_SENSORS --> ENRICHMENT
-    TRANSACTION --> ENRICHMENT
-    USER_ACTIONS --> ENRICHMENT
+    TOPOLOGY --> KV_STORE
+    TOPOLOGY --> WINDOW_STORE
+    TOPOLOGY --> SESSION_STORE
+    TOPOLOGY --> CUSTOM_STORE
     
-    ENRICHMENT --> AGGREGATION
-    AGGREGATION --> WINDOWING
-    WINDOWING --> JOINS
-    JOINS --> ALERTS
+    KV_STORE -.-> LOCAL_DISK
+    WINDOW_STORE -.-> LOCAL_DISK
+    SESSION_STORE -.-> LOCAL_DISK
     
-    AGGREGATION -.-> KV_STORES
-    WINDOWING -.-> WINDOW_STORES
-    JOINS -.-> SESSION_STORES
+    KV_STORE -.-> CHANGELOG
+    WINDOW_STORE -.-> CHANGELOG
+    SESSION_STORE -.-> CHANGELOG
     
-    KV_STORES --> QUERY_API
-    WINDOW_STORES --> QUERY_API
-    SESSION_STORES --> QUERY_API
+    CHANGELOG --> STANDBY
+    CHANGELOG --> RESTORE
     
-    QUERY_API --> WEBSOCKET
-    WEBSOCKET --> LIVE_CHARTS
-    QUERY_API --> METRICS_API
-    METRICS_API --> REAL_TIME_METRICS
+    INPUT_TOPICS --> TOPOLOGY
+    TOPOLOGY --> OUTPUT_TOPICS
     
-    ALERTS --> ALERT_API
-    ALERT_API --> ALERT_PANEL
-    ALERTS --> NOTIFICATION
-    
-    AGGREGATION --> STORAGE
-    QUERY_API --> DRILL_DOWN
-    
-    style ENRICHMENT fill:#e3f2fd
-    style AGGREGATION fill:#e8f5e8
-    style WINDOWING fill:#fff3e0
-    style QUERY_API fill:#f3e5f5
+    style KV_STORE fill:#e3f2fd
+    style CHANGELOG fill:#e8f5e8
+    style STANDBY fill:#fff3e0
+    style RESTORE fill:#f3e5f5
 ```
 
-## 🏗️ **Complete Stream Processing Topology**
+**Key Benefits:**
+- ✅ **Persistent state** survives application restarts
+- ✅ **Fast local access** with disk-based storage
+- ✅ **Automatic backup** via changelog topics
+- ✅ **Fault tolerance** with standby replicas
 
-### 1. **Multi-Source Data Ingestion and Enrichment**
+## 🔧 **Advanced State Store Configuration**
+
+### 1. **Custom State Store Implementation**
 
 ```kotlin
 @Component
-class DashboardStreamProcessor {
+class CustomStateStoreConfig {
     
-    fun buildDashboardTopology(): Topology {
+    fun buildAdvancedStateTopology(): Topology {
         val builder = StreamsBuilder()
         
-        // Source streams from different data sources
-        val webEvents: KStream<String, WebEvent> = builder.stream(
-            "web-events",
-            Consumed.with(Serdes.String(), JsonSerde(WebEvent::class.java))
+        // 1. High-performance Key-Value Store
+        val userSessionStore = Stores.keyValueStoreBuilder(
+            Stores.persistentKeyValueStore("user-sessions"),
+            Serdes.String(),
+            JsonSerde(UserSession::class.java)
+        )
+        .withCachingEnabled()  // Enable in-memory caching
+        .withLoggingEnabled(mapOf(
+            "cleanup.policy" to "compact",
+            "min.compaction.lag.ms" to "3600000", // 1 hour
+            "segment.ms" to "86400000" // 1 day
+        ))
+        
+        // 2. Time-based Window Store
+        val metricsWindowStore = Stores.windowStoreBuilder(
+            Stores.persistentWindowStore(
+                "metrics-windows",
+                Duration.ofDays(7), // Retention: 7 days
+                Duration.ofMinutes(5), // Window size: 5 minutes
+                false // No duplicate windows
+            ),
+            Serdes.String(),
+            JsonSerde(MetricSummary::class.java)
+        )
+        .withCachingEnabled()
+        .withLoggingEnabled(mapOf(
+            "cleanup.policy" to "delete",
+            "retention.ms" to "604800000", // 7 days
+            "segment.ms" to "3600000" // 1 hour segments
+        ))
+        
+        // 3. Session Window Store
+        val conversationSessionStore = Stores.sessionStoreBuilder(
+            Stores.persistentSessionStore(
+                "conversation-sessions",
+                Duration.ofHours(2) // Session timeout: 2 hours
+            ),
+            Serdes.String(),
+            JsonSerde(ConversationSession::class.java)
+        )
+        .withCachingEnabled()
+        .withLoggingEnabled(emptyMap())
+        
+        // 4. Custom Timestamped Store
+        val auditTrailStore = Stores.keyValueStoreBuilder(
+            Stores.persistentTimestampedKeyValueStore("audit-trail"),
+            Serdes.String(),
+            JsonSerde(AuditEntry::class.java)
+        )
+        .withCachingEnabled()
+        .withLoggingEnabled(mapOf(
+            "cleanup.policy" to "delete",
+            "retention.ms" to "2592000000", // 30 days
+            "min.cleanable.dirty.ratio" to "0.1"
+        ))
+        
+        // Add stores to topology
+        builder.addStateStore(userSessionStore)
+        builder.addStateStore(metricsWindowStore)
+        builder.addStateStore(conversationSessionStore)
+        builder.addStateStore(auditTrailStore)
+        
+        return buildProcessingTopology(builder)
+    }
+    
+    private fun buildProcessingTopology(builder: StreamsBuilder): Topology {
+        val events: KStream<String, Event> = builder.stream("events")
+        
+        // Use multiple state stores in processing
+        val processedEvents = events.transform(
+            TransformerSupplier {
+                MultiStateTransformer()
+            },
+            "user-sessions", "audit-trail"
         )
         
-        val mobileEvents: KStream<String, MobileEvent> = builder.stream(
-            "mobile-events", 
-            Consumed.with(Serdes.String(), JsonSerde(MobileEvent::class.java))
-        )
-        
-        val transactionEvents: KStream<String, TransactionEvent> = builder.stream(
-            "transaction-events",
-            Consumed.with(Serdes.String(), JsonSerde(TransactionEvent::class.java))
-        )
-        
-        // Reference data tables
-        val userProfiles: GlobalKTable<String, UserProfile> = builder.globalTable(
-            "user-profiles",
-            Consumed.with(Serdes.String(), JsonSerde(UserProfile::class.java))
-        )
-        
-        val productCatalog: GlobalKTable<String, Product> = builder.globalTable(
-            "product-catalog",
-            Consumed.with(Serdes.String(), JsonSerde(Product::class.java))
-        )
-        
-        // 1. Unify all events into a common format
-        val unifiedEvents = unifyEventStreams(webEvents, mobileEvents, transactionEvents)
-        
-        // 2. Enrich events with user and product data
-        val enrichedEvents = enrichEvents(unifiedEvents, userProfiles, productCatalog)
-        
-        // 3. Build analytics pipelines
-        buildAnalyticsPipelines(builder, enrichedEvents)
-        
-        // 4. Build alerting system
-        buildAlertingSystem(builder, enrichedEvents)
+        processedEvents.to("processed-events")
         
         return builder.build()
     }
+}
+
+class MultiStateTransformer : Transformer<String, Event, KeyValue<String, ProcessedEvent>?> {
+    private lateinit var userSessions: KeyValueStore<String, UserSession>
+    private lateinit var auditTrail: TimestampedKeyValueStore<String, AuditEntry>
+    private lateinit var context: ProcessorContext
     
-    private fun unifyEventStreams(
-        webEvents: KStream<String, WebEvent>,
-        mobileEvents: KStream<String, MobileEvent>,
-        transactionEvents: KStream<String, TransactionEvent>
-    ): KStream<String, UnifiedEvent> {
-        
-        // Convert web events
-        val unifiedWebEvents = webEvents.map { key, event ->
-            KeyValue(
-                event.sessionId,
-                UnifiedEvent(
-                    eventId = event.eventId,
-                    userId = event.userId,
-                    sessionId = event.sessionId,
-                    timestamp = event.timestamp,
-                    eventType = "WEB_${event.action}",
-                    platform = "WEB",
-                    data = mapOf(
-                        "page" to event.page,
-                        "referrer" to event.referrer,
-                        "userAgent" to event.userAgent,
-                        "ipAddress" to event.ipAddress
-                    ) + event.customData
-                )
-            )
-        }
-        
-        // Convert mobile events
-        val unifiedMobileEvents = mobileEvents.map { key, event ->
-            KeyValue(
-                event.sessionId,
-                UnifiedEvent(
-                    eventId = event.eventId,
-                    userId = event.userId,
-                    sessionId = event.sessionId,
-                    timestamp = event.timestamp,
-                    eventType = "MOBILE_${event.action}",
-                    platform = "MOBILE",
-                    data = mapOf(
-                        "appVersion" to event.appVersion,
-                        "deviceType" to event.deviceType,
-                        "osVersion" to event.osVersion,
-                        "location" to event.location
-                    ) + event.customData
-                )
-            )
-        }
-        
-        // Convert transaction events
-        val unifiedTransactionEvents = transactionEvents.map { key, event ->
-            KeyValue(
-                event.transactionId,
-                UnifiedEvent(
-                    eventId = event.transactionId,
-                    userId = event.userId,
-                    sessionId = event.sessionId,
-                    timestamp = event.timestamp,
-                    eventType = "TRANSACTION_${event.type}",
-                    platform = event.platform,
-                    data = mapOf(
-                        "amount" to event.amount,
-                        "currency" to event.currency,
-                        "merchantId" to event.merchantId,
-                        "paymentMethod" to event.paymentMethod
-                    ) + event.metadata
-                )
-            )
-        }
-        
-        // Merge all streams
-        return unifiedWebEvents
-            .merge(unifiedMobileEvents)
-            .merge(unifiedTransactionEvents)
+    override fun init(context: ProcessorContext) {
+        this.context = context
+        this.userSessions = context.getStateStore("user-sessions")
+        this.auditTrail = context.getStateStore("audit-trail")
     }
     
-    private fun enrichEvents(
-        events: KStream<String, UnifiedEvent>,
-        userProfiles: GlobalKTable<String, UserProfile>,
-        productCatalog: GlobalKTable<String, Product>
-    ): KStream<String, EnrichedEvent> {
-        
-        // Enrich with user profile data
-        val eventsWithUser = events.join(
-            userProfiles,
-            { key, event -> event.userId },
-            { event, user ->
-                EnrichedEvent(
-                    unifiedEvent = event,
-                    userProfile = user,
-                    enrichmentTimestamp = System.currentTimeMillis()
-                )
-            }
+    override fun transform(key: String, event: Event): KeyValue<String, ProcessedEvent>? {
+        // Multi-store transaction-like processing
+        return try {
+            // Update user session
+            val session = updateUserSession(event)
+            
+            // Log audit entry with timestamp
+            logAuditEntry(event)
+            
+            // Generate processed event
+            KeyValue(key, createProcessedEvent(event, session))
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process event $key", e)
+            null
+        }
+    }
+    
+    private fun updateUserSession(event: Event): UserSession {
+        val currentSession = userSessions.get(event.userId) ?: UserSession(
+            userId = event.userId,
+            startTime = event.timestamp,
+            events = emptyList()
         )
         
-        // Further enrich transaction events with product data
-        return eventsWithUser.map { key, enrichedEvent ->
-            val event = enrichedEvent.unifiedEvent
-            
-            if (event.eventType.startsWith("TRANSACTION_") && event.data.containsKey("productId")) {
-                val productId = event.data["productId"] as? String
-                if (productId != null) {
-                    // Note: For simplicity, this example doesn't show the full product enrichment
-                    // In practice, you'd need another join or lookup for product data
-                    enrichedEvent
-                } else {
-                    enrichedEvent
-                }
-            } else {
-                enrichedEvent
-            }
-            
-            KeyValue(key, enrichedEvent)
-        }
+        val updatedSession = currentSession.copy(
+            events = currentSession.events + event,
+            lastActivity = event.timestamp,
+            duration = event.timestamp - currentSession.startTime,
+            eventCount = currentSession.eventCount + 1
+        )
+        
+        userSessions.put(event.userId, updatedSession)
+        return updatedSession
+    }
+    
+    private fun logAuditEntry(event: Event) {
+        val auditEntry = AuditEntry(
+            eventId = event.eventId,
+            userId = event.userId,
+            action = event.eventType,
+            timestamp = event.timestamp,
+            metadata = event.metadata
+        )
+        
+        auditTrail.put(
+            event.eventId,
+            ValueAndTimestamp.make(auditEntry, event.timestamp)
+        )
+    }
+    
+    override fun close() {
+        // Cleanup if needed
     }
 }
 ```
 
-### 2. **Multi-Dimensional Real-time Analytics**
+### 2. **Performance Optimization Strategies**
 
 ```kotlin
 @Component
-class RealTimeAnalytics {
+class StateStoreOptimization {
     
-    fun buildAnalyticsPipelines(
-        builder: StreamsBuilder,
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ) {
-        // 1. Real-time user activity analytics
-        buildUserActivityAnalytics(builder, enrichedEvents)
+    fun buildOptimizedTopology(): Topology {
+        val builder = StreamsBuilder()
         
-        // 2. Business metrics dashboard
-        buildBusinessMetrics(builder, enrichedEvents)
+        // Optimized store configuration
+        val highThroughputStore = Stores.keyValueStoreBuilder(
+            Stores.persistentKeyValueStore("high-throughput-data"),
+            Serdes.String(),
+            JsonSerde(DataPoint::class.java)
+        )
+        .withCachingEnabled() // Critical for write performance
+        .withLoggingEnabled(mapOf(
+            // Optimize changelog topic
+            "cleanup.policy" to "compact",
+            "compression.type" to "lz4",
+            "segment.ms" to "3600000", // 1 hour
+            "min.cleanable.dirty.ratio" to "0.2",
+            "delete.retention.ms" to "86400000" // 1 day
+        ))
         
-        // 3. Geographic analytics
-        buildGeographicAnalytics(builder, enrichedEvents)
+        builder.addStateStore(highThroughputStore)
         
-        // 4. Performance analytics
-        buildPerformanceAnalytics(builder, enrichedEvents)
+        val dataStream: KStream<String, DataPoint> = builder.stream(
+            "data-points",
+            Consumed.with(Serdes.String(), JsonSerde(DataPoint::class.java))
+        )
         
-        // 5. Funnel analysis
-        buildFunnelAnalytics(builder, enrichedEvents)
-    }
-    
-    private fun buildUserActivityAnalytics(
-        builder: StreamsBuilder,
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ) {
-        // Real-time active users by minute
-        val activeUsersByMinute = enrichedEvents
-            .selectKey { _, event -> "active-users" }
-            .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
-            .aggregate(
-                { ActiveUsersMetric() },
-                { key, event, metric ->
-                    metric.copy(
-                        uniqueUsers = metric.uniqueUsers + event.unifiedEvent.userId,
-                        totalEvents = metric.totalEvents + 1,
-                        platformBreakdown = updatePlatformBreakdown(metric.platformBreakdown, event.unifiedEvent.platform),
-                        lastUpdate = event.unifiedEvent.timestamp
-                    )
-                },
-                Named.`as`("active-users-by-minute"),
-                Materialized.`as`<String, ActiveUsersMetric, WindowStore<Bytes, ByteArray>>("active-users-store")
-                    .withKeySerde(Serdes.String())
-                    .withValueSerde(JsonSerde(ActiveUsersMetric::class.java))
-                    .withRetention(Duration.ofHours(24))
-            )
-        
-        // User session analytics
-        val userSessions = enrichedEvents
-            .selectKey { _, event -> event.unifiedEvent.userId }
-            .groupByKey()
-            .windowedBy(SessionWindows.with(Duration.ofMinutes(30)))
-            .aggregate(
-                { UserSessionAnalytics() },
-                { userId, event, session ->
-                    session.copy(
-                        userId = userId,
-                        events = session.events + event.unifiedEvent,
-                        sessionStart = if (session.sessionStart == 0L) event.unifiedEvent.timestamp else session.sessionStart,
-                        sessionEnd = event.unifiedEvent.timestamp,
-                        duration = event.unifiedEvent.timestamp - (if (session.sessionStart == 0L) event.unifiedEvent.timestamp else session.sessionStart),
-                        pageViews = session.pageViews + if (event.unifiedEvent.eventType.contains("PAGE_VIEW")) 1 else 0,
-                        transactions = session.transactions + if (event.unifiedEvent.eventType.startsWith("TRANSACTION_")) 1 else 0,
-                        platforms = session.platforms + event.unifiedEvent.platform,
-                        userSegment = determineUserSegment(event.userProfile)
-                    )
-                },
-                { session1, session2 -> // Session merger
-                    session1.copy(
-                        events = session1.events + session2.events,
-                        sessionStart = minOf(session1.sessionStart, session2.sessionStart),
-                        sessionEnd = maxOf(session1.sessionEnd, session2.sessionEnd),
-                        duration = maxOf(session1.sessionEnd, session2.sessionEnd) - minOf(session1.sessionStart, session2.sessionStart),
-                        pageViews = session1.pageViews + session2.pageViews,
-                        transactions = session1.transactions + session2.transactions,
-                        platforms = session1.platforms + session2.platforms
-                    )
-                },
-                Named.`as`("user-sessions"),
-                Materialized.with(Serdes.String(), JsonSerde(UserSessionAnalytics::class.java))
-            )
-        
-        // Output streams for dashboard consumption
-        activeUsersByMinute.toStream()
-            .map { windowedKey, metric ->
-                KeyValue(
-                    "${windowedKey.key()}-${windowedKey.window().start()}",
-                    DashboardMetric(
-                        metricType = "ACTIVE_USERS",
-                        timeWindow = TimeWindow(windowedKey.window().start(), windowedKey.window().end()),
-                        value = metric.uniqueUsers.size.toDouble(),
-                        breakdown = metric.platformBreakdown,
-                        timestamp = metric.lastUpdate
-                    )
-                )
-            }
-            .to("dashboard-metrics")
-        
-        userSessions.toStream()
-            .filter { windowedKey, session ->
-                // Only emit completed sessions
-                System.currentTimeMillis() - windowedKey.window().end() > Duration.ofMinutes(30).toMillis()
-            }
-            .to("user-session-analytics")
-    }
-    
-    private fun buildBusinessMetrics(
-        builder: StreamsBuilder,
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ) {
-        // Revenue analytics by time window
-        val revenueAnalytics = enrichedEvents
-            .filter { _, event -> event.unifiedEvent.eventType == "TRANSACTION_COMPLETED" }
-            .selectKey { _, event -> "revenue" }
-            .groupByKey()
-            .windowedBy(
-                TimeWindows.of(Duration.ofMinutes(5))
-                    .advanceBy(Duration.ofMinutes(1))
-            )
-            .aggregate(
-                { RevenueMetrics() },
-                { key, event, metrics ->
-                    val amount = event.unifiedEvent.data["amount"] as? Double ?: 0.0
-                    val currency = event.unifiedEvent.data["currency"] as? String ?: "USD"
-                    
-                    metrics.copy(
-                        totalRevenue = metrics.totalRevenue + amount,
-                        transactionCount = metrics.transactionCount + 1,
-                        averageTransactionValue = (metrics.totalRevenue + amount) / (metrics.transactionCount + 1),
-                        currencyBreakdown = updateCurrencyBreakdown(metrics.currencyBreakdown, currency, amount),
-                        userTierBreakdown = updateUserTierBreakdown(metrics.userTierBreakdown, event.userProfile.tier, amount),
-                        lastUpdate = event.unifiedEvent.timestamp
-                    )
-                },
-                Named.`as`("revenue-analytics"),
-                Materialized.`as`<String, RevenueMetrics, WindowStore<Bytes, ByteArray>>("revenue-store")
-            )
-        
-        // Product performance analytics
-        val productAnalytics = enrichedEvents
-            .filter { _, event -> 
-                event.unifiedEvent.eventType.startsWith("TRANSACTION_") && 
-                event.unifiedEvent.data.containsKey("productId")
-            }
-            .selectKey { _, event -> event.unifiedEvent.data["productId"] as String }
-            .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofHours(1)))
-            .aggregate(
-                { ProductPerformanceMetrics() },
-                { productId, event, metrics ->
-                    val amount = event.unifiedEvent.data["amount"] as? Double ?: 0.0
-                    val quantity = event.unifiedEvent.data["quantity"] as? Int ?: 1
-                    
-                    metrics.copy(
-                        productId = productId,
-                        sales = metrics.sales + amount,
-                        unitsSold = metrics.unitsSold + quantity,
-                        transactionCount = metrics.transactionCount + 1,
-                        averageOrderValue = (metrics.sales + amount) / (metrics.transactionCount + 1),
-                        customerSegments = updateCustomerSegments(metrics.customerSegments, event.userProfile.tier),
-                        platforms = updatePlatformStats(metrics.platforms, event.unifiedEvent.platform),
-                        lastUpdate = event.unifiedEvent.timestamp
-                    )
-                },
-                Named.`as`("product-analytics")
-            )
-        
-        // Output business metrics
-        revenueAnalytics.toStream()
-            .map { windowedKey, metrics ->
-                KeyValue(
-                    "revenue-${windowedKey.window().start()}",
-                    DashboardMetric(
-                        metricType = "REVENUE",
-                        timeWindow = TimeWindow(windowedKey.window().start(), windowedKey.window().end()),
-                        value = metrics.totalRevenue,
-                        breakdown = mapOf(
-                            "transactionCount" to metrics.transactionCount,
-                            "averageValue" to metrics.averageTransactionValue,
-                            "currencies" to metrics.currencyBreakdown
-                        ),
-                        timestamp = metrics.lastUpdate
-                    )
-                )
-            }
-            .to("dashboard-metrics")
-    }
-}
-```
-
-### 3. **Real-time Alerting System**
-
-```kotlin
-@Component
-class RealTimeAlerting {
-    
-    fun buildAlertingSystem(
-        builder: StreamsBuilder,
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ) {
-        // 1. Anomaly detection for transaction amounts
-        val transactionAnomalies = buildTransactionAnomalyDetection(enrichedEvents)
-        
-        // 2. User behavior alerts
-        val behaviorAlerts = buildUserBehaviorAlerts(enrichedEvents)
-        
-        // 3. System performance alerts
-        val performanceAlerts = buildPerformanceAlerts(enrichedEvents)
-        
-        // 4. Business threshold alerts
-        val businessAlerts = buildBusinessThresholdAlerts(enrichedEvents)
-        
-        // Merge all alerts
-        val allAlerts = transactionAnomalies
-            .merge(behaviorAlerts)
-            .merge(performanceAlerts)
-            .merge(businessAlerts)
-        
-        // Process and route alerts
-        processAndRouteAlerts(allAlerts)
-    }
-    
-    private fun buildTransactionAnomalyDetection(
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ): KStream<String, Alert> {
-        
-        val transactionEvents = enrichedEvents.filter { _, event ->
-            event.unifiedEvent.eventType == "TRANSACTION_COMPLETED"
-        }
-        
-        return transactionEvents.transform(
+        // Batch processing for better performance
+        val batchProcessor = dataStream.transform(
             TransformerSupplier {
-                TransactionAnomalyDetector()
+                BatchingTransformer()
             },
-            "transaction-baselines"
-        )
-    }
-    
-    private fun buildUserBehaviorAlerts(
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ): KStream<String, Alert> {
-        
-        // Detect suspicious user behavior patterns
-        return enrichedEvents
-            .selectKey { _, event -> event.unifiedEvent.userId }
-            .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMinutes(10)))
-            .aggregate(
-                { UserBehaviorWindow() },
-                { userId, event, window ->
-                    window.copy(
-                        userId = userId,
-                        events = window.events + event.unifiedEvent,
-                        eventTypes = window.eventTypes + event.unifiedEvent.eventType,
-                        platforms = window.platforms + event.unifiedEvent.platform,
-                        locations = window.locations + (event.unifiedEvent.data["location"] as? String ?: "unknown"),
-                        lastActivity = event.unifiedEvent.timestamp
-                    )
-                },
-                Named.`as`("user-behavior-windows")
-            )
-            .toStream()
-            .flatMap { windowedKey, window ->
-                val alerts = mutableListOf<KeyValue<String, Alert>>()
-                
-                // Check for suspicious patterns
-                if (window.platforms.size > 3) {
-                    alerts.add(KeyValue(
-                        "behavior-${windowedKey.key()}-${System.currentTimeMillis()}",
-                        Alert(
-                            alertId = UUID.randomUUID().toString(),
-                            alertType = "SUSPICIOUS_BEHAVIOR",
-                            severity = AlertSeverity.MEDIUM,
-                            title = "Multiple Platform Access",
-                            description = "User ${window.userId} accessed from ${window.platforms.size} different platforms within 10 minutes",
-                            data = mapOf(
-                                "userId" to window.userId,
-                                "platforms" to window.platforms,
-                                "eventCount" to window.events.size
-                            ),
-                            timestamp = window.lastActivity
-                        )
-                    ))
-                }
-                
-                if (window.locations.size > 2) {
-                    alerts.add(KeyValue(
-                        "location-${windowedKey.key()}-${System.currentTimeMillis()}",
-                        Alert(
-                            alertId = UUID.randomUUID().toString(),
-                            alertType = "MULTIPLE_LOCATIONS",
-                            severity = AlertSeverity.HIGH,
-                            title = "Multiple Location Access",
-                            description = "User ${window.userId} accessed from ${window.locations.size} different locations",
-                            data = mapOf(
-                                "userId" to window.userId,
-                                "locations" to window.locations,
-                                "timeWindow" to "10 minutes"
-                            ),
-                            timestamp = window.lastActivity
-                        )
-                    ))
-                }
-                
-                alerts
-            }
-    }
-    
-    private fun buildBusinessThresholdAlerts(
-        enrichedEvents: KStream<String, EnrichedEvent>
-    ): KStream<String, Alert> {
-        
-        // Monitor business KPIs and generate alerts when thresholds are exceeded
-        return enrichedEvents
-            .selectKey { _, event -> "business-metrics" }
-            .groupByKey()
-            .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
-            .aggregate(
-                { BusinessMetricsWindow() },
-                { key, event, metrics ->
-                    val amount = if (event.unifiedEvent.eventType == "TRANSACTION_COMPLETED") {
-                        event.unifiedEvent.data["amount"] as? Double ?: 0.0
-                    } else 0.0
-                    
-                    metrics.copy(
-                        totalRevenue = metrics.totalRevenue + amount,
-                        totalEvents = metrics.totalEvents + 1,
-                        uniqueUsers = metrics.uniqueUsers + event.unifiedEvent.userId,
-                        errorEvents = metrics.errorEvents + if (event.unifiedEvent.eventType.contains("ERROR")) 1 else 0,
-                        lastUpdate = event.unifiedEvent.timestamp
-                    )
-                },
-                Named.`as`("business-metrics-windows")
-            )
-            .toStream()
-            .flatMap { windowedKey, metrics ->
-                val alerts = mutableListOf<KeyValue<String, Alert>>()
-                
-                // Revenue threshold alert
-                if (metrics.totalRevenue < 1000.0) { // Low revenue threshold
-                    alerts.add(KeyValue(
-                        "revenue-low-${windowedKey.window().start()}",
-                        Alert(
-                            alertId = UUID.randomUUID().toString(),
-                            alertType = "LOW_REVENUE",
-                            severity = AlertSeverity.MEDIUM,
-                            title = "Low Revenue Alert",
-                            description = "Revenue in the last 5 minutes is below threshold: $${metrics.totalRevenue}",
-                            data = mapOf(
-                                "revenue" to metrics.totalRevenue,
-                                "threshold" to 1000.0,
-                                "window" to "5 minutes"
-                            ),
-                            timestamp = metrics.lastUpdate
-                        )
-                    ))
-                }
-                
-                // Error rate alert
-                val errorRate = if (metrics.totalEvents > 0) {
-                    metrics.errorEvents.toDouble() / metrics.totalEvents
-                } else 0.0
-                
-                if (errorRate > 0.05) { // 5% error rate threshold
-                    alerts.add(KeyValue(
-                        "error-rate-${windowedKey.window().start()}",
-                        Alert(
-                            alertId = UUID.randomUUID().toString(),
-                            alertType = "HIGH_ERROR_RATE",
-                            severity = AlertSeverity.HIGH,
-                            title = "High Error Rate Alert",
-                            description = "Error rate is ${(errorRate * 100).format(2)}% in the last 5 minutes",
-                            data = mapOf(
-                                "errorRate" to errorRate,
-                                "errorCount" to metrics.errorEvents,
-                                "totalEvents" to metrics.totalEvents
-                            ),
-                            timestamp = metrics.lastUpdate
-                        )
-                    ))
-                }
-                
-                alerts
-            }
-    }
-    
-    private fun processAndRouteAlerts(alerts: KStream<String, Alert>) {
-        // Route alerts based on severity and type
-        val routedAlerts = alerts.branch(
-            Named.`as`("critical"),
-            Predicate { _, alert -> alert.severity == AlertSeverity.CRITICAL },
-            
-            Named.`as`("high"),
-            Predicate { _, alert -> alert.severity == AlertSeverity.HIGH },
-            
-            Named.`as`("medium"),
-            Predicate { _, alert -> alert.severity == AlertSeverity.MEDIUM },
-            
-            Named.`as`("low"),
-            Predicate { _, alert -> true }
+            "high-throughput-data"
         )
         
-        // Send critical alerts immediately
-        routedAlerts["critical"]!!
-            .foreach { key, alert ->
-                sendImmediateAlert(alert)
+        batchProcessor.to("processed-data-points")
+        
+        return builder.build()
+    }
+}
+
+class BatchingTransformer : Transformer<String, DataPoint, KeyValue<String, BatchedDataPoints>?> {
+    private lateinit var store: KeyValueStore<String, DataPoint>
+    private lateinit var context: ProcessorContext
+    private val batchBuffer = mutableMapOf<String, MutableList<DataPoint>>()
+    private val batchSize = 100
+    
+    override fun init(context: ProcessorContext) {
+        this.context = context
+        this.store = context.getStateStore("high-throughput-data")
+        
+        // Schedule periodic batch flush
+        context.schedule(
+            Duration.ofSeconds(30),
+            PunctuationType.WALL_CLOCK_TIME
+        ) { timestamp ->
+            flushBatches(timestamp)
+        }
+    }
+    
+    override fun transform(key: String, dataPoint: DataPoint): KeyValue<String, BatchedDataPoints>? {
+        // Add to batch
+        val categoryBatch = batchBuffer.computeIfAbsent(dataPoint.category) { mutableListOf() }
+        categoryBatch.add(dataPoint)
+        
+        // Update store (with caching, this is efficient)
+        store.put(key, dataPoint)
+        
+        // Flush if batch is full
+        if (categoryBatch.size >= batchSize) {
+            return flushBatch(dataPoint.category, categoryBatch.toList())
+        }
+        
+        return null
+    }
+    
+    private fun flushBatches(timestamp: Long) {
+        batchBuffer.forEach { (category, batch) ->
+            if (batch.isNotEmpty()) {
+                val result = flushBatch(category, batch.toList())
+                if (result != null) {
+                    context.forward(result.key, result.value)
+                }
+                batch.clear()
             }
+        }
+    }
+    
+    private fun flushBatch(category: String, batch: List<DataPoint>): KeyValue<String, BatchedDataPoints> {
+        val batchedData = BatchedDataPoints(
+            category = category,
+            dataPoints = batch,
+            batchSize = batch.size,
+            batchTimestamp = System.currentTimeMillis(),
+            aggregates = calculateAggregates(batch)
+        )
         
-        // Batch lower priority alerts
-        routedAlerts["high"]!!.to("high-priority-alerts")
-        routedAlerts["medium"]!!.to("medium-priority-alerts")
-        routedAlerts["low"]!!.to("low-priority-alerts")
-        
-        // Send all alerts to dashboard
-        alerts.to("dashboard-alerts")
+        return KeyValue(category, batchedData)
+    }
+    
+    override fun close() {
+        // Final flush
+        flushBatches(System.currentTimeMillis())
     }
 }
 ```
 
-## 📡 **Interactive Dashboard API**
+## 🛡️ **Fault Tolerance and Recovery**
 
-### 1. **WebSocket Real-time Updates**
+### 1. **Standby Replicas Configuration**
 
 ```kotlin
-@Component
-@EnableWebSocket
-class DashboardWebSocketConfig : WebSocketConfigurer {
+@Configuration
+class FaultToleranceConfig {
     
-    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        registry.addHandler(DashboardWebSocketHandler(), "/dashboard-ws")
-            .setAllowedOrigins("*")
+    @Bean
+    fun faultTolerantStreamsConfig(): KafkaStreamsConfiguration {
+        val props = HashMap<String, Any>()
+        
+        // Basic configuration
+        props[StreamsConfig.APPLICATION_ID_CONFIG] = "fault-tolerant-app"
+        props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG] = "localhost:9092"
+        
+        // Fault tolerance settings
+        props[StreamsConfig.NUM_STANDBY_REPLICAS_CONFIG] = 2 // 2 standby replicas
+        props[StreamsConfig.ACCEPTABLE_RECOVERY_LAG_CONFIG] = 1000L // 1000 records max lag
+        props[StreamsConfig.MAX_WARMUP_REPLICAS_CONFIG] = 2 // Warm up 2 replicas during rebalance
+        
+        // State directory with redundancy
+        props[StreamsConfig.STATE_DIR_CONFIG] = "/opt/kafka-streams/state"
+        
+        // Processing guarantees
+        props[StreamsConfig.PROCESSING_GUARANTEE_CONFIG] = StreamsConfig.EXACTLY_ONCE_V2
+        
+        // Replication and durability
+        props[StreamsConfig.REPLICATION_FACTOR_CONFIG] = 3
+        props[StreamsConfig.topicPrefix(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG)] = 2
+        
+        // Recovery optimization
+        props[StreamsConfig.COMMIT_INTERVAL_MS_CONFIG] = 1000 // 1 second
+        props[StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG] = 64 * 1024 * 1024 // 64MB
+        
+        return KafkaStreamsConfiguration(props)
     }
 }
 
 @Component
-class DashboardWebSocketHandler : TextWebSocketHandler() {
-    
-    private val sessions = ConcurrentHashMap<String, WebSocketSession>()
+class StateRecoveryManager {
     
     @Autowired
     private lateinit var kafkaStreams: KafkaStreams
     
-    override fun afterConnectionEstablished(session: WebSocketSession) {
-        sessions[session.id] = session
-        logger.info("Dashboard WebSocket connected: ${session.id}")
-        
-        // Send initial data
-        sendInitialDashboardData(session)
+    @EventListener
+    fun handleStateChange(stateChangeEvent: KafkaStreams.StateListener) {
+        when (stateChangeEvent.newState()) {
+            KafkaStreams.State.REBALANCING -> {
+                logger.info("Streams rebalancing - state stores may be temporarily unavailable")
+                handleRebalancing()
+            }
+            
+            KafkaStreams.State.RUNNING -> {
+                logger.info("Streams running - all state stores available")
+                handleRunning()
+            }
+            
+            KafkaStreams.State.ERROR -> {
+                logger.error("Streams in error state - initiating recovery")
+                handleError()
+            }
+            
+            else -> {
+                logger.info("Streams state: ${stateChangeEvent.newState()}")
+            }
+        }
     }
     
-    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+    private fun handleRebalancing() {
+        // Pause external processing if needed
+        // Update health check status
+        updateHealthStatus("REBALANCING")
+    }
+    
+    private fun handleRunning() {
+        // Resume external processing
+        // Verify state store integrity
+        verifyStateStores()
+        updateHealthStatus("HEALTHY")
+    }
+    
+    private fun handleError() {
+        // Attempt graceful recovery
         try {
-            val request = ObjectMapper().readValue(message.payload, DashboardRequest::class.java)
-            handleDashboardRequest(session, request)
+            // Check if recovery is possible
+            if (canRecover()) {
+                logger.info("Attempting automatic recovery")
+                restartStreamsApplication()
+            } else {
+                logger.error("Manual intervention required")
+                alertOperations("Kafka Streams requires manual recovery")
+            }
         } catch (e: Exception) {
-            logger.error("Failed to handle WebSocket message", e)
+            logger.error("Failed to recover automatically", e)
+            alertOperations("Critical: Kafka Streams recovery failed")
         }
     }
     
-    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
-        sessions.remove(session.id)
-        logger.info("Dashboard WebSocket disconnected: ${session.id}")
-    }
-    
-    private fun sendInitialDashboardData(session: WebSocketSession) {
+    private fun verifyStateStores() {
         try {
-            val dashboardData = DashboardData(
-                activeUsers = getCurrentActiveUsers(),
-                revenueMetrics = getCurrentRevenueMetrics(),
-                recentAlerts = getRecentAlerts(),
-                systemHealth = getSystemHealth()
-            )
+            // Query each state store to verify accessibility
+            val storeNames = listOf("user-sessions", "metrics-windows", "audit-trail")
             
-            session.sendMessage(TextMessage(
-                ObjectMapper().writeValueAsString(dashboardData)
-            ))
-        } catch (e: Exception) {
-            logger.error("Failed to send initial dashboard data", e)
-        }
-    }
-    
-    private fun handleDashboardRequest(session: WebSocketSession, request: DashboardRequest) {
-        when (request.type) {
-            "GET_USER_ANALYTICS" -> {
-                val analytics = getUserAnalytics(request.userId, request.timeRange)
-                sendResponse(session, "USER_ANALYTICS", analytics)
-            }
-            
-            "GET_REVENUE_BREAKDOWN" -> {
-                val breakdown = getRevenueBreakdown(request.timeRange)
-                sendResponse(session, "REVENUE_BREAKDOWN", breakdown)
-            }
-            
-            "GET_ALERT_DETAILS" -> {
-                val alertDetails = getAlertDetails(request.alertId)
-                sendResponse(session, "ALERT_DETAILS", alertDetails)
-            }
-            
-            "SUBSCRIBE_METRIC" -> {
-                subscribeToMetric(session, request.metricType)
-            }
-        }
-    }
-    
-    @Scheduled(fixedRate = 5000) // Every 5 seconds
-    fun broadcastLiveUpdates() {
-        if (sessions.isNotEmpty()) {
-            try {
-                val liveUpdate = LiveDashboardUpdate(
-                    timestamp = System.currentTimeMillis(),
-                    activeUsers = getCurrentActiveUsers(),
-                    revenueLastMinute = getRevenueLastMinute(),
-                    newAlerts = getNewAlerts(),
-                    systemMetrics = getCurrentSystemMetrics()
+            storeNames.forEach { storeName ->
+                val store = kafkaStreams.store(
+                    StoreQueryParameters.fromNameAndType(
+                        storeName,
+                        QueryableStoreTypes.keyValueStore<String, Any>()
+                    )
                 )
                 
-                val message = TextMessage(ObjectMapper().writeValueAsString(liveUpdate))
-                
-                sessions.values.forEach { session ->
-                    if (session.isOpen) {
-                        session.sendMessage(message)
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("Failed to broadcast live updates", e)
+                // Perform a simple query to verify store health
+                val approximateNumEntries = store.approximateNumEntries()
+                logger.info("State store $storeName verified: ~$approximateNumEntries entries")
             }
+            
+        } catch (e: Exception) {
+            logger.error("State store verification failed", e)
+            throw IllegalStateException("State stores not accessible", e)
         }
     }
 }
 ```
 
-### 2. **Comprehensive Query API**
+### 2. **Disaster Recovery Procedures**
+
+```kotlin
+@Component
+class DisasterRecoveryManager {
+    
+    @Autowired
+    private lateinit var kafkaStreams: KafkaStreams
+    
+    fun performBackup(backupPath: String): BackupResult {
+        return try {
+            logger.info("Starting state store backup to $backupPath")
+            
+            // Stop processing temporarily (if possible)
+            val isRunning = kafkaStreams.state() == KafkaStreams.State.RUNNING
+            
+            if (isRunning) {
+                // For critical applications, you might not stop the streams
+                // Instead, use standby replicas or point-in-time snapshots
+                logger.warn("Backing up while streams are running - may have consistency issues")
+            }
+            
+            val stateDir = File("/opt/kafka-streams/state")
+            val backupDir = File(backupPath)
+            
+            // Create backup directory
+            backupDir.mkdirs()
+            
+            // Backup state directories
+            val backupFiles = backupStateDirectories(stateDir, backupDir)
+            
+            // Backup changelog topic offsets for consistency
+            val offsetsBackup = backupChangelogOffsets()
+            
+            BackupResult(
+                success = true,
+                backupPath = backupPath,
+                backupTimestamp = System.currentTimeMillis(),
+                filesBackedUp = backupFiles,
+                changelogOffsets = offsetsBackup,
+                sizeBytes = calculateBackupSize(backupDir)
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Backup failed", e)
+            BackupResult(
+                success = false,
+                error = e.message,
+                backupTimestamp = System.currentTimeMillis()
+            )
+        }
+    }
+    
+    fun performRestore(backupPath: String): RestoreResult {
+        return try {
+            logger.info("Starting state store restore from $backupPath")
+            
+            // Ensure streams are stopped
+            if (kafkaStreams.state() != KafkaStreams.State.NOT_RUNNING) {
+                kafkaStreams.close(Duration.ofSeconds(30))
+            }
+            
+            val backupDir = File(backupPath)
+            val stateDir = File("/opt/kafka-streams/state")
+            
+            // Clear existing state
+            stateDir.deleteRecursively()
+            stateDir.mkdirs()
+            
+            // Restore state directories
+            restoreStateDirectories(backupDir, stateDir)
+            
+            // Note: Changelog topics will be automatically reconciled on startup
+            // if there are any inconsistencies
+            
+            RestoreResult(
+                success = true,
+                restorePath = backupPath,
+                restoreTimestamp = System.currentTimeMillis(),
+                message = "State restored successfully. Restart application to complete recovery."
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Restore failed", e)
+            RestoreResult(
+                success = false,
+                error = e.message,
+                restoreTimestamp = System.currentTimeMillis()
+            )
+        }
+    }
+    
+    fun validateStateConsistency(): ConsistencyReport {
+        val report = ConsistencyReport()
+        
+        try {
+            // Check if all expected state stores are available
+            val expectedStores = listOf("user-sessions", "metrics-windows", "audit-trail")
+            expectedStores.forEach { storeName ->
+                val isAvailable = isStoreAvailable(storeName)
+                report.storeAvailability[storeName] = isAvailable
+                
+                if (isAvailable) {
+                    // Perform consistency checks
+                    val consistencyCheck = checkStoreConsistency(storeName)
+                    report.consistencyResults[storeName] = consistencyCheck
+                }
+            }
+            
+            // Check changelog topic lag
+            report.changelogLag = checkChangelogLag()
+            
+            // Overall health assessment
+            report.overallHealth = determineOverallHealth(report)
+            
+        } catch (e: Exception) {
+            logger.error("Consistency validation failed", e)
+            report.error = e.message
+        }
+        
+        return report
+    }
+    
+    private fun checkStoreConsistency(storeName: String): StoreConsistencyCheck {
+        return try {
+            val store = kafkaStreams.store(
+                StoreQueryParameters.fromNameAndType(
+                    storeName,
+                    QueryableStoreTypes.keyValueStore<String, Any>()
+                )
+            )
+            
+            val entryCount = store.approximateNumEntries()
+            val sampleKeys = getSampleKeys(store, 100)
+            val sampleValidation = validateSampleData(store, sampleKeys)
+            
+            StoreConsistencyCheck(
+                storeName = storeName,
+                entryCount = entryCount,
+                sampleSize = sampleKeys.size,
+                sampleValidationPassed = sampleValidation,
+                lastChecked = System.currentTimeMillis()
+            )
+            
+        } catch (e: Exception) {
+            StoreConsistencyCheck(
+                storeName = storeName,
+                error = e.message,
+                lastChecked = System.currentTimeMillis()
+            )
+        }
+    }
+}
+```
+
+## 🔍 **Interactive Queries and State Access**
+
+### 1. **Advanced Query API**
 
 ```kotlin
 @RestController
-@RequestMapping("/api/dashboard")
-class DashboardQueryController {
+@RequestMapping("/api/state")
+class StateQueryController {
     
     @Autowired
     private lateinit var kafkaStreams: KafkaStreams
     
-    @GetMapping("/metrics/active-users")
-    fun getActiveUsers(
-        @RequestParam(defaultValue = "1") hours: Int
-    ): ResponseEntity<List<TimeSeriesPoint>> {
+    @GetMapping("/users/{userId}/session")
+    fun getUserSession(@PathVariable userId: String): ResponseEntity<UserSession> {
         return try {
             val store = kafkaStreams.store(
                 StoreQueryParameters.fromNameAndType(
-                    "active-users-store",
-                    QueryableStoreTypes.windowStore<String, ActiveUsersMetric>()
+                    "user-sessions",
+                    QueryableStoreTypes.keyValueStore<String, UserSession>()
+                )
+            )
+            
+            val session = store.get(userId)
+            if (session != null) {
+                ResponseEntity.ok(session)
+            } else {
+                ResponseEntity.notFound().build()
+            }
+            
+        } catch (e: InvalidStateStoreException) {
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(null)
+        }
+    }
+    
+    @GetMapping("/metrics/{metricName}/windows")
+    fun getMetricWindows(
+        @PathVariable metricName: String,
+        @RequestParam(defaultValue = "1") hours: Long
+    ): ResponseEntity<List<WindowedMetric>> {
+        return try {
+            val store = kafkaStreams.store(
+                StoreQueryParameters.fromNameAndType(
+                    "metrics-windows",
+                    QueryableStoreTypes.windowStore<String, MetricSummary>()
                 )
             )
             
             val endTime = Instant.now()
-            val startTime = endTime.minus(Duration.ofHours(hours.toLong()))
+            val startTime = endTime.minus(Duration.ofHours(hours))
             
-            val dataPoints = mutableListOf<TimeSeriesPoint>()
+            val windows = mutableListOf<WindowedMetric>()
             
-            store.fetchAll(startTime, endTime).use { iterator ->
+            store.fetch(
+                metricName,
+                startTime,
+                endTime
+            ).use { iterator ->
                 while (iterator.hasNext()) {
                     val entry = iterator.next()
-                    dataPoints.add(
-                        TimeSeriesPoint(
-                            timestamp = entry.key.window().start(),
-                            value = entry.value.uniqueUsers.size.toDouble(),
-                            metadata = mapOf(
-                                "totalEvents" to entry.value.totalEvents,
-                                "platformBreakdown" to entry.value.platformBreakdown
-                            )
+                    windows.add(
+                        WindowedMetric(
+                            metricName = metricName,
+                            windowStart = entry.key,
+                            value = entry.value,
+                            timestamp = entry.key
                         )
                     )
                 }
             }
             
-            ResponseEntity.ok(dataPoints.sortedBy { it.timestamp })
+            ResponseEntity.ok(windows)
             
         } catch (e: InvalidStateStoreException) {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(emptyList())
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(emptyList())
         }
     }
     
-    @GetMapping("/metrics/revenue")
-    fun getRevenueMetrics(
-        @RequestParam(defaultValue = "24") hours: Int,
-        @RequestParam(defaultValue = "hour") granularity: String
-    ): ResponseEntity<RevenueAnalysisResponse> {
+    @GetMapping("/audit/{eventId}")
+    fun getAuditEntry(@PathVariable eventId: String): ResponseEntity<TimestampedAuditEntry> {
         return try {
             val store = kafkaStreams.store(
                 StoreQueryParameters.fromNameAndType(
-                    "revenue-store",
-                    QueryableStoreTypes.windowStore<String, RevenueMetrics>()
+                    "audit-trail",
+                    QueryableStoreTypes.timestampedKeyValueStore<String, AuditEntry>()
                 )
             )
             
-            val endTime = Instant.now()
-            val startTime = endTime.minus(Duration.ofHours(hours.toLong()))
-            
-            val metrics = mutableListOf<RevenueDataPoint>()
-            var totalRevenue = 0.0
-            var totalTransactions = 0
-            val currencyBreakdown = mutableMapOf<String, Double>()
-            
-            store.fetch("revenue", startTime, endTime).use { iterator ->
-                while (iterator.hasNext()) {
-                    val entry = iterator.next()
-                    val revenueMetric = entry.value
-                    
-                    metrics.add(
-                        RevenueDataPoint(
-                            timestamp = entry.key,
-                            revenue = revenueMetric.totalRevenue,
-                            transactionCount = revenueMetric.transactionCount,
-                            averageValue = revenueMetric.averageTransactionValue
-                        )
+            val entry = store.get(eventId)
+            if (entry != null) {
+                ResponseEntity.ok(
+                    TimestampedAuditEntry(
+                        auditEntry = entry.value(),
+                        timestamp = entry.timestamp()
                     )
-                    
-                    totalRevenue += revenueMetric.totalRevenue
-                    totalTransactions += revenueMetric.transactionCount
-                    
-                    revenueMetric.currencyBreakdown.forEach { (currency, amount) ->
-                        currencyBreakdown[currency] = (currencyBreakdown[currency] ?: 0.0) + amount
-                    }
-                }
+                )
+            } else {
+                ResponseEntity.notFound().build()
             }
             
-            ResponseEntity.ok(
-                RevenueAnalysisResponse(
-                    timeRange = TimeRange(startTime.toEpochMilli(), endTime.toEpochMilli()),
-                    totalRevenue = totalRevenue,
-                    totalTransactions = totalTransactions,
-                    averageTransactionValue = if (totalTransactions > 0) totalRevenue / totalTransactions else 0.0,
-                    currencyBreakdown = currencyBreakdown,
-                    timeSeries = metrics.sortedBy { it.timestamp },
-                    granularity = granularity
-                )
-            )
-            
         } catch (e: InvalidStateStoreException) {
-            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(null)
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(null)
         }
     }
     
-    @GetMapping("/analytics/funnel")
-    fun getFunnelAnalysis(
-        @RequestParam(defaultValue = "24") hours: Int
-    ): ResponseEntity<FunnelAnalysisResponse> {
-        // Implementation for funnel analysis using state stores
-        return ResponseEntity.ok(
-            FunnelAnalysisResponse(
-                steps = listOf(
-                    FunnelStep("Page View", 10000, 100.0),
-                    FunnelStep("Product View", 5000, 50.0),
-                    FunnelStep("Add to Cart", 1000, 10.0),
-                    FunnelStep("Checkout", 500, 5.0),
-                    FunnelStep("Purchase", 250, 2.5)
-                ),
-                conversionRates = mapOf(
-                    "Page View → Product View" to 50.0,
-                    "Product View → Add to Cart" to 20.0,
-                    "Add to Cart → Checkout" to 50.0,
-                    "Checkout → Purchase" to 50.0
-                ),
-                timeRange = TimeRange(
-                    System.currentTimeMillis() - Duration.ofHours(hours.toLong()).toMillis(),
-                    System.currentTimeMillis()
+    @GetMapping("/health/stores")
+    fun getStateStoreHealth(): ResponseEntity<Map<String, StoreHealth>> {
+        val health = mutableMapOf<String, StoreHealth>()
+        val storeNames = listOf("user-sessions", "metrics-windows", "audit-trail")
+        
+        storeNames.forEach { storeName ->
+            health[storeName] = try {
+                val metadata = kafkaStreams.localThreadsMetadata()
+                val storeInfo = metadata.flatMap { it.activeTasks() + it.standbyTasks() }
+                    .flatMap { it.topicPartitions().map { tp -> tp to it } }
+                    .find { it.second.taskId().toString().contains(storeName) }
+                
+                StoreHealth(
+                    available = true,
+                    storeName = storeName,
+                    partitions = storeInfo?.second?.topicPartitions()?.size ?: 0,
+                    lastAccessed = System.currentTimeMillis()
                 )
-            )
-        )
+                
+            } catch (e: Exception) {
+                StoreHealth(
+                    available = false,
+                    storeName = storeName,
+                    error = e.message
+                )
+            }
+        }
+        
+        return ResponseEntity.ok(health)
     }
     
-    @GetMapping("/alerts")
-    fun getAlerts(
-        @RequestParam(defaultValue = "24") hours: Int,
-        @RequestParam(required = false) severity: String?
-    ): ResponseEntity<AlertsResponse> {
-        // Implementation to fetch alerts from state stores or external systems
-        return ResponseEntity.ok(
-            AlertsResponse(
-                alerts = getAlertsFromStore(hours, severity),
-                totalCount = 42,
-                severityBreakdown = mapOf(
-                    "CRITICAL" to 2,
-                    "HIGH" to 8,
-                    "MEDIUM" to 15,
-                    "LOW" to 17
-                )
-            )
-        )
+    @PostMapping("/operations/backup")
+    fun triggerBackup(@RequestBody request: BackupRequest): ResponseEntity<BackupResult> {
+        val disasterRecoveryManager = DisasterRecoveryManager()
+        val result = disasterRecoveryManager.performBackup(request.backupPath)
+        
+        return if (result.success) {
+            ResponseEntity.ok(result)
+        } else {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result)
+        }
+    }
+}
+```
+
+### 2. **State Store Monitoring**
+
+```kotlin
+@Component
+class StateStoreMonitoring {
+    
+    @Autowired
+    private lateinit var kafkaStreams: KafkaStreams
+    
+    @Scheduled(fixedRate = 30000) // Every 30 seconds
+    fun monitorStateStores() {
+        try {
+            val metadata = kafkaStreams.localThreadsMetadata()
+            
+            metadata.forEach { threadMetadata ->
+                // Monitor active tasks
+                threadMetadata.activeTasks().forEach { taskMetadata ->
+                    monitorTask(taskMetadata, "active")
+                }
+                
+                // Monitor standby tasks
+                threadMetadata.standbyTasks().forEach { taskMetadata ->
+                    monitorTask(taskMetadata, "standby")
+                }
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to monitor state stores", e)
+        }
     }
     
-    @GetMapping("/health")
-    fun getDashboardHealth(): ResponseEntity<DashboardHealth> {
-        return ResponseEntity.ok(
-            DashboardHealth(
-                streamsState = kafkaStreams.state().toString(),
-                storeAvailability = checkStoreAvailability(),
-                dataFreshness = checkDataFreshness(),
-                alertingSystems = checkAlertingSystems(),
-                overallStatus = "HEALTHY"
-            )
+    private fun monitorTask(taskMetadata: TaskMetadata, taskType: String) {
+        val taskId = taskMetadata.taskId().toString()
+        
+        // Record task-level metrics
+        Metrics.globalRegistry.gauge(
+            "kafka.streams.task.partitions",
+            Tags.of(
+                Tag.of("task_id", taskId),
+                Tag.of("task_type", taskType)
+            ),
+            taskMetadata.topicPartitions().size.toDouble()
         )
+        
+        // Monitor state store sizes (if accessible)
+        if (taskType == "active") {
+            try {
+                val storeMetrics = getStoreMetrics(taskId)
+                storeMetrics.forEach { (storeName, metrics) ->
+                    Metrics.globalRegistry.gauge(
+                        "kafka.streams.store.size",
+                        Tags.of(
+                            Tag.of("store", storeName),
+                            Tag.of("task_id", taskId)
+                        ),
+                        metrics.sizeBytes.toDouble()
+                    )
+                    
+                    Metrics.globalRegistry.gauge(
+                        "kafka.streams.store.entries",
+                        Tags.of(
+                            Tag.of("store", storeName),
+                            Tag.of("task_id", taskId)
+                        ),
+                        metrics.entryCount.toDouble()
+                    )
+                }
+            } catch (e: Exception) {
+                logger.warn("Could not get store metrics for task $taskId", e)
+            }
+        }
+    }
+    
+    @EventListener
+    fun handleRebalance(event: StreamsRebalanceEvent) {
+        logger.info("Streams rebalance: ${event.type}")
+        
+        Metrics.globalRegistry.counter(
+            "kafka.streams.rebalance",
+            Tags.of(Tag.of("type", event.type.toString()))
+        ).increment()
+        
+        when (event.type) {
+            RebalanceType.STARTED -> {
+                startRebalanceTimer()
+            }
+            RebalanceType.COMPLETED -> {
+                recordRebalanceDuration()
+                validatePostRebalanceState()
+            }
+        }
+    }
+    
+    private fun validatePostRebalanceState() {
+        CompletableFuture.runAsync {
+            Thread.sleep(5000) // Wait for stabilization
+            
+            try {
+                val consistencyReport = DisasterRecoveryManager().validateStateConsistency()
+                
+                if (consistencyReport.overallHealth != "HEALTHY") {
+                    logger.warn("Post-rebalance consistency check failed: $consistencyReport")
+                    alertOperations("State consistency issues detected after rebalance")
+                }
+                
+            } catch (e: Exception) {
+                logger.error("Post-rebalance validation failed", e)
+            }
+        }
     }
 }
 ```
 
 ## ✅ **Best Practices Summary**
 
-### 📊 **Dashboard Architecture**
-- **Separate concerns** between stream processing and dashboard API
-- **Use WebSockets** for real-time updates to reduce polling
-- **Implement proper error handling** for state store unavailability
-- **Cache frequently accessed data** to reduce state store load
+### 🗃️ **State Store Design**
+- **Choose appropriate store types** based on access patterns
+- **Configure retention policies** to manage disk usage
+- **Enable caching** for frequently accessed data
+- **Use proper serialization** for performance and compatibility
 
-### 🔄 **Stream Processing Optimization**
-- **Design for scalability** with proper partitioning strategies
-- **Use appropriate windowing** for different metrics granularities
-- **Implement efficient joins** with co-partitioned data
-- **Monitor resource usage** and optimize state store configurations
+### 🛡️ **Fault Tolerance**
+- **Configure standby replicas** for critical applications
+- **Monitor changelog lag** to ensure recovery readiness
+- **Test recovery procedures** regularly
+- **Implement health checks** for state store availability
 
-### 📡 **Real-time Communication**
-- **Batch updates** when possible to reduce WebSocket traffic
-- **Implement connection management** for WebSocket sessions
-- **Use compression** for large data payloads
-- **Handle connection failures** gracefully with reconnection logic
+### 🔧 **Performance Optimization**
+- **Batch state operations** when possible
+- **Configure appropriate cache sizes** based on memory availability
+- **Monitor state store sizes** and implement cleanup policies
+- **Use proper key design** for even distribution
 
-### 🛡️ **Production Readiness**
-- **Implement comprehensive monitoring** for all components
-- **Set up proper alerting** for system health and business metrics
-- **Design for fault tolerance** with standby replicas and recovery procedures
-- **Test under load** to ensure scalability requirements are met
-
-## 🎉 **Phase 3 Complete!**
-
-**Congratulations!** You've completed **Phase 3: Kafka Streams, State & Aggregation** with mastery of:
-
-✅ **Kafka Streams API Fundamentals** (Lesson 14)  
-✅ **Advanced Windowing & Joins** (Lesson 15)  
-✅ **State Store Management & Fault Tolerance** (Lesson 16)  
-✅ **Real-time Dashboard Application** (Lesson 17)  
+### 📊 **Operational Excellence**
+- **Implement state store monitoring** with comprehensive metrics
+- **Create backup and restore procedures** for disaster recovery
+- **Set up alerting** for state store issues
+- **Document recovery procedures** for operations teams
 
 ## 🚀 **What's Next?**
 
-Ready for the final phase? Begin **Phase 4: Production & Scaling** with [Lesson 18: Kafka Security & ACLs](../lesson_18/concept.md) to learn how to secure and deploy Kafka systems in production environments.
+You've mastered state management and fault tolerance! Complete Phase 3 with [Lesson 17: Building a Real-time Dashboard Application](../lesson_18/concept.md), where you'll put everything together to build a comprehensive real-time analytics system with state stores, windowing, and interactive queries.
 
 ---
 
-*You've built a complete real-time analytics system! This comprehensive dashboard demonstrates the full power of Kafka Streams for building production-ready, scalable stream processing applications that provide instant insights from streaming data.*
+*Local state stores are the foundation of robust stream processing applications. With proper fault tolerance and recovery mechanisms, you can build systems that maintain consistency and availability even in the face of failures.*

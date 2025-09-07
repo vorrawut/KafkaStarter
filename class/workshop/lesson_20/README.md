@@ -1,644 +1,712 @@
-# Workshop: Deployment & Scaling Best Practices
+# Workshop: Observability & Monitoring
 
-## 🎯 Objective  
-Master production deployment strategies, auto-scaling patterns, and operational best practices for running Kafka clusters at scale in cloud and on-premises environments.
+## 🎯 Objective
+Implement comprehensive observability for production Kafka systems including metrics collection, distributed tracing, structured logging, alerting, and real-time dashboards for operational excellence.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Deployment Strategies
-Implement deployment automation in `deployment/DeploymentManager.kt`
+### Task 1: Metrics Collection
+Implement metrics in `metrics/KafkaMetricsCollector.kt`
 
-### Task 2: Auto-scaling Configuration  
-Build auto-scaling logic in `scaling/AutoScaler.kt`
+### Task 2: Distributed Tracing
+Build tracing in `tracing/DistributedTracer.kt`
 
-### Task 3: Performance Tuning
-Optimize configurations in `tuning/PerformanceTuner.kt`
+### Task 3: Structured Logging
+Create logging framework in `logging/StructuredLogger.kt`
 
-### Task 4: Operational Runbooks
-Create operational procedures in `operations/RunbookManager.kt`
+### Task 4: Health Monitoring
+Implement health checks in `health/SystemHealthMonitor.kt`
 
-### Task 5: Disaster Recovery
-Implement DR procedures in `disaster/DisasterRecoveryManager.kt`
+### Task 5: Alert Management
+Build alerting in `alerting/AlertManager.kt`
 
-## 🏗️ Production Deployment Architecture
+## 🏗️ Observability Architecture
 ```mermaid
 graph TB
-    subgraph "Multi-Environment Pipeline"
-        DEV[Development<br/>Single node, fast iteration]
-        STAGE[Staging<br/>Production-like, testing]
-        PROD[Production<br/>Multi-AZ, HA setup]
-        
-        DEV -->|CI/CD| STAGE
-        STAGE -->|Validation| PROD
+    subgraph "Kafka Infrastructure"
+        KAFKA[Kafka Brokers<br/>JMX metrics exposed]
+        ZK[Zookeeper<br/>Health monitoring]
+        SR[Schema Registry<br/>Schema metrics]
+        CONNECT[Kafka Connect<br/>Connector metrics]
     end
     
-    subgraph "Production Kafka Cluster"
-        subgraph "Availability Zone A"
-            ZK1[Zookeeper 1]
-            B1[Broker 1]
-            B4[Broker 4]
-        end
-        
-        subgraph "Availability Zone B"
-            ZK2[Zookeeper 2]
-            B2[Broker 2]
-            B5[Broker 5]
-        end
-        
-        subgraph "Availability Zone C"
-            ZK3[Zookeeper 3]
-            B3[Broker 3]
-            B6[Broker 6]
-        end
+    subgraph "Application Layer"
+        PRODUCER[Producer Apps<br/>Custom metrics]
+        CONSUMER[Consumer Apps<br/>Processing metrics]
+        STREAMS[Streams Apps<br/>Topology metrics]
+        REST[REST APIs<br/>HTTP metrics]
     end
     
-    subgraph "Load Balancers & Proxies"
-        LB[Load Balancer<br/>Health checks, SSL termination]
-        PROXY[Kafka Proxy<br/>Connection pooling, routing]
+    subgraph "Metrics Collection"
+        JMX[JMX Exporter<br/>Kafka metrics]
+        MICROMETER[Micrometer<br/>Application metrics]
+        PROMETHEUS[Prometheus<br/>Metrics storage]
+        CUSTOM[Custom Collectors<br/>Business metrics]
     end
     
-    subgraph "Monitoring & Observability"
-        METRICS[Metrics Collection<br/>Prometheus, JMX]
-        LOGS[Log Aggregation<br/>ELK Stack]
-        ALERTS[Alerting<br/>PagerDuty, Slack]
-        DASH[Dashboards<br/>Grafana, Kibana]
+    subgraph "Tracing Infrastructure"
+        JAEGER[Jaeger<br/>Trace collection]
+        ZIPKIN[Zipkin<br/>Trace visualization]
+        SLEUTH[Spring Cloud Sleuth<br/>Auto-instrumentation]
+        OTEL[OpenTelemetry<br/>Vendor-neutral tracing]
     end
     
-    subgraph "Auto-scaling"
-        HPA[Horizontal Pod Autoscaler]
-        VPA[Vertical Pod Autoscaler]
-        CLUSTER[Cluster Autoscaler]
+    subgraph "Logging Pipeline"
+        LOGBACK[Logback<br/>Structured logging]
+        FLUENTD[Fluentd<br/>Log collection]
+        ELASTICSEARCH[Elasticsearch<br/>Log storage]
+        KIBANA[Kibana<br/>Log analysis]
     end
     
-    LB --> PROXY
-    PROXY --> B1
-    PROXY --> B2
-    PROXY --> B3
+    subgraph "Monitoring & Alerting"
+        GRAFANA[Grafana<br/>Dashboards]
+        ALERT_MANAGER[AlertManager<br/>Alert routing]
+        PAGERDUTY[PagerDuty<br/>Incident management]
+        SLACK[Slack<br/>Team notifications]
+    end
     
-    B1 --> METRICS
-    B2 --> METRICS
-    B3 --> METRICS
+    KAFKA --> JMX
+    PRODUCER --> MICROMETER
+    CONSUMER --> MICROMETER
+    STREAMS --> MICROMETER
+    REST --> MICROMETER
     
-    METRICS --> ALERTS
-    METRICS --> DASH
-    LOGS --> DASH
+    JMX --> PROMETHEUS
+    MICROMETER --> PROMETHEUS
+    CUSTOM --> PROMETHEUS
     
-    METRICS --> HPA
-    METRICS --> VPA
-    HPA --> CLUSTER
+    PRODUCER --> SLEUTH
+    CONSUMER --> SLEUTH
+    SLEUTH --> JAEGER
+    SLEUTH --> ZIPKIN
     
-    style PROD fill:#4ecdc4
-    style LB fill:#ff6b6b
-    style ALERTS fill:#ffe66d
+    PRODUCER --> LOGBACK
+    CONSUMER --> LOGBACK
+    LOGBACK --> FLUENTD
+    FLUENTD --> ELASTICSEARCH
+    
+    PROMETHEUS --> GRAFANA
+    PROMETHEUS --> ALERT_MANAGER
+    ELASTICSEARCH --> KIBANA
+    
+    ALERT_MANAGER --> PAGERDUTY
+    ALERT_MANAGER --> SLACK
+    
+    style PROMETHEUS fill:#ff6b6b
+    style GRAFANA fill:#4ecdc4
+    style JAEGER fill:#a8e6cf
+    style ELASTICSEARCH fill:#ffe66d
 ```
 
-## 🚀 Deployment Strategies
+## 📊 Comprehensive Metrics Strategy
 
-### 1. **Blue-Green Deployment**
-```mermaid
-sequenceDiagram
-    participant LB as Load Balancer
-    participant Blue as Blue Cluster (Current)
-    participant Green as Green Cluster (New)
-    participant Clients as Client Applications
-    
-    Note over Blue,Green: Initial State - Blue Active
-    LB->>Blue: Route 100% traffic
-    
-    Note over Blue,Green: Deploy to Green
-    Green->>Green: Deploy new version
-    Green->>Green: Run validation tests
-    
-    Note over Blue,Green: Gradual Traffic Shift
-    LB->>Blue: Route 90% traffic
-    LB->>Green: Route 10% traffic
-    
-    LB->>Blue: Route 50% traffic
-    LB->>Green: Route 50% traffic
-    
-    LB->>Blue: Route 0% traffic
-    LB->>Green: Route 100% traffic
-    
-    Note over Blue,Green: Blue becomes standby
-    Blue->>Blue: Scale down or keep as rollback
-```
-
-### 2. **Rolling Deployment**
+### Three Pillars of Observability
 ```mermaid
 graph TB
-    subgraph "Rolling Update Process"
-        START[Start Rolling Update] --> N1[Update Node 1]
-        N1 --> V1[Validate Node 1]
-        V1 --> N2[Update Node 2]
-        N2 --> V2[Validate Node 2]
-        V2 --> N3[Update Node 3]
-        N3 --> V3[Validate Node 3]
-        V3 --> COMPLETE[Update Complete]
-        
-        V1 -->|Failure| ROLLBACK1[Rollback Node 1]
-        V2 -->|Failure| ROLLBACK2[Rollback Nodes 1-2]
-        V3 -->|Failure| ROLLBACK3[Rollback All Nodes]
+    subgraph "Metrics (What's Happening)"
+        BUSINESS[Business Metrics<br/>Orders/sec, Revenue/hour]
+        APPLICATION[Application Metrics<br/>Latency, Throughput, Errors]
+        INFRASTRUCTURE[Infrastructure Metrics<br/>CPU, Memory, Disk, Network]
+        KAFKA_METRICS[Kafka Metrics<br/>Producer rate, Consumer lag, Partition count]
     end
     
-    style COMPLETE fill:#4ecdc4
-    style ROLLBACK1 fill:#ff6b6b
-    style ROLLBACK2 fill:#ff6b6b
-    style ROLLBACK3 fill:#ff6b6b
+    subgraph "Logs (What Happened)"
+        STRUCTURED[Structured Logs<br/>JSON format with context]
+        AUDIT[Audit Logs<br/>Security and compliance]
+        ERROR[Error Logs<br/>Exceptions and failures]
+        CORRELATION[Correlation IDs<br/>Request tracing]
+    end
+    
+    subgraph "Traces (How It Happened)"
+        DISTRIBUTED[Distributed Traces<br/>Cross-service calls]
+        SPANS[Spans<br/>Individual operations]
+        CONTEXT[Trace Context<br/>Baggage and tags]
+        SAMPLING[Sampling Strategy<br/>Performance optimization]
+    end
+    
+    subgraph "Dashboards & Alerts"
+        REAL_TIME[Real-time Dashboards<br/>Live system status]
+        ALERTS[Intelligent Alerts<br/>Threshold-based notifications]
+        RUNBOOKS[Automated Runbooks<br/>Self-healing systems]
+        INCIDENTS[Incident Management<br/>Response coordination]
+    end
+    
+    BUSINESS --> REAL_TIME
+    APPLICATION --> ALERTS
+    INFRASTRUCTURE --> ALERTS
+    KAFKA_METRICS --> REAL_TIME
+    
+    STRUCTURED --> INCIDENTS
+    AUDIT --> INCIDENTS
+    ERROR --> ALERTS
+    
+    DISTRIBUTED --> REAL_TIME
+    SPANS --> INCIDENTS
+    
+    REAL_TIME --> RUNBOOKS
+    ALERTS --> INCIDENTS
+    
+    style BUSINESS fill:#ff6b6b
+    style STRUCTURED fill:#4ecdc4
+    style DISTRIBUTED fill:#a8e6cf
+    style REAL_TIME fill:#ffe66d
 ```
 
-### 3. **Canary Deployment**
-```mermaid
-graph TB
-    subgraph "Canary Deployment Flow"
-        PROD[Production 100%] --> CANARY[Deploy to Canary 5%]
-        CANARY --> MONITOR[Monitor Metrics]
-        
-        MONITOR -->|Success| EXPAND1[Expand to 25%]
-        MONITOR -->|Failure| ROLLBACK[Rollback Canary]
-        
-        EXPAND1 --> MONITOR2[Monitor Extended]
-        MONITOR2 -->|Success| EXPAND2[Expand to 100%]
-        MONITOR2 -->|Failure| ROLLBACK
-        
-        EXPAND2 --> COMPLETE[Full Deployment]
-    end
-    
-    style COMPLETE fill:#4ecdc4
-    style ROLLBACK fill:#ff6b6b
-```
+## 📈 Kafka-Specific Metrics
 
-## ⚖️ Auto-scaling Strategies
-
-### Horizontal Scaling Metrics
-```mermaid
-graph TB
-    subgraph "Scaling Triggers"
-        CPU[CPU Usage > 70%]
-        MEMORY[Memory Usage > 80%]
-        LAG[Consumer Lag > 1000]
-        THROUGHPUT[Throughput > 80% capacity]
-        CONNECTIONS[Connection count > 500]
-    end
-    
-    subgraph "Scaling Actions"
-        SCALE_OUT[Scale Out<br/>Add brokers/consumers]
-        SCALE_UP[Scale Up<br/>Increase resources]
-        SCALE_IN[Scale In<br/>Remove brokers/consumers]
-        SCALE_DOWN[Scale Down<br/>Reduce resources]
-    end
-    
-    subgraph "Safety Checks"
-        MIN_REPLICAS[Minimum Replicas]
-        MAX_REPLICAS[Maximum Replicas]
-        COOLDOWN[Cooldown Period]
-        HEALTH_CHECK[Health Validation]
-    end
-    
-    CPU --> SCALE_OUT
-    MEMORY --> SCALE_UP
-    LAG --> SCALE_OUT
-    THROUGHPUT --> SCALE_OUT
-    
-    SCALE_OUT --> MIN_REPLICAS
-    SCALE_UP --> MAX_REPLICAS
-    SCALE_IN --> COOLDOWN
-    SCALE_DOWN --> HEALTH_CHECK
-    
-    style SCALE_OUT fill:#4ecdc4
-    style SCALE_UP fill:#4ecdc4
-    style SCALE_IN fill:#ffe66d
-    style SCALE_DOWN fill:#ffe66d
-```
-
-### Consumer Auto-scaling
+### Producer Metrics
 ```kotlin
 @Component
-class KafkaConsumerAutoScaler {
+class KafkaProducerMetrics {
     
-    fun evaluateScaling(groupId: String): ScalingDecision {
-        val metrics = consumerGroupMetrics.getMetrics(groupId)
-        val avgLag = metrics.partitions.map { it.lag }.average()
-        val processingRate = metrics.processingRate
-        val currentInstances = metrics.activeConsumers
+    private val meterRegistry: MeterRegistry
+    private val producerMetrics = ConcurrentHashMap<String, Timer>()
+    
+    @EventListener
+    fun handleProducerSendStart(event: ProducerSendStartEvent) {
+        val timer = Timer.start(meterRegistry)
+        producerMetrics[event.correlationId] = timer
         
-        return when {
-            avgLag > 1000 && currentInstances < maxInstances -> {
-                ScalingDecision.SCALE_OUT(
-                    targetInstances = minOf(currentInstances + 1, maxInstances),
-                    reason = "High consumer lag detected: $avgLag"
-                )
+        // Track send attempts
+        meterRegistry.counter(
+            "kafka.producer.send.attempts",
+            "topic", event.topic,
+            "partition", event.partition?.toString() ?: "unknown"
+        ).increment()
+    }
+    
+    @EventListener
+    fun handleProducerSendSuccess(event: ProducerSendSuccessEvent) {
+        val timer = producerMetrics.remove(event.correlationId)
+        timer?.stop(Timer.Sample.start(meterRegistry).stop(
+            Timer.builder("kafka.producer.send.duration")
+                .tag("topic", event.topic)
+                .tag("status", "success")
+                .register(meterRegistry)
+        ))
+        
+        // Track batch size
+        meterRegistry.gauge(
+            "kafka.producer.batch.size",
+            Tags.of("topic", event.topic),
+            event.batchSize
+        )
+        
+        // Track record size
+        meterRegistry.summary(
+            "kafka.producer.record.size",
+            "topic", event.topic
+        ).record(event.recordSize.toDouble())
+    }
+    
+    @EventListener
+    fun handleProducerSendFailure(event: ProducerSendFailureEvent) {
+        val timer = producerMetrics.remove(event.correlationId)
+        timer?.stop(Timer.Sample.start(meterRegistry).stop(
+            Timer.builder("kafka.producer.send.duration")
+                .tag("topic", event.topic)
+                .tag("status", "failure")
+                .tag("error", event.exception.javaClass.simpleName)
+                .register(meterRegistry)
+        ))
+        
+        // Track error types
+        meterRegistry.counter(
+            "kafka.producer.errors",
+            "topic", event.topic,
+            "error.type", event.exception.javaClass.simpleName
+        ).increment()
+    }
+}
+```
+
+### Consumer Metrics
+```kotlin
+@Component
+class KafkaConsumerMetrics {
+    
+    @Autowired
+    private lateinit var meterRegistry: MeterRegistry
+    
+    @Scheduled(fixedDelay = 30000) // Every 30 seconds
+    fun collectConsumerLagMetrics() {
+        AdminClient.create(adminConfig).use { adminClient ->
+            try {
+                val consumerGroups = adminClient.listConsumerGroups().all().get()
+                
+                consumerGroups.forEach { group ->
+                    if (group.state() == ConsumerGroupState.STABLE) {
+                        val groupDescription = adminClient.describeConsumerGroups(listOf(group.groupId()))
+                            .all().get()[group.groupId()]
+                        
+                        val assignments = groupDescription?.members()?.flatMap { 
+                            it.assignment().topicPartitions() 
+                        } ?: emptyList()
+                        
+                        val endOffsets = adminClient.listOffsets(
+                            assignments.associateWith { OffsetSpec.latest() }
+                        ).all().get()
+                        
+                        val groupOffsets = adminClient.listConsumerGroupOffsets(group.groupId())
+                            .partitionsToOffsetAndMetadata().get()
+                        
+                        assignments.forEach { tp ->
+                            val endOffset = endOffsets[tp]?.offset() ?: 0
+                            val currentOffset = groupOffsets[tp]?.offset() ?: 0
+                            val lag = endOffset - currentOffset
+                            
+                            meterRegistry.gauge(
+                                "kafka.consumer.lag",
+                                Tags.of(
+                                    "group", group.groupId(),
+                                    "topic", tp.topic(),
+                                    "partition", tp.partition().toString()
+                                ),
+                                lag.toDouble()
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to collect consumer lag metrics", e)
             }
-            avgLag < 100 && currentInstances > minInstances -> {
-                ScalingDecision.SCALE_IN(
-                    targetInstances = maxOf(currentInstances - 1, minInstances),
-                    reason = "Low consumer lag: $avgLag"
-                )
+        }
+    }
+    
+    @KafkaListener(topics = [".*"], topicPattern = ".*")
+    fun recordProcessingMetrics(
+        @Payload message: Any,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int,
+        @Header(KafkaHeaders.OFFSET) offset: Long
+    ) {
+        // Record message processing
+        meterRegistry.counter(
+            "kafka.consumer.messages.processed",
+            "topic", topic,
+            "partition", partition.toString()
+        ).increment()
+        
+        // Record processing time
+        val processingTimer = Timer.start(meterRegistry)
+        // Processing happens in actual listener
+        processingTimer.stop(
+            Timer.builder("kafka.consumer.processing.duration")
+                .tag("topic", topic)
+                .register(meterRegistry)
+        )
+    }
+}
+```
+
+## 🔍 Distributed Tracing Implementation
+
+### Tracing Configuration
+```kotlin
+@Configuration
+class TracingConfiguration {
+    
+    @Bean
+    fun jaegerTracer(): io.jaegertracing.Configuration {
+        return io.jaegertracing.Configuration("kafka-starter")
+            .withSampler(
+                io.jaegertracing.Configuration.SamplerConfiguration()
+                    .withType("const")
+                    .withParam(1) // Sample all traces in development
+            )
+            .withReporter(
+                io.jaegertracing.Configuration.ReporterConfiguration()
+                    .withLogSpans(true)
+                    .withFlushInterval(1000)
+                    .withMaxQueueSize(10000)
+                    .withSender(
+                        io.jaegertracing.Configuration.SenderConfiguration()
+                            .withAgentHost("localhost")
+                            .withAgentPort(6831)
+                    )
+            )
+    }
+    
+    @Bean
+    fun kafkaTracingInterceptor(): KafkaTracingInterceptor {
+        return KafkaTracingInterceptor()
+    }
+}
+
+@Component
+class KafkaTracingInterceptor : ProducerInterceptor<String, Any>, ConsumerInterceptor<String, Any> {
+    
+    private val tracer = GlobalTracer.get()
+    
+    override fun onSend(record: ProducerRecord<String, Any>): ProducerRecord<String, Any> {
+        val span = tracer.activeSpan()
+        
+        if (span != null) {
+            // Inject trace context into Kafka headers
+            val headers = record.headers()
+            tracer.inject(
+                span.context(),
+                Format.Builtin.TEXT_MAP,
+                HeadersTextMapExtract(headers)
+            )
+            
+            // Add span tags
+            span.setTag("kafka.topic", record.topic())
+            span.setTag("kafka.partition", record.partition()?.toString() ?: "unknown")
+            span.setTag("kafka.key", record.key() ?: "null")
+            span.setTag("component", "kafka-producer")
+        }
+        
+        return record
+    }
+    
+    override fun onConsume(records: ConsumerRecords<String, Any>): ConsumerRecords<String, Any> {
+        records.forEach { record ->
+            // Extract trace context from Kafka headers
+            val spanContext = tracer.extract(
+                Format.Builtin.TEXT_MAP,
+                HeadersTextMapExtract(record.headers())
+            )
+            
+            // Create child span for message processing
+            val spanBuilder = tracer.buildSpan("kafka-message-processing")
+                .withTag("kafka.topic", record.topic())
+                .withTag("kafka.partition", record.partition().toString())
+                .withTag("kafka.offset", record.offset().toString())
+                .withTag("component", "kafka-consumer")
+            
+            if (spanContext != null) {
+                spanBuilder.asChildOf(spanContext)
             }
-            processingRate < 0.5 && currentInstances > minInstances -> {
-                ScalingDecision.SCALE_IN(
-                    targetInstances = maxOf(currentInstances - 1, minInstances),
-                    reason = "Low processing rate: $processingRate"
-                )
+            
+            val span = spanBuilder.start()
+            tracer.activateSpan(span).use {
+                // Span will be active during message processing
             }
-            else -> ScalingDecision.NO_ACTION("Metrics within acceptable range")
+        }
+        
+        return records
+    }
+}
+```
+
+### Cross-Service Tracing
+```kotlin
+@Service
+class OrderProcessingService {
+    
+    @Autowired
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
+    
+    @Traced(operationName = "order-processing")
+    fun processOrder(order: Order): OrderResult {
+        val span = tracer.activeSpan()
+        span?.setTag("order.id", order.id)
+        span?.setTag("order.amount", order.totalAmount.toString())
+        span?.setTag("customer.id", order.customerId)
+        
+        return try {
+            // Step 1: Validate order
+            val validationSpan = tracer.buildSpan("validate-order")
+                .asChildOf(span)
+                .start()
+            
+            tracer.activateSpan(validationSpan).use {
+                validateOrder(order)
+                validationSpan.setTag("validation.result", "success")
+            }
+            
+            // Step 2: Process payment
+            val paymentSpan = tracer.buildSpan("process-payment")
+                .asChildOf(span)
+                .start()
+            
+            val paymentResult = tracer.activateSpan(paymentSpan).use {
+                val result = paymentService.processPayment(order)
+                paymentSpan.setTag("payment.result", result.status.name)
+                paymentSpan.setTag("payment.amount", result.amount.toString())
+                result
+            }
+            
+            // Step 3: Publish order event
+            val eventSpan = tracer.buildSpan("publish-order-event")
+                .asChildOf(span)
+                .start()
+            
+            tracer.activateSpan(eventSpan).use {
+                val orderEvent = OrderProcessedEvent(
+                    orderId = order.id,
+                    status = OrderStatus.PROCESSED,
+                    traceId = span?.context()?.toTraceId() ?: "unknown"
+                )
+                
+                kafkaTemplate.send("order-events", order.id, orderEvent)
+                eventSpan.setTag("event.published", true)
+            }
+            
+            OrderResult.success(order.id)
+            
+        } catch (e: Exception) {
+            span?.setTag("error", true)
+            span?.setTag("error.message", e.message ?: "Unknown error")
+            span?.log(mapOf("event" to "error", "error.object" to e))
+            
+            OrderResult.failure(order.id, e.message ?: "Processing failed")
         }
     }
 }
 ```
 
-## 🔧 Performance Tuning
+## 📝 Structured Logging Framework
 
-### Broker Configuration Optimization
-```mermaid
-graph TB
-    subgraph "Memory Tuning"
-        HEAP[JVM Heap Size<br/&gt;6-8GB recommended]
-        PAGE_CACHE[OS Page Cache<br/&gt;50%+ of system RAM]
-        SOCKET_BUFFER[Socket Buffers<br/&gt;128KB-1MB]
-    end
-    
-    subgraph "Disk Tuning"
-        LOG_DIRS[Multiple Log Directories<br/>Separate disks]
-        LOG_SEGMENT[Log Segment Size<br/&gt;1GB default]
-        LOG_RETENTION[Log Retention<br/>Time vs Size based]
-    end
-    
-    subgraph "Network Tuning"
-        NUM_NETWORK[Network Threads<br/&gt;3-8 threads]
-        NUM_IO[I/O Threads<br/&gt;8-16 threads]
-        REPLICA_FETCH[Replica Fetch Size<br/&gt;1MB default]
-    end
-    
-    subgraph "Producer Tuning"
-        BATCH_SIZE[Batch Size<br/&gt;16KB-1MB]
-        LINGER_MS[Linger Time<br/&gt;5-100ms]
-        COMPRESSION[Compression<br/>LZ4, Snappy, GZIP]
-    end
-    
-    style HEAP fill:#ff6b6b
-    style PAGE_CACHE fill:#4ecdc4
-    style LOG_DIRS fill:#a8e6cf
-    style BATCH_SIZE fill:#ffe66d
-```
-
-### Performance Tuning Matrix
+### Logging Configuration
 ```kotlin
-data class PerformanceTuningConfig(
-    // Memory Configuration
-    val heapSize: String = "6g",
-    val pageCacheSize: String = "auto", // 50% of system RAM
+@Configuration
+class LoggingConfiguration {
     
-    // Thread Configuration  
-    val networkThreads: Int = 3,
-    val ioThreads: Int = 8,
-    val backgroundThreads: Int = 10,
+    @Bean
+    fun structuredLogger(): StructuredLogger {
+        return StructuredLogger()
+    }
     
-    // Log Configuration
-    val logSegmentBytes: Long = 1073741824, // 1GB
-    val logRetentionHours: Int = 168, // 7 days
-    val logRollMs: Long = 604800000, // 7 days
-    
-    // Replication Configuration
-    val replicaFetchMaxBytes: Int = 1048576, // 1MB
-    val replicaFetchWaitMaxMs: Int = 500,
-    val replicaLagTimeMaxMs: Long = 30000,
-    
-    // Producer Optimization
-    val batchSize: Int = 65536, // 64KB
-    val lingerMs: Int = 5,
-    val compressionType: String = "lz4",
-    val acks: String = "all",
-    
-    // Consumer Optimization
-    val fetchMinBytes: Int = 1024, // 1KB
-    val fetchMaxWaitMs: Int = 500,
-    val maxPollRecords: Int = 500,
-    val maxPartitionFetchBytes: Int = 1048576 // 1MB
-) {
-    
-    fun generateBrokerConfig(): Properties {
-        return Properties().apply {
-            // Memory settings
-            setProperty("heap.opts", "-Xmx$heapSize -Xms$heapSize")
-            
-            // Thread settings
-            setProperty("num.network.threads", networkThreads.toString())
-            setProperty("num.io.threads", ioThreads.toString())
-            setProperty("background.threads", backgroundThreads.toString())
-            
-            // Log settings
-            setProperty("log.segment.bytes", logSegmentBytes.toString())
-            setProperty("log.retention.hours", logRetentionHours.toString())
-            setProperty("log.roll.ms", logRollMs.toString())
-            
-            // Replication settings
-            setProperty("replica.fetch.max.bytes", replicaFetchMaxBytes.toString())
-            setProperty("replica.fetch.wait.max.ms", replicaFetchWaitMaxMs.toString())
-            setProperty("replica.lag.time.max.ms", replicaLagTimeMaxMs.toString())
+    @Bean
+    fun logbackEncoderCustomizer(): LogbackEncoderCustomizer {
+        return LogbackEncoderCustomizer { encoder ->
+            if (encoder is JsonEncoder) {
+                encoder.includeContext = true
+                encoder.includeMdc = true
+                encoder.includeStructuredArguments = true
+            }
         }
+    }
+}
+
+@Component
+class StructuredLogger {
+    
+    private val logger = LoggerFactory.getLogger(StructuredLogger::class.java)
+    
+    fun logOrderEvent(
+        level: Level,
+        event: String,
+        orderId: String,
+        customerId: String?,
+        details: Map<String, Any> = emptyMap()
+    ) {
+        MDC.put("event.type", event)
+        MDC.put("order.id", orderId)
+        MDC.put("customer.id", customerId ?: "unknown")
+        MDC.put("timestamp", Instant.now().toString())
+        
+        val logData = mapOf(
+            "event" to event,
+            "orderId" to orderId,
+            "customerId" to customerId,
+            "details" to details,
+            "traceId" to getCurrentTraceId(),
+            "spanId" to getCurrentSpanId()
+        )
+        
+        when (level) {
+            Level.INFO -> logger.info(marker("ORDER_EVENT"), "{}", logData)
+            Level.WARN -> logger.warn(marker("ORDER_EVENT"), "{}", logData)
+            Level.ERROR -> logger.error(marker("ORDER_EVENT"), "{}", logData)
+            else -> logger.debug(marker("ORDER_EVENT"), "{}", logData)
+        }
+        
+        MDC.clear()
+    }
+    
+    fun logKafkaEvent(
+        level: Level,
+        operation: String,
+        topic: String,
+        partition: Int?,
+        offset: Long?,
+        key: String?,
+        error: Throwable? = null
+    ) {
+        MDC.put("operation", operation)
+        MDC.put("topic", topic)
+        MDC.put("partition", partition?.toString() ?: "unknown")
+        MDC.put("offset", offset?.toString() ?: "unknown")
+        MDC.put("message.key", key ?: "null")
+        
+        val logData = mutableMapOf<String, Any>(
+            "operation" to operation,
+            "topic" to topic,
+            "partition" to (partition ?: -1),
+            "offset" to (offset ?: -1),
+            "messageKey" to (key ?: "null"),
+            "traceId" to getCurrentTraceId(),
+            "timestamp" to Instant.now()
+        )
+        
+        if (error != null) {
+            logData["error"] = mapOf(
+                "type" to error.javaClass.simpleName,
+                "message" to (error.message ?: "No error message"),
+                "stackTrace" to error.stackTraceToString()
+            )
+        }
+        
+        when (level) {
+            Level.ERROR -> logger.error(marker("KAFKA_EVENT"), "{}", logData, error)
+            Level.WARN -> logger.warn(marker("KAFKA_EVENT"), "{}", logData)
+            Level.INFO -> logger.info(marker("KAFKA_EVENT"), "{}", logData)
+            else -> logger.debug(marker("KAFKA_EVENT"), "{}", logData)
+        }
+        
+        MDC.clear()
+    }
+    
+    private fun getCurrentTraceId(): String {
+        return tracer.activeSpan()?.context()?.toTraceId() ?: "no-trace"
+    }
+    
+    private fun getCurrentSpanId(): String {
+        return tracer.activeSpan()?.context()?.toSpanId() ?: "no-span"
+    }
+    
+    private fun marker(name: String): Marker {
+        return MarkerFactory.getMarker(name)
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Multi-environment deployment pipeline working
-- [ ] Auto-scaling responds correctly to load changes
-- [ ] Performance tuning achieves target throughput/latency
-- [ ] Blue-green deployment tested and documented
-- [ ] Disaster recovery procedures tested and validated
-- [ ] Monitoring and alerting covers all critical metrics
-- [ ] Operational runbooks complete and accessible
+- [ ] Comprehensive metrics collection for all Kafka components
+- [ ] Distributed tracing works across microservices and Kafka
+- [ ] Structured logging provides actionable insights
+- [ ] Health monitoring detects issues before they impact users
+- [ ] Alerting system notifies teams of critical issues
+- [ ] Dashboards provide real-time visibility into system health
+- [ ] Performance impact of observability is minimal (&lt;5% overhead)
 
 ## 🚀 Getting Started
 
-### 1. Infrastructure as Code
+### 1. Configure Observability Stack
 ```yaml
-# Terraform example for AWS
-resource "aws_msk_cluster" "kafka_cluster" {
-  cluster_name           = "kafka-production"
-  kafka_version         = "2.8.1"
-  number_of_broker_nodes = 6
-  
-  broker_node_group_info {
-    instance_type   = "kafka.m5.xlarge"
-    ebs_volume_size = 1000
-    client_subnets = [
-      aws_subnet.private_a.id,
-      aws_subnet.private_b.id,
-      aws_subnet.private_c.id,
-    ]
-    security_groups = [aws_security_group.kafka.id]
-  }
-  
-  encryption_info {
-    encryption_at_rest_kms_key_id = aws_kms_key.kafka.arn
-    encryption_in_transit {
-      client_broker = "TLS"
-      in_cluster    = true
-    }
-  }
-  
-  configuration_info {
-    arn      = aws_msk_configuration.kafka_config.arn
-    revision = aws_msk_configuration.kafka_config.latest_revision
-  }
-  
-  logging_info {
-    broker_logs {
-      cloudwatch_logs {
-        enabled   = true
-        log_group = aws_cloudwatch_log_group.kafka.name
-      }
-      s3 {
-        enabled = true
-        bucket  = aws_s3_bucket.kafka_logs.id
-        prefix  = "kafka-broker-logs"
-      }
-    }
-  }
-  
-  tags = {
-    Environment = "production"
-    Team        = "platform"
-  }
-}
+# docker-compose-observability.yml
+version: '3.8'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "6831:6831/udp"
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      
+  elasticsearch:
+    image: elasticsearch:7.10.0
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      
+  kibana:
+    image: kibana:7.10.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
 ```
 
-### 2. Kubernetes Deployment
-```yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: kafka
-spec:
-  serviceName: kafka-headless
-  replicas: 6
-  selector:
-    matchLabels:
-      app: kafka
-  template:
-    metadata:
-      labels:
-        app: kafka
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app: kafka
-            topologyKey: kubernetes.io/hostname
-      containers:
-      - name: kafka
-        image: confluentinc/cp-kafka:7.4.0
-        ports:
-        - containerPort: 9092
-        env:
-        - name: KAFKA_BROKER_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: KAFKA_ZOOKEEPER_CONNECT
-          value: "zookeeper:2181"
-        - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://$(POD_IP):9092"
-        resources:
-          requests:
-            memory: "4Gi"
-            cpu: "1"
-          limits:
-            memory: "8Gi"
-            cpu: "2"
-        volumeMounts:
-        - name: kafka-storage
-          mountPath: /var/lib/kafka/data
-  volumeClaimTemplates:
-  - metadata:
-      name: kafka-storage
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 1000Gi
-      storageClassName: fast-ssd
+### 2. Test Observability
+```bash
+# Start observability stack
+docker-compose -f docker-compose-observability.yml up -d
+
+# Generate test load
+curl -X POST http://localhost:8090/api/orders/generate-load \
+  -d '{"orderCount": 1000, "ratePerSecond": 50}'
+
+# Check metrics
+curl http://localhost:9090/api/v1/query?query=kafka_producer_send_total
+
+# View traces
+open http://localhost:16686
+
+# Check logs
+curl http://localhost:9200/logs-*/_search?q=level:ERROR
 ```
 
-### 3. Monitoring Setup
-```yaml
-# Prometheus monitoring
-apiVersion: v1
-kind: ServiceMonitor
-metadata:
-  name: kafka-metrics
-spec:
-  selector:
-    matchLabels:
-      app: kafka
-  endpoints:
-  - port: metrics
-    interval: 30s
-    path: /metrics
-    
----
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: kafka-alerts
-spec:
-  groups:
-  - name: kafka
-    rules:
-    - alert: KafkaBrokerDown
-      expr: up{job="kafka"} == 0
-      for: 1m
-      labels:
-        severity: critical
-      annotations:
-        summary: "Kafka broker is down"
-        
-    - alert: KafkaConsumerLag
-      expr: kafka_consumer_lag_sum > 1000
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "High consumer lag detected"
-        
-    - alert: KafkaDiskUsage
-      expr: kafka_log_size_bytes / kafka_log_size_limit_bytes > 0.85
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "Kafka disk usage is high"
-```
+### 3. Configure Dashboards
+```bash
+# Import Kafka dashboard
+curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
+  -H "Content-Type: application/json" \
+  -d @kafka-dashboard.json
 
-## 💾 Disaster Recovery
-
-### Backup Strategies
-```mermaid
-graph TB
-    subgraph "Backup Types"
-        CONFIG[Configuration Backup<br/>Topics, ACLs, Settings]
-        DATA[Data Backup<br/>Log segments, Offsets]
-        METADATA[Metadata Backup<br/>Zookeeper state]
-    end
-    
-    subgraph "Backup Frequency"
-        REALTIME[Real-time<br/>Cross-region replication]
-        HOURLY[Hourly<br/>Incremental backups]
-        DAILY[Daily<br/>Full backups]
-        WEEKLY[Weekly<br/>Archive backups]
-    end
-    
-    subgraph "Recovery Scenarios"
-        BROKER_FAIL[Broker Failure<br/>Replace & sync]
-        CLUSTER_FAIL[Cluster Failure<br/>Restore from backup]
-        REGION_FAIL[Region Failure<br/>Failover to DR region]
-        DATA_CORRUPT[Data Corruption<br/>Point-in-time recovery]
-    end
-    
-    CONFIG --> DAILY
-    DATA --> REALTIME
-    METADATA --> HOURLY
-    
-    REALTIME --> REGION_FAIL
-    DAILY --> CLUSTER_FAIL
-    HOURLY --> DATA_CORRUPT
-    
-    style REGION_FAIL fill:#ff6b6b
-    style CLUSTER_FAIL fill:#ffe66d
-    style DATA_CORRUPT fill:#a8e6cf
-```
-
-### Recovery Procedures
-```kotlin
-@Service
-class DisasterRecoveryService {
-    
-    fun executeRecoveryPlan(scenario: DisasterScenario): RecoveryResult {
-        return when (scenario) {
-            DisasterScenario.BROKER_FAILURE -> {
-                replaceFailedBroker()
-            }
-            DisasterScenario.CLUSTER_FAILURE -> {
-                restoreFromBackup()
-            }
-            DisasterScenario.REGION_FAILURE -> {
-                failoverToDisasterRecoveryRegion()
-            }
-            DisasterScenario.DATA_CORRUPTION -> {
-                performPointInTimeRecovery()
-            }
-        }
-    }
-    
-    private fun replaceFailedBroker(): RecoveryResult {
-        // 1. Provision new broker
-        // 2. Configure with same broker.id
-        // 3. Start broker and let it sync
-        // 4. Verify all partitions are replicated
-        return RecoveryResult.success("Broker replaced and synced")
-    }
-    
-    private fun restoreFromBackup(): RecoveryResult {
-        // 1. Stop all applications
-        // 2. Restore Zookeeper state
-        // 3. Restore Kafka log directories
-        // 4. Start cluster in order
-        // 5. Verify data integrity
-        return RecoveryResult.success("Cluster restored from backup")
-    }
-}
+# Import application metrics dashboard
+curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
+  -H "Content-Type: application/json" \
+  -d @application-dashboard.json
 ```
 
 ## 🎯 Best Practices
 
-### Deployment Excellence
-- **Infrastructure as Code** - Use Terraform, CloudFormation, or Pulumi
-- **Immutable deployments** - Never modify running instances
-- **Gradual rollouts** - Use canary or blue-green strategies
-- **Automated validation** - Test every deployment automatically
+### Metrics Strategy
+- **Focus on business metrics** first (orders/sec, revenue/hour)
+- **Use RED method** (Rate, Errors, Duration) for services
+- **Use USE method** (Utilization, Saturation, Errors) for resources
+- **Implement SLIs and SLOs** for service level objectives
 
-### Scaling Wisdom
-- **Proactive monitoring** - Scale before hitting limits
-- **Predictable patterns** - Use historical data for planning
-- **Cost optimization** - Balance performance with cost
-- **Capacity planning** - Plan for peak loads and growth
+### Logging Strategy
+- **Use structured logging** with consistent format
+- **Include correlation IDs** for request tracing
+- **Log at appropriate levels** to reduce noise
+- **Implement log sampling** for high-volume systems
 
-### Operational Excellence
-- **Runbook automation** - Automate common operational tasks
-- **Incident response** - Have clear escalation procedures
-- **Performance baselines** - Know your normal operating parameters
-- **Regular testing** - Test disaster recovery procedures regularly
+### Tracing Strategy
+- **Sample traces intelligently** to balance coverage and performance
+- **Use semantic tags** for meaningful searchability
+- **Implement baggage** for cross-cutting concerns
+- **Monitor trace latency** to ensure performance
 
 ## 🔍 Troubleshooting
 
-### Common Production Issues
-1. **Memory leaks** - Monitor heap usage and GC patterns
-2. **Network partitions** - Implement proper timeouts and retries
-3. **Disk space** - Monitor log growth and implement retention
-4. **Consumer lag** - Scale consumers or optimize processing
+### Common Issues
+1. **High cardinality metrics** - Limit tag values and use sampling
+2. **Trace sampling gaps** - Adjust sampling rates for critical paths
+3. **Log volume explosion** - Implement log levels and filtering
+4. **Performance impact** - Monitor observability overhead
 
-### Operational Commands
+### Debug Commands
 ```bash
-# Check cluster health
-kafka-broker-api-versions --bootstrap-server localhost:9092
+# Check Prometheus targets
+curl http://localhost:9090/api/v1/targets
 
-# Monitor resource usage
-kafka-run-class kafka.tools.JmxTool \
-  --object-name kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec
+# Query specific metrics
+curl 'http://localhost:9090/api/v1/query?query=kafka_consumer_lag_max'
 
-# Graceful shutdown
-kafka-server-stop
+# Search traces by service
+curl 'http://localhost:16686/api/traces?service=order-service&limit=10'
 
-# Rolling restart
-kubectl rollout restart statefulset/kafka
+# Check Elasticsearch indices
+curl http://localhost:9200/_cat/indices?v
 ```
 
-## 🎉 Curriculum Complete!
-
-**Congratulations!** You've completed the comprehensive Kafka Mastery Curriculum! You now have the skills to:
+## 🚀 Next Steps
+Congratulations! You've completed the comprehensive Kafka Mastery Curriculum! You now have the skills to:
 
 ✅ **Design** event-driven architectures from scratch  
 ✅ **Build** production-ready Kafka applications  
@@ -647,20 +715,6 @@ kubectl rollout restart statefulset/kafka
 ✅ **Monitor** and operate Kafka in production  
 ✅ **Deploy** with confidence using modern DevOps practices  
 
-## 🚀 What's Next?
+## 🎓 **CURRICULUM COMPLETE!**
 
-### Continue Learning
-- **Advanced Kafka Connect** - Integration with external systems
-- **KSQL** - SQL for stream processing
-- **Multi-datacenter replication** - Global event streaming
-- **Custom serializers** - Specialized data formats
-
-### Apply Your Skills
-- **Build real projects** - Apply concepts to your work
-- **Contribute to community** - Share your learning journey
-- **Mentor others** - Help developers learn Kafka
-- **Stay updated** - Follow Kafka development and best practices
-
----
-
-*"From Kafka beginner to production expert - you've mastered one of the most important technologies in modern software architecture. Now go build amazing systems!"* 🚀
+You've mastered all 20 lessons of Kafka expertise. Time to build amazing systems! 🚀

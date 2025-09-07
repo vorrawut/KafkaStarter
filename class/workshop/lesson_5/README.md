@@ -1,316 +1,252 @@
-# Workshop: Schema Registry & Evolution
+# Workshop: Topics, Partitions & Offsets
 
 ## 🎯 Objective
-Master schema management with Confluent Schema Registry, implementing Avro and Protobuf schemas with proper evolution strategies for production systems.
+Master Kafka's storage model by understanding topics, partitions, and offsets. Learn how to design efficient topic structures and manage data distribution.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Schema Definition & Registration
-Create and register schemas in `schemas/UserEventSchema.kt`
+### Task 1: Topic Management
+Complete the topic management operations in `management/TopicManager.kt`
 
-### Task 2: Avro Implementation
-Implement Avro serialization in `avro/AvroUserEventProducer.kt` and `avro/AvroUserEventConsumer.kt`
+### Task 2: Partition Strategy
+Implement partitioning strategies in `partitioning/PartitionStrategy.kt`
 
-### Task 3: Protobuf Implementation  
-Implement Protobuf serialization in `protobuf/ProtobufUserEventProducer.kt` and `protobuf/ProtobufUserEventConsumer.kt`
+### Task 3: Offset Management
+Build offset tracking and management in `offset/OffsetManager.kt`
 
-### Task 4: Schema Evolution
-Practice schema evolution strategies in `evolution/SchemaEvolutionManager.kt`
+### Task 4: CLI Operations
+Practice Kafka CLI commands in `cli/KafkaCliOperations.kt`
 
-### Task 5: Performance Comparison
-Compare serialization performance in `performance/SerializationBenchmark.kt`
+### Task 5: Performance Analysis
+Analyze partition performance in `analysis/PartitionAnalyzer.kt`
 
-## 🏗️ Schema Registry Architecture
+## 🏗️ Kafka Storage Architecture
 ```mermaid
 graph TB
-    subgraph "Schema Registry (:8081)"
-        SR[Schema Registry Server]
-        STORE[Schema Storage]
-        COMPAT[Compatibility Checker]
-        VERSIONS[Version Manager]
+    subgraph "Kafka Cluster"
+        subgraph "Topic: user-events"
+            P0[Partition 0<br/>Leader: Broker 1<br/>Offset: 0→1000]
+            P1[Partition 1<br/>Leader: Broker 2<br/>Offset: 0→856]
+            P2[Partition 2<br/>Leader: Broker 3<br/>Offset: 0→1200]
+        end
+        
+        subgraph "Messages in Partition 0"
+            M0[Offset 998: {user: john}]
+            M1[Offset 999: {user: jane}]
+            M2[Offset 1000: {user: bob}]
+        end
     end
     
     subgraph "Producers"
-        PROD1[JSON Producer]
-        PROD2[Avro Producer]
-        PROD3[Protobuf Producer]
+        P[Producer] -->|key: user-id| P0
+        P -->|hash(key) % 3| P1
+        P --> P2
     end
     
     subgraph "Consumers"
-        CONS1[JSON Consumer]
-        CONS2[Avro Consumer]
-        CONS3[Protobuf Consumer]
+        C1[Consumer 1<br/>Group: analytics] --> P0
+        C2[Consumer 2<br/>Group: analytics] --> P1
+        C3[Consumer 3<br/>Group: analytics] --> P2
     end
     
-    subgraph "Kafka Topics"
-        T1[user-events-json]
-        T2[user-events-avro]
-        T3[user-events-protobuf]
-    end
-    
-    PROD2 -->|Register Schema| SR
-    PROD3 -->|Register Schema| SR
-    
-    PROD1 -->|Raw JSON| T1
-    PROD2 -->|Schema ID + Binary| T2
-    PROD3 -->|Schema ID + Binary| T3
-    
-    T1 --> CONS1
-    T2 --> CONS2
-    T3 --> CONS3
-    
-    CONS2 -->|Fetch Schema| SR
-    CONS3 -->|Fetch Schema| SR
-    
-    style SR fill:#ff6b6b
-    style T2 fill:#4ecdc4
-    style T3 fill:#a8e6cf
-```
-
-## 🔄 Schema Evolution Flow
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant SR as Schema Registry
-    participant PROD as Producer
-    participant CONS as Consumer
-    
-    Dev->>SR: Register Schema v1
-    SR-->>Dev: Schema ID: 1
-    
-    PROD->>SR: Get Schema v1
-    PROD->>PROD: Serialize with Schema ID 1
-    PROD->>Kafka: Send [Schema ID 1][Binary Data]
-    
-    Kafka->>CONS: Deliver Message
-    CONS->>SR: Fetch Schema ID 1
-    CONS->>CONS: Deserialize with Schema v1
-    
-    Note over Dev,CONS: Schema Evolution
-    Dev->>SR: Register Schema v2 (backward compatible)
-    SR->>SR: Compatibility Check
-    SR-->>Dev: Schema ID: 2
-    
-    PROD->>SR: Get Schema v2
-    PROD->>PROD: Serialize with Schema ID 2
-    PROD->>Kafka: Send [Schema ID 2][Binary Data]
-    
-    Kafka->>CONS: Deliver Message
-    Note over CONS: Old consumer can still read v2 data!
-    CONS->>SR: Fetch Schema ID 2
-    CONS->>CONS: Deserialize with compatibility rules
+    style P0 fill:#ff6b6b
+    style P1 fill:#4ecdc4
+    style P2 fill:#a8e6cf
 ```
 
 ## 🎯 Key Concepts
 
-### **Schema Registry Benefits**
-- **Type Safety**: Compile-time checking of data structures
-- **Evolution**: Safe schema changes without breaking consumers
-- **Efficiency**: Binary serialization reduces message size
-- **Documentation**: Self-documenting data contracts
-- **Governance**: Centralized schema management
+### **Topics**: Logical Event Categories
+- Named streams of events (e.g., `user-events`, `order-events`)
+- Append-only logs with configurable retention
+- Logical containers for related events
 
-### **Serialization Formats**
+### **Partitions**: Physical Storage Units
+- Topics split into ordered, immutable sequences
+- Enable parallel processing and scalability
+- Each partition has a leader and replicas
 
-#### **JSON** (Human-readable)
-```json
-{
-  "eventId": "evt-123",
-  "eventType": "USER_CREATED",
-  "userId": "user-456",
-  "username": "john_doe",
-  "email": "john@example.com",
-  "timestamp": 1645123456789
-}
-```
+### **Offsets**: Message Positions
+- Unique, sequential identifiers within partitions
+- Enable precise message tracking and replay
+- Consumer progress tracking mechanism
 
-#### **Avro** (Schema evolution focus)
-```json
-{
-  "type": "record",
-  "name": "UserEvent",
-  "fields": [
-    {"name": "eventId", "type": "string"},
-    {"name": "eventType", "type": "string"},
-    {"name": "userId", "type": "string"},
-    {"name": "username", "type": "string"},
-    {"name": "email", "type": "string"},
-    {"name": "timestamp", "type": "long"}
-  ]
-}
-```
+## 📊 Partitioning Strategies
 
-#### **Protobuf** (Performance focus)
-```protobuf
-syntax = "proto3";
-
-message UserEvent {
-  string event_id = 1;
-  string event_type = 2;
-  string user_id = 3;
-  string username = 4;
-  string email = 5;
-  int64 timestamp = 6;
-}
-```
-
-## ⚡ Performance Comparison
-```mermaid
-graph TB
-    subgraph "Serialization Performance"
-        JSON[JSON<br/>Size: 150 bytes<br/>Speed: Fast<br/>CPU: Low]
-        AVRO[Avro<br/>Size: 45 bytes<br/>Speed: Very Fast<br/>CPU: Low]
-        PROTO[Protobuf<br/>Size: 42 bytes<br/>Speed: Fastest<br/>CPU: Very Low]
-    end
-    
-    subgraph "Schema Evolution Support"
-        JSON_EV[JSON<br/>Manual handling<br/>No built-in compatibility]
-        AVRO_EV[Avro<br/>Excellent evolution<br/>Multiple compatibility modes]
-        PROTO_EV[Protobuf<br/>Good evolution<br/>Field number-based]
-    end
-    
-    subgraph "Use Cases"
-        JSON_UC[JSON<br/>• Development<br/>• Debugging<br/>• Simple APIs]
-        AVRO_UC[Avro<br/>• Data lakes<br/>• ETL pipelines<br/>• Analytics]
-        PROTO_UC[Protobuf<br/>• High throughput<br/>• Microservices<br/>• Real-time systems]
-    end
-    
-    style AVRO fill:#4ecdc4
-    style PROTO fill:#a8e6cf
-    style JSON fill:#ffe66d
-```
-
-## 🔄 Schema Evolution Strategies
-
-### **Backward Compatibility** (Consumers can read new data)
+### 1. **Key-Based Partitioning**
 ```mermaid
 graph LR
-    V1[Schema v1<br/>Fields: A, B] --> V2[Schema v2<br/>Fields: A, B, C]
-    V2 --> OLD[Old Consumer<br/>Reads A, B<br/>Ignores C]
+    subgraph "Message Keys"
+        K1[user-123]
+        K2[user-456] 
+        K3[user-789]
+    end
     
-    style V2 fill:#4ecdc4
-    style OLD fill:#a8e6cf
+    subgraph "Hash Function"
+        H[hash(key) % partitions]
+    end
+    
+    subgraph "Partitions"
+        P0[Partition 0]
+        P1[Partition 1]
+        P2[Partition 2]
+    end
+    
+    K1 --> H
+    K2 --> H
+    K3 --> H
+    H --> P0
+    H --> P1
+    H --> P2
+    
+    style H fill:#ffe66d
 ```
 
-### **Forward Compatibility** (Consumers can read old data)
+**Benefits:**
+- Guarantees message ordering per key
+- Related events stay together
+- Enables stateful processing
+
+### 2. **Round-Robin Partitioning**
+- Messages distributed evenly across partitions
+- No ordering guarantees
+- Good for maximum throughput
+
+### 3. **Custom Partitioning**
+- Business logic determines partition assignment
+- Geographic distribution
+- Load balancing strategies
+
+## 🔄 Consumer Offset Management
+
 ```mermaid
-graph LR
-    V1[Schema v1<br/>Fields: A, B, C] --> V2[Schema v2<br/>Fields: A, B]
-    V2 --> NEW[New Consumer<br/>Expects A, B<br/>C has default value]
+sequenceDiagram
+    participant C as Consumer
+    participant K as Kafka Broker
+    participant O as __consumer_offsets
     
-    style V2 fill:#4ecdc4
-    style NEW fill:#a8e6cf
+    C->>K: Poll messages
+    K-->>C: Messages [offset 100-105]
+    C->>C: Process messages
+    C->>K: Commit offset 105
+    K->>O: Store offset for group/topic/partition
+    
+    Note over C,O: On restart, consumer resumes from offset 106
 ```
 
-### **Full Compatibility** (Both directions work)
-```mermaid
-graph TB
-    V1[Schema v1] <--> V2[Schema v2]
-    V2 <--> V3[Schema v3]
-    
-    OLD[Old Consumers] --> V1
-    NEW[New Consumers] --> V3
-    
-    style V2 fill:#4ecdc4
-```
+### Offset Commit Strategies:
+1. **Auto-commit**: Automatic offset commits at intervals
+2. **Manual commit**: Explicit offset control after processing
+3. **Sync commit**: Blocking commit for guaranteed persistence
+4. **Async commit**: Non-blocking commit for better performance
 
 ## ✅ Success Criteria
-- [ ] Schema Registry accessible and healthy
-- [ ] Can register and retrieve schemas
-- [ ] Avro producer/consumer working with binary serialization
-- [ ] Protobuf producer/consumer working with binary serialization
-- [ ] Schema evolution scenarios tested
-- [ ] Performance benchmarks completed
-- [ ] Compatibility rules understood and applied
+- [ ] Can create topics with specific partition counts
+- [ ] Understand how messages distribute across partitions
+- [ ] Can manage consumer offsets manually
+- [ ] Demonstrate message ordering within partitions
+- [ ] CLI operations working correctly
+- [ ] Performance analysis completed
 
-## 🚀 Getting Started
+## 🚀 Hands-On Exercises
 
-### 1. Verify Schema Registry
+### 1. Topic Creation
 ```bash
-# Check Schema Registry health
-curl http://localhost:8081/subjects
+# Create topic with 3 partitions
+kafka-topics --create --topic workshop-topic \
+  --partitions 3 --replication-factor 1 \
+  --bootstrap-server localhost:9092
 
-# List all schemas
-curl http://localhost:8081/subjects
+# Describe topic details
+kafka-topics --describe --topic workshop-topic \
+  --bootstrap-server localhost:9092
 ```
 
-### 2. Register Your First Schema
+### 2. Partition Distribution Testing
 ```bash
-# Register Avro schema
-curl -X POST http://localhost:8081/subjects/user-events-avro-value/versions \
-  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  -d '{"schema": "{\"type\":\"record\",\"name\":\"UserEvent\",\"fields\":[{\"name\":\"eventId\",\"type\":\"string\"}]}"}'
+# Send messages with keys
+kafka-console-producer --topic workshop-topic \
+  --property "parse.key=true" \
+  --property "key.separator=:" \
+  --bootstrap-server localhost:9092
+
+# Input: user-1:{"message": "hello"}
+# Input: user-2:{"message": "world"}
 ```
 
-### 3. Test Serialization Performance
+### 3. Offset Inspection
 ```bash
-# Run performance benchmark
-./gradlew test --tests SerializationBenchmarkTest
+# Check consumer group offsets
+kafka-consumer-groups --bootstrap-server localhost:9092 \
+  --group my-group --describe
 
-# Compare message sizes
-./gradlew bootRun --args="--benchmark.mode=size"
+# Reset offsets to beginning
+kafka-consumer-groups --bootstrap-server localhost:9092 \
+  --group my-group --topic workshop-topic \
+  --reset-offsets --to-earliest --execute
 ```
 
-## 🔧 Schema Evolution Examples
+## 📈 Performance Considerations
 
-### Adding Optional Fields (Backward Compatible)
-```kotlin
-// Schema v1
-data class UserEventV1(
-    val eventId: String,
-    val userId: String,
-    val eventType: String
-)
+### Partition Count Guidelines:
+- **Too few**: Limits parallelism and throughput
+- **Too many**: Increases overhead and complexity
+- **Rule of thumb**: Start with 2-3× expected consumer count
 
-// Schema v2 - Added optional field with default
-data class UserEventV2(
-    val eventId: String,
-    val userId: String,
-    val eventType: String,
-    val metadata: Map<String, String> = emptyMap() // NEW FIELD
-)
+### Factors to Consider:
+1. **Throughput requirements**
+2. **Number of consumers**
+3. **Message size and frequency**
+4. **Retention requirements**
+5. **Cluster resources**
+
+## 🔧 Best Practices
+
+### Topic Design:
+- Use descriptive, consistent naming conventions
+- Plan partition count for future growth
+- Consider retention policies based on use case
+- Group related events in same topic when possible
+
+### Partitioning Strategy:
+- Use meaningful keys for related message ordering
+- Avoid hot partitions (uneven distribution)
+- Monitor partition sizes and consumer lag
+- Plan for partition rebalancing
+
+### Offset Management:
+- Choose commit strategy based on delivery guarantees
+- Monitor consumer lag for performance issues
+- Implement proper error handling for commit failures
+- Use manual commits for exactly-once processing
+
+## 🔍 Monitoring & Observability
+
+```mermaid
+graph TB
+    subgraph "Topic Metrics"
+        TM[Message Rate<br/>Bytes In/Out<br/>Error Rate]
+    end
+    
+    subgraph "Partition Metrics"
+        PM[Size Distribution<br/>Leader Distribution<br/>Replication Lag]
+    end
+    
+    subgraph "Consumer Metrics"
+        CM[Consumer Lag<br/>Processing Rate<br/>Offset Commits]
+    end
+    
+    TM --> DASHBOARD[Kafka Dashboard]
+    PM --> DASHBOARD
+    CM --> DASHBOARD
+    
+    style DASHBOARD fill:#4ecdc4
 ```
 
-### Removing Fields (Forward Compatible)
-```kotlin
-// Schema v1
-data class UserEventV1(
-    val eventId: String,
-    val userId: String,
-    val eventType: String,
-    val deprecatedField: String // TO BE REMOVED
-)
-
-// Schema v2 - Field removed
-data class UserEventV2(
-    val eventId: String,
-    val userId: String,
-    val eventType: String
-    // deprecatedField removed
-)
-```
-
-## 🔍 Monitoring & Debugging
-
-### Schema Registry Metrics
-- **Schema registration rate**
-- **Compatibility check failures**
-- **Schema fetch latency**
-- **Storage usage**
-
-### Debug Tools
-```bash
-# View schema by ID
-curl http://localhost:8081/schemas/ids/1
-
-# Check compatibility
-curl -X POST http://localhost:8081/compatibility/subjects/user-events-avro-value/versions/latest \
-  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  -d '{"schema": "..."}'
-
-# List schema versions
-curl http://localhost:8081/subjects/user-events-avro-value/versions
-```
+### Key Metrics:
+- **Topic**: Message throughput, error rates
+- **Partition**: Size distribution, leader balance
+- **Consumer**: Lag, processing rate, commit success
 
 ## 🚀 Next Steps
-Schema management mastered? Time to explore development tools! Move to [Lesson 6: Development Tools](../lesson_6/README.md) to learn debugging, testing, and monitoring techniques for Kafka applications.
+Master the storage fundamentals? Time to add schemas! Move to [Lesson 5: Schema Registry](../lesson_6/README.md) to learn about structured data management and evolution.

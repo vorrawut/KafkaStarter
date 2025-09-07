@@ -3,21 +3,14 @@ server:
 
 spring:
   application:
-    name: kafka-starter-lesson5
+    name: kafka-starter-lesson4
   
   kafka:
-    bootstrap-servers: localhost:9092
-    
-    # TODO: Configure Schema Registry URL
-    # TODO: Set up Avro serializer configurations
-    # TODO: Set up Protobuf serializer configurations
-    # TODO: Configure consumer group settings
+    # TODO: Configure Kafka bootstrap servers
+    # TODO: Set up producer configurations for partition awareness
+    # TODO: Configure consumer settings for offset management
+    # TODO: Add admin client configuration for topic management
 
-# TODO: Add Schema Registry specific configuration
-# TODO: Configure compatibility levels
-# TODO: Set up monitoring and health checks
-# TODO: Add performance benchmarking settings
-
-# HINT: Schema Registry URL is typically http://localhost:8081
-# HINT: Use specific Avro reader for better performance
-# HINT: Configure schema caching for production
+# TODO: Add logging configuration for partition tracking
+# TODO: Configure monitoring endpoints
+# TODO: Set up metrics collection for partition monitoring

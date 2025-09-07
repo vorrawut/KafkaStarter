@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_9/README",
-  "title": "Workshop: Manual Acknowledgment & Idempotent Consumers",
+  "title": "Workshop: Error Handling & Dead Letter Topics",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_9/README.md",
   "sourceDirName": "workshop/lesson_9",
@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_9/workshop_9"
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_9/concept"
   },
   "next": {
     "title": "Concept",

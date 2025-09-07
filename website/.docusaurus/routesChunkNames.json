@@ -49,17 +49,17 @@
     },
     "content": "content---kafka-starter-answers-353-a42"
   },
-  "/KafkaStarter/curriculum-91c": {
+  "/KafkaStarter/curriculum-942": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---kafka-starter-curriculumf-30-a40"
     }
   },
-  "/KafkaStarter/curriculum-24f": {
+  "/KafkaStarter/curriculum-3fa": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---kafka-starter-curriculum-8-ec-911"
   },
-  "/KafkaStarter/curriculum-a44": {
+  "/KafkaStarter/curriculum-205": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/KafkaStarter/curriculum/CURRICULUM_GUIDE-076": {
@@ -73,6 +73,10 @@
   "/KafkaStarter/curriculum/modules/lesson_10/concept-c6e": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-10-concept-3-bc-dc9"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_10/workshop-dd7": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-10-workshop-562-3f4"
   },
   "/KafkaStarter/curriculum/modules/lesson_11/concept-bfd": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -118,41 +122,53 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-20-concept-3-e-3-776"
   },
+  "/KafkaStarter/curriculum/modules/lesson_21/concept-f13": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-21-concept-771-051"
+  },
   "/KafkaStarter/curriculum/modules/lesson_3/concept-af5": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-3-concept-8-b-2-f2f"
   },
-  "/KafkaStarter/curriculum/modules/lesson_3/workshop_3-985": {
+  "/KafkaStarter/curriculum/modules/lesson_3/workshop-782": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-3-workshop-301-b-c8f"
+    "content": "content---kafka-starter-curriculum-modules-lesson-3-workshop-4-a-8-0e8"
   },
   "/KafkaStarter/curriculum/modules/lesson_4/concept-25e": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-4-concept-4-c-6-0a0"
   },
-  "/KafkaStarter/curriculum/modules/lesson_4/workshop_4-f5f": {
+  "/KafkaStarter/curriculum/modules/lesson_4/workshop-49d": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-4-workshop-43-b-3-33e"
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-workshop-71-f-23c"
   },
   "/KafkaStarter/curriculum/modules/lesson_5/concept-b32": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-5-concept-318-164"
   },
-  "/KafkaStarter/curriculum/modules/lesson_5/workshop_5-5a0": {
+  "/KafkaStarter/curriculum/modules/lesson_5/workshop-5a9": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-5-workshop-5-c-44-92e"
+    "content": "content---kafka-starter-curriculum-modules-lesson-5-workshop-2-b-9-d0d"
   },
   "/KafkaStarter/curriculum/modules/lesson_6/concept-1d3": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-6-concept-65-b-660"
   },
-  "/KafkaStarter/curriculum/modules/lesson_6/workshop_6-3a5": {
+  "/KafkaStarter/curriculum/modules/lesson_6/workshop-890": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-6-workshop-6-b-68-f7b"
+    "content": "content---kafka-starter-curriculum-modules-lesson-6-workshop-9-b-6-45c"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_6/workshop_4-3b2": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-6-workshop-4-a-9-e-7c3"
   },
   "/KafkaStarter/curriculum/modules/lesson_7/concept-1be": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-7-conceptb-00-4f3"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_7/workshop-7d3": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-7-workshop-23-e-18a"
   },
   "/KafkaStarter/curriculum/modules/lesson_8/concept-108": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -161,10 +177,6 @@
   "/KafkaStarter/curriculum/modules/lesson_9/concept-e09": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-9-conceptc-3-f-067"
-  },
-  "/KafkaStarter/curriculum/modules/lesson_9/workshop_9-607": {
-    "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-9-workshop-932-c-023"
   },
   "/KafkaStarter/curriculum/modules/practical_usecases_guideline-e81": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -221,6 +233,10 @@
   "/KafkaStarter/curriculum/workshop/lesson_20/-433": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-workshop-lesson-20-3-d-4-845"
+  },
+  "/KafkaStarter/curriculum/workshop/lesson_21/-f75": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-workshop-lesson-21-a-4-e-47e"
   },
   "/KafkaStarter/curriculum/workshop/lesson_3/-dd9": {
     "__comp": "__comp---theme-doc-item-178-a40",

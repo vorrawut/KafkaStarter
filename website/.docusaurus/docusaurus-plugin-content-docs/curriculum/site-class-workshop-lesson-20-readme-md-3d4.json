@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_20/README",
-  "title": "Workshop: Deployment & Scaling Best Practices",
+  "title": "Workshop: Observability & Monitoring",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_20/README.md",
   "sourceDirName": "workshop/lesson_20",
@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/modules/lesson_20/concept"
   },
   "next": {
-    "title": "👍 Practical Use Cases",
-    "permalink": "/KafkaStarter/curriculum/modules/practical_usecases_guideline"
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_21/concept"
   }
 }

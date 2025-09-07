@@ -234,9 +234,9 @@ cd class/workshop/lesson_1/
 
 #### 🚀 **For Experienced Developers**  
 1. Skim foundational concepts (Lessons 1-3)
-2. Dive into [Resilient Messaging](class/workshop/lesson_7/) 
+2. Dive into [Resilient Messaging](class/workshop/lesson_8/) 
 3. Explore [Demo System](demo/README.md)
-4. Focus on [Production Patterns](class/workshop/lesson_18/)
+4. Focus on [Production Patterns](class/workshop/lesson_19/)
 
 #### 👥 **For Teams**
 1. Review [Curriculum Summary](CURRICULUM_SUMMARY.md)

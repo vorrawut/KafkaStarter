@@ -1,640 +1,574 @@
-# Workshop: Fan-out Pattern & Notification Systems
+# Workshop: Message Transformation & Filtering
 
 ## 🎯 Objective
-Master the fan-out messaging pattern for building scalable notification systems that deliver messages across multiple channels (email, SMS, push notifications, webhooks) with reliable delivery and failure handling.
+Master message transformation patterns, content-based routing, field mapping, data enrichment, and filtering strategies for building flexible data processing pipelines with Kafka.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Fan-out Event Publisher
-Implement fan-out publisher in `fanout/NotificationEventPublisher.kt`
+### Task 1: Message Transformation
+Implement transformations in `transformation/MessageTransformer.kt`
 
-### Task 2: Multi-Channel Notification
-Build notification channels in `channels/NotificationChannelManager.kt`
+### Task 2: Content-Based Filtering
+Build filtering logic in `filtering/ContentBasedFilter.kt`
 
-### Task 3: Delivery Tracking
-Implement delivery tracking in `tracking/DeliveryTracker.kt`
+### Task 3: Data Enrichment
+Create enrichment service in `enrichment/DataEnricher.kt`
 
-### Task 4: Channel Routing
-Create routing logic in `routing/ChannelRouter.kt`
+### Task 4: Field Mapping
+Implement field mapping in `mapping/FieldMapper.kt`
 
-### Task 5: Failure Recovery
-Handle failures in `recovery/FailureRecoveryService.kt`
+### Task 5: Pipeline Orchestration
+Build processing pipeline in `pipeline/TransformationPipeline.kt`
 
-## 🏗️ Fan-out Notification Architecture
+## 🏗️ Transformation Pipeline Architecture
 ```mermaid
 graph TB
-    subgraph "Event Sources"
-        ORDER[Order Events<br/>order-placed, order-shipped]
-        USER[User Events<br/>user-registered, password-reset]
-        PAYMENT[Payment Events<br/>payment-successful, payment-failed]
-        SYSTEM[System Events<br/>maintenance, alerts]
+    subgraph "Input Sources"
+        RAW[Raw Events<br/>Various formats]
+        LEGACY[Legacy System Events<br/>Old schema format]
+        EXTERNAL[External API Events<br/>Third-party format]
     end
     
-    subgraph "Fan-out Engine"
-        DISPATCHER[Event Dispatcher<br/>Routes to channels]
-        TEMPLATE[Template Engine<br/>Message formatting]
-        PREFERENCES[User Preferences<br/>Channel selection]
-        RULES[Business Rules<br/>Event filtering]
+    subgraph "Transformation Pipeline"
+        VALIDATE[Message Validation<br/>Schema compliance]
+        FILTER[Content-Based Filter<br/>Business rules]
+        TRANSFORM[Field Transformation<br/>Format conversion]
+        ENRICH[Data Enrichment<br/>External data lookup]
+        ROUTE[Content Routing<br/>Destination selection]
     end
     
-    subgraph "Notification Channels"
-        EMAIL[Email Service<br/>SMTP delivery]
-        SMS[SMS Service<br/>Twilio/AWS SNS]
-        PUSH[Push Notifications<br/>Firebase/APNs]
-        WEBHOOK[Webhooks<br/>HTTP callbacks]
-        SLACK[Slack Integration<br/>Team notifications]
-        IN_APP[In-App Notifications<br/>Real-time UI]
+    subgraph "Processing Stages"
+        NORMALIZE[Data Normalization<br/>Standard format]
+        AGGREGATE[Field Aggregation<br/>Computed fields]
+        SPLIT[Message Splitting<br/>One-to-many]
+        MERGE[Message Merging<br/>Many-to-one]
     end
     
-    subgraph "Delivery Tracking"
-        TRACKER[Delivery Tracker<br/>Status monitoring]
-        RETRY[Retry Service<br/>Failed deliveries]
-        ANALYTICS[Analytics<br/>Delivery metrics]
-        AUDIT[Audit Log<br/>Compliance tracking]
+    subgraph "Output Destinations"
+        ANALYTICS[Analytics Topic<br/>Processed events]
+        AUDIT[Audit Topic<br/>Compliance events]
+        ALERTS[Alert Topic<br/>Critical events]
+        DLQ[Dead Letter Queue<br/>Failed transformations]
     end
     
-    ORDER --> DISPATCHER
-    USER --> DISPATCHER
-    PAYMENT --> DISPATCHER
-    SYSTEM --> DISPATCHER
+    RAW --> VALIDATE
+    LEGACY --> VALIDATE
+    EXTERNAL --> VALIDATE
     
-    DISPATCHER --> TEMPLATE
-    DISPATCHER --> PREFERENCES
-    DISPATCHER --> RULES
+    VALIDATE --> FILTER
+    FILTER --> TRANSFORM
+    TRANSFORM --> ENRICH
+    ENRICH --> ROUTE
     
-    TEMPLATE --> EMAIL
-    TEMPLATE --> SMS
-    TEMPLATE --> PUSH
-    TEMPLATE --> WEBHOOK
-    TEMPLATE --> SLACK
-    TEMPLATE --> IN_APP
+    ROUTE --> NORMALIZE
+    NORMALIZE --> AGGREGATE
+    AGGREGATE --> SPLIT
+    SPLIT --> MERGE
     
-    EMAIL --> TRACKER
-    SMS --> TRACKER
-    PUSH --> TRACKER
-    WEBHOOK --> TRACKER
+    MERGE --> ANALYTICS
+    MERGE --> AUDIT
+    MERGE --> ALERTS
+    FILTER --> DLQ
     
-    TRACKER --> RETRY
-    TRACKER --> ANALYTICS
-    TRACKER --> AUDIT
-    
-    style DISPATCHER fill:#ff6b6b
-    style EMAIL fill:#4ecdc4
-    style SMS fill:#a8e6cf
-    style PUSH fill:#ffe66d
-    style TRACKER fill:#ffa8e6
+    style VALIDATE fill:#ff6b6b
+    style FILTER fill:#4ecdc4
+    style TRANSFORM fill:#a8e6cf
+    style ENRICH fill:#ffe66d
 ```
 
-## 🌟 Fan-out Pattern Flow
+## 🔄 Message Transformation Flow
 ```mermaid
 sequenceDiagram
-    participant Source as Event Source
-    participant Fanout as Fan-out Engine
-    participant Email as Email Channel
-    participant SMS as SMS Channel
-    participant Push as Push Channel
-    participant Tracker as Delivery Tracker
+    participant Source as Source Topic
+    participant Processor as Transform Processor
+    participant Enricher as Data Enricher
+    participant Router as Content Router
+    participant Target as Target Topic
     
-    Source->>Fanout: Order Shipped Event
-    Fanout->>Fanout: Load User Preferences
-    Fanout->>Fanout: Apply Business Rules
-    Fanout->>Fanout: Generate Templates
+    Source->>Processor: Raw Message
+    Processor->>Processor: Validate Schema
     
-    par Parallel Delivery
-        Fanout->>Email: Email Notification
-        Fanout->>SMS: SMS Notification  
-        Fanout->>Push: Push Notification
+    alt Valid Message
+        Processor->>Processor: Apply Transformations
+        Processor->>Enricher: Enrich with External Data
+        Enricher-->>Processor: Enriched Message
+        Processor->>Router: Route Based on Content
+        Router->>Target: Transformed Message
+    else Invalid Message
+        Processor->>Target: Send to DLQ with Error Details
     end
     
-    Email->>Tracker: Delivery Success
-    SMS->>Tracker: Delivery Failed
-    Push->>Tracker: Delivery Success
-    
-    Tracker->>SMS: Schedule Retry
-    SMS->>Tracker: Retry Success
-    
-    Note over Tracker: All channels delivered successfully
+    Note over Processor: Field mapping, format conversion
+    Note over Enricher: User profiles, product catalogs
+    Note over Router: Topic selection based on rules
 ```
 
 ## 🎯 Key Concepts
 
-### **Fan-out Pattern Benefits**
-- **Parallel Processing**: Multiple channels processed simultaneously
-- **Channel Independence**: Failures in one channel don't affect others
-- **Scalability**: Easy to add new notification channels
-- **User Choice**: Respect user preferences and opt-outs
+### **Message Transformation Patterns**
 
-### **Notification Event Models**
+#### **1. Field Mapping & Format Conversion**
+```mermaid
+graph LR
+    INPUT[Input Message<br/>userName: john_doe<br/>emailAddr: john@email.com<br/>accountId: 12345] 
+    
+    MAPPING[Field Mapping<br/>userName → user.name<br/>emailAddr → user.email<br/>accountId → account.id]
+    
+    OUTPUT[Output Message<br/>user.name: john_doe<br/>user.email: john@email.com<br/>account.id: 12345]
+    
+    INPUT --> MAPPING
+    MAPPING --> OUTPUT
+    
+    style MAPPING fill:#4ecdc4
+```
 
-#### **Base Notification Event**
+#### **2. Data Enrichment**
+```mermaid
+graph TB
+    ORIGINAL[Original Event<br/>userId: 123<br/>productId: 456<br/>action: view]
+    
+    ENRICH[Data Enrichment]
+    
+    USER_DB[(User Database)]
+    PRODUCT_DB[(Product Catalog)]
+    
+    ENRICHED[Enriched Event<br/>userId: 123<br/>userName: john_doe<br/>userSegment: premium<br/>productId: 456<br/>productName: Kafka T-Shirt<br/>productCategory: clothing<br/>action: view<br/>timestamp: 2024-01-15T10:30:00Z]
+    
+    ORIGINAL --> ENRICH
+    ENRICH --> USER_DB
+    ENRICH --> PRODUCT_DB
+    USER_DB --> ENRICHED
+    PRODUCT_DB --> ENRICHED
+    
+    style ENRICH fill:#a8e6cf
+    style ENRICHED fill:#4ecdc4
+```
+
+#### **3. Content-Based Filtering**
+```mermaid
+flowchart TD
+    MESSAGE[Incoming Message] --> RULES{Apply Filter Rules}
+    
+    RULES -->|High Value Customer| PRIORITY[Priority Queue]
+    RULES -->|Regular Customer| STANDARD[Standard Queue]
+    RULES -->|Suspicious Activity| SECURITY[Security Queue]
+    RULES -->|Invalid Data| DLQ[Dead Letter Queue]
+    
+    subgraph "Filter Rules"
+        RULE1[customer.tier == 'GOLD']
+        RULE2[order.amount > 1000]
+        RULE3[risk.score > 80]
+        RULE4[validation.errors.length > 0]
+    end
+    
+    style PRIORITY fill:#4ecdc4
+    style SECURITY fill:#ff6b6b
+    style DLQ fill:#ff6b6b
+```
+
+### **Transformation Models**
+
+#### **User Activity Transformation**
 ```kotlin
-data class NotificationEvent(
+// Input: Raw user activity event
+data class RawUserActivity(
+    val uid: String,                    // Legacy user ID format
+    val act: String,                    // Abbreviated action
+    val ts: Long,                       // Unix timestamp
+    val attrs: Map<String, String>      // Mixed attributes
+)
+
+// Output: Standardized user activity event  
+data class StandardUserActivity(
+    val user: UserInfo,
+    val activity: ActivityInfo,
+    val metadata: EventMetadata
+)
+
+data class UserInfo(
+    val userId: String,
+    val username: String,
+    val segment: String,
+    val tier: String
+)
+
+data class ActivityInfo(
+    val action: String,
+    val category: String,
+    val resource: String,
+    val timestamp: Instant
+)
+
+data class EventMetadata(
     val eventId: String,
-    val eventType: NotificationEventType,
-    val recipientId: String,
-    val templateId: String,
-    val payload: Map<String, Any>,
-    val priority: NotificationPriority = NotificationPriority.NORMAL,
-    val scheduledTime: Instant? = null,
-    val expiryTime: Instant? = null,
-    val correlationId: String,
-    val metadata: Map<String, String> = emptyMap()
-)
-
-enum class NotificationEventType {
-    ORDER_CONFIRMATION,
-    ORDER_SHIPPED,
-    ORDER_DELIVERED,
-    PAYMENT_SUCCESSFUL,
-    PAYMENT_FAILED,
-    USER_WELCOME,
-    PASSWORD_RESET,
-    SECURITY_ALERT,
-    MAINTENANCE_NOTICE,
-    PROMOTIONAL_OFFER
-}
-
-enum class NotificationPriority {
-    LOW,
-    NORMAL, 
-    HIGH,
-    URGENT
-}
-```
-
-#### **Channel-Specific Messages**
-```kotlin
-data class EmailNotification(
-    val recipientEmail: String,
-    val subject: String,
-    val htmlBody: String,
-    val textBody: String,
-    val attachments: List<Attachment> = emptyList(),
-    val replyTo: String? = null,
-    val headers: Map<String, String> = emptyMap()
-)
-
-data class SMSNotification(
-    val recipientPhone: String,
-    val message: String,
-    val countryCode: String,
-    val shortCode: String? = null
-)
-
-data class PushNotification(
-    val deviceTokens: List<String>,
-    val title: String,
-    val body: String,
-    val badge: Int? = null,
-    val sound: String? = null,
-    val data: Map<String, String> = emptyMap()
-)
-
-data class WebhookNotification(
-    val url: String,
-    val method: String = "POST",
-    val headers: Map<String, String> = emptyMap(),
-    val payload: Any,
-    val timeout: Duration = Duration.ofSeconds(30)
+    val source: String,
+    val version: String,
+    val correlationId: String
 )
 ```
 
-### **User Preference Management**
-```mermaid
-graph TB
-    subgraph "User Preferences"
-        GLOBAL[Global Settings<br/>Enable/Disable notifications]
-        CHANNEL[Channel Preferences<br/>Email, SMS, Push enabled]
-        EVENT[Event Preferences<br/>Which events to receive]
-        TIMING[Timing Preferences<br/>Quiet hours, frequency]
-    end
-    
-    subgraph "Preference Rules"
-        OPTOUT[Opt-out Lists<br/>Unsubscribed users]
-        GDPR[GDPR Compliance<br/>Consent management]
-        FREQUENCY[Frequency Limits<br/>Anti-spam protection]
-        TIMEZONE[Timezone Awareness<br/>Local delivery times]
-    end
-    
-    subgraph "Dynamic Routing"
-        ROUTER[Channel Router]
-        FILTER[Preference Filter]
-        SCHEDULER[Delivery Scheduler]
-    end
-    
-    GLOBAL --> ROUTER
-    CHANNEL --> ROUTER
-    EVENT --> FILTER
-    TIMING --> SCHEDULER
-    
-    OPTOUT --> FILTER
-    GDPR --> FILTER
-    FREQUENCY --> SCHEDULER
-    TIMEZONE --> SCHEDULER
-    
-    style ROUTER fill:#4ecdc4
-    style FILTER fill:#ff6b6b
-    style SCHEDULER fill:#ffe66d
-```
+## ⚙️ Message Transformer Implementation
 
-## ⚙️ Fan-out Engine Implementation
-
-### Notification Event Publisher
+### Core Transformation Engine
 ```kotlin
 @Component
-class NotificationEventPublisher {
+class MessageTransformationEngine {
     
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, NotificationEvent>
-    
-    @Autowired
-    private lateinit var userPreferenceService: UserPreferenceService
-    
-    @Autowired
-    private lateinit var templateService: TemplateService
-    
-    fun publishNotification(event: NotificationEvent): CompletableFuture<Void> {
-        logger.info("Publishing notification event: ${event.eventId}")
+    fun transform(
+        input: Any,
+        transformationRules: List<TransformationRule>
+    ): TransformationResult {
         
-        return CompletableFuture.runAsync {
-            try {
-                // Load user preferences
-                val preferences = userPreferenceService.getUserPreferences(event.recipientId)
-                
-                // Apply business rules and filters
-                if (shouldSendNotification(event, preferences)) {
-                    
-                    // Get enabled channels for this user and event type
-                    val enabledChannels = getEnabledChannels(event, preferences)
-                    
-                    // Fan out to each enabled channel
-                    enabledChannels.forEach { channel ->
-                        val channelEvent = enrichEventForChannel(event, channel)
-                        val topicName = "notifications-${channel.name.lowercase()}"
-                        
-                        kafkaTemplate.send(topicName, event.recipientId, channelEvent)
-                            .whenComplete { result, throwable ->
-                                if (throwable != null) {
-                                    logger.error("Failed to send to $channel for event ${event.eventId}", throwable)
-                                } else {
-                                    logger.debug("Successfully sent to $channel for event ${event.eventId}")
-                                }
-                            }
-                    }
-                    
-                    // Publish to delivery tracking
-                    publishDeliveryTracking(event, enabledChannels)
-                } else {
-                    logger.info("Notification filtered out: ${event.eventId}")
+        var currentMessage = input
+        val appliedTransformations = mutableListOf<String>()
+        
+        try {
+            for (rule in transformationRules) {
+                if (rule.isApplicable(currentMessage)) {
+                    currentMessage = rule.apply(currentMessage)
+                    appliedTransformations.add(rule.name)
                 }
+            }
+            
+            return TransformationResult.success(
+                transformedMessage = currentMessage,
+                appliedRules = appliedTransformations
+            )
+            
+        } catch (e: Exception) {
+            return TransformationResult.failure(
+                originalMessage = input,
+                error = e.message ?: "Unknown transformation error",
+                appliedRules = appliedTransformations
+            )
+        }
+    }
+}
+
+interface TransformationRule {
+    val name: String
+    fun isApplicable(message: Any): Boolean
+    fun apply(message: Any): Any
+}
+```
+
+### Field Mapping Rules
+```kotlin
+@Component
+class FieldMappingRule : TransformationRule {
+    override val name = "FieldMapping"
+    
+    private val fieldMappings = mapOf(
+        "uid" to "user.userId",
+        "uname" to "user.username", 
+        "email" to "user.email",
+        "act" to "activity.action",
+        "ts" to "activity.timestamp",
+        "prod_id" to "product.productId",
+        "cat" to "product.category"
+    )
+    
+    override fun isApplicable(message: Any): Boolean {
+        return message is Map<*, *> && fieldMappings.keys.any { 
+            message.containsKey(it) 
+        }
+    }
+    
+    override fun apply(message: Any): Any {
+        if (message !is Map<*, *>) return message
+        
+        val result = mutableMapOf<String, Any?>()
+        
+        message.forEach { (key, value) ->
+            val mappedKey = fieldMappings[key.toString()] ?: key.toString()
+            setNestedValue(result, mappedKey, value)
+        }
+        
+        return result
+    }
+    
+    private fun setNestedValue(map: MutableMap<String, Any?>, path: String, value: Any?) {
+        val parts = path.split(".")
+        var current = map
+        
+        for (i in 0 until parts.size - 1) {
+            val part = parts[i]
+            if (!current.containsKey(part)) {
+                current[part] = mutableMapOf<String, Any?>()
+            }
+            @Suppress("UNCHECKED_CAST")
+            current = current[part] as MutableMap<String, Any?>
+        }
+        
+        current[parts.last()] = value
+    }
+}
+```
+
+## 🔍 Content-Based Filtering
+
+### Filter Rule Engine
+```kotlin
+@Component
+class ContentBasedFilterEngine {
+    
+    fun applyFilters(
+        message: Any,
+        filterRules: List<FilterRule>
+    ): FilterResult {
+        
+        val matchedRules = mutableListOf<String>()
+        var routingDestination = "default"
+        
+        for (rule in filterRules) {
+            if (rule.matches(message)) {
+                matchedRules.add(rule.name)
+                routingDestination = rule.destination
                 
-            } catch (e: Exception) {
-                logger.error("Failed to publish notification: ${event.eventId}", e)
-                throw e
+                if (rule.isTerminal) {
+                    break // Stop processing on terminal rule
+                }
             }
         }
-    }
-    
-    private fun shouldSendNotification(
-        event: NotificationEvent, 
-        preferences: UserPreferences
-    ): Boolean {
-        // Check global notification settings
-        if (!preferences.notificationsEnabled) return false
         
-        // Check event type preferences
-        if (!preferences.enabledEventTypes.contains(event.eventType)) return false
-        
-        // Check quiet hours
-        if (isInQuietHours(preferences)) return false
-        
-        // Check frequency limits
-        if (exceedsFrequencyLimit(event, preferences)) return false
-        
-        return true
-    }
-    
-    private fun getEnabledChannels(
-        event: NotificationEvent,
-        preferences: UserPreferences
-    ): List<NotificationChannel> {
-        return NotificationChannel.values().filter { channel ->
-            preferences.enabledChannels.contains(channel) &&
-            isChannelAvailableForEvent(channel, event.eventType)
-        }
-    }
-}
-```
-
-### Multi-Channel Delivery System
-```kotlin
-@Component
-class EmailNotificationConsumer {
-    
-    @KafkaListener(topics = ["notifications-email"])
-    fun processEmailNotification(
-        @Payload event: NotificationEvent,
-        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int
-    ) {
-        try {
-            logger.info("Processing email notification: ${event.eventId}")
-            
-            // Generate email content from template
-            val emailContent = templateService.generateEmailContent(event)
-            
-            // Send email
-            val deliveryResult = emailService.sendEmail(
-                recipient = emailContent.recipientEmail,
-                subject = emailContent.subject,
-                htmlBody = emailContent.htmlBody,
-                textBody = emailContent.textBody
+        return FilterResult(
+            shouldProcess = matchedRules.isNotEmpty(),
+            destination = routingDestination,
+            matchedRules = matchedRules,
+            metadata = mapOf(
+                "filterAppliedAt" to Instant.now(),
+                "rulesEvaluated" to filterRules.size
             )
-            
-            // Track delivery
-            deliveryTracker.recordDelivery(
-                eventId = event.eventId,
-                channel = NotificationChannel.EMAIL,
-                status = if (deliveryResult.success) DeliveryStatus.DELIVERED else DeliveryStatus.FAILED,
-                providerId = deliveryResult.messageId,
-                error = deliveryResult.error
-            )
-            
-        } catch (e: Exception) {
-            logger.error("Failed to process email notification: ${event.eventId}", e)
-            
-            deliveryTracker.recordDelivery(
-                eventId = event.eventId,
-                channel = NotificationChannel.EMAIL,
-                status = DeliveryStatus.FAILED,
-                error = e.message
-            )
-        }
-    }
-}
-
-@Component
-class SMSNotificationConsumer {
-    
-    @KafkaListener(topics = ["notifications-sms"])
-    fun processSMSNotification(
-        @Payload event: NotificationEvent
-    ) {
-        try {
-            logger.info("Processing SMS notification: ${event.eventId}")
-            
-            // Generate SMS content
-            val smsContent = templateService.generateSMSContent(event)
-            
-            // Send SMS
-            val deliveryResult = smsService.sendSMS(
-                recipient = smsContent.recipientPhone,
-                message = smsContent.message,
-                countryCode = smsContent.countryCode
-            )
-            
-            // Track delivery
-            deliveryTracker.recordDelivery(
-                eventId = event.eventId,
-                channel = NotificationChannel.SMS,
-                status = if (deliveryResult.success) DeliveryStatus.DELIVERED else DeliveryStatus.FAILED,
-                providerId = deliveryResult.messageId,
-                error = deliveryResult.error
-            )
-            
-        } catch (e: Exception) {
-            logger.error("Failed to process SMS notification: ${event.eventId}", e)
-            
-            deliveryTracker.recordDelivery(
-                eventId = event.eventId,
-                channel = NotificationChannel.SMS,
-                status = DeliveryStatus.FAILED,
-                error = e.message
-            )
-        }
-    }
-}
-```
-
-## 📊 Delivery Tracking & Analytics
-
-### Delivery Status Monitoring
-```mermaid
-graph TB
-    subgraph "Delivery States"
-        QUEUED[Queued<br/>Waiting to send]
-        SENT[Sent<br/>Delivered to provider]
-        DELIVERED[Delivered<br/>Confirmed by recipient]
-        FAILED[Failed<br/>Delivery unsuccessful]
-        RETRYING[Retrying<br/>Attempting retry]
-        EXPIRED[Expired<br/>TTL exceeded]
-    end
-    
-    subgraph "Tracking Metrics"
-        DELIVERY_RATE[Delivery Rate<br/>% successful deliveries]
-        CHANNEL_PERF[Channel Performance<br/>Speed and reliability]
-        FAILURE_RATE[Failure Rate<br/>% failed deliveries]
-        RETRY_SUCCESS[Retry Success Rate<br/>Recovery effectiveness]
-    end
-    
-    subgraph "Business Metrics"
-        ENGAGEMENT[User Engagement<br/>Open/click rates]
-        CONVERSION[Conversion Rate<br/>Action completion]
-        UNSUBSCRIBE[Unsubscribe Rate<br/>User opt-outs]
-        REVENUE[Revenue Impact<br/>Notification ROI]
-    end
-    
-    QUEUED --> SENT
-    SENT --> DELIVERED
-    SENT --> FAILED
-    FAILED --> RETRYING
-    RETRYING --> DELIVERED
-    RETRYING --> EXPIRED
-    
-    DELIVERED --> DELIVERY_RATE
-    FAILED --> FAILURE_RATE
-    RETRYING --> RETRY_SUCCESS
-    
-    DELIVERED --> ENGAGEMENT
-    ENGAGEMENT --> CONVERSION
-    CONVERSION --> REVENUE
-    
-    style DELIVERED fill:#4ecdc4
-    style FAILED fill:#ff6b6b
-    style EXPIRED fill:#ff6b6b
-    style ENGAGEMENT fill:#a8e6cf
-```
-
-### Delivery Tracker Implementation
-```kotlin
-@Component
-class DeliveryTracker {
-    
-    @Autowired
-    private lateinit var deliveryRepository: DeliveryRepository
-    
-    @Autowired
-    private lateinit var metricsRegistry: MeterRegistry
-    
-    fun recordDelivery(
-        eventId: String,
-        channel: NotificationChannel,
-        status: DeliveryStatus,
-        providerId: String? = null,
-        error: String? = null,
-        metadata: Map<String, String> = emptyMap()
-    ) {
-        val delivery = DeliveryRecord(
-            id = generateDeliveryId(),
-            eventId = eventId,
-            channel = channel,
-            status = status,
-            providerId = providerId,
-            error = error,
-            attemptCount = 1,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now(),
-            metadata = metadata
         )
-        
-        deliveryRepository.save(delivery)
-        
-        // Record metrics
-        metricsRegistry.counter(
-            "notification.delivery",
-            "channel", channel.name,
-            "status", status.name
-        ).increment()
-        
-        logger.info("Recorded delivery: $eventId -> $channel -> $status")
     }
+}
+
+interface FilterRule {
+    val name: String
+    val destination: String
+    val isTerminal: Boolean
+    fun matches(message: Any): Boolean
+}
+```
+
+### Business Rule Examples
+```kotlin
+@Component
+class HighValueCustomerFilter : FilterRule {
+    override val name = "HighValueCustomer"
+    override val destination = "high-priority-topic"
+    override val isTerminal = false
     
-    fun getDeliveryStatus(eventId: String): List<DeliveryRecord> {
-        return deliveryRepository.findByEventId(eventId)
-    }
-    
-    fun getDeliveryMetrics(
-        timeRange: TimeRange,
-        channels: List<NotificationChannel>? = null
-    ): DeliveryMetrics {
-        val deliveries = deliveryRepository.findByTimeRange(timeRange, channels)
-        
-        val totalDeliveries = deliveries.size
-        val successfulDeliveries = deliveries.count { it.status == DeliveryStatus.DELIVERED }
-        val failedDeliveries = deliveries.count { it.status == DeliveryStatus.FAILED }
-        
-        val channelMetrics = deliveries.groupBy { it.channel }
-            .mapValues { (channel, channelDeliveries) ->
-                ChannelMetrics(
-                    channel = channel,
-                    totalSent = channelDeliveries.size,
-                    successful = channelDeliveries.count { it.status == DeliveryStatus.DELIVERED },
-                    failed = channelDeliveries.count { it.status == DeliveryStatus.FAILED },
-                    averageDeliveryTime = calculateAverageDeliveryTime(channelDeliveries)
-                )
+    override fun matches(message: Any): Boolean {
+        return when (message) {
+            is Map<*, *> -> {
+                val customerTier = message["customer.tier"] as? String
+                val orderAmount = message["order.amount"] as? Number
+                
+                customerTier == "GOLD" || 
+                customerTier == "PLATINUM" || 
+                (orderAmount?.toDouble() ?: 0.0) > 1000.0
             }
+            is StandardUserActivity -> {
+                message.user.tier in listOf("GOLD", "PLATINUM")
+            }
+            else -> false
+        }
+    }
+}
+
+@Component  
+class SecurityAlertFilter : FilterRule {
+    override val name = "SecurityAlert"
+    override val destination = "security-alerts-topic"
+    override val isTerminal = true // Terminal rule - stops further processing
+    
+    override fun matches(message: Any): Boolean {
+        return when (message) {
+            is Map<*, *> -> {
+                val riskScore = message["risk.score"] as? Number
+                val suspiciousFlags = message["security.flags"] as? List<*>
+                
+                (riskScore?.toInt() ?: 0) > 80 ||
+                (suspiciousFlags?.size ?: 0) > 0
+            }
+            else -> false
+        }
+    }
+}
+```
+
+## 🌟 Data Enrichment Service
+
+### User Profile Enrichment
+```kotlin
+@Component
+class UserProfileEnricher {
+    
+    @Autowired
+    private lateinit var userProfileService: UserProfileService
+    
+    @Autowired
+    private lateinit var cacheManager: CacheManager
+    
+    fun enrichWithUserProfile(message: Any): Any {
+        return when (message) {
+            is Map<*, *> -> enrichMapMessage(message)
+            is StandardUserActivity -> enrichUserActivity(message)
+            else -> message
+        }
+    }
+    
+    private fun enrichUserActivity(activity: StandardUserActivity): StandardUserActivity {
+        val userId = activity.user.userId
+        val cachedProfile = getCachedUserProfile(userId)
         
-        return DeliveryMetrics(
-            timeRange = timeRange,
-            totalDeliveries = totalDeliveries,
-            successfulDeliveries = successfulDeliveries,
-            failedDeliveries = failedDeliveries,
-            overallDeliveryRate = if (totalDeliveries > 0) successfulDeliveries.toDouble() / totalDeliveries else 0.0,
-            channelMetrics = channelMetrics.values.toList()
+        val profile = cachedProfile ?: run {
+            val fetchedProfile = userProfileService.getUserProfile(userId)
+            cacheUserProfile(userId, fetchedProfile)
+            fetchedProfile
+        }
+        
+        return activity.copy(
+            user = activity.user.copy(
+                username = profile.username,
+                segment = profile.segment,
+                tier = profile.tier
+            )
         )
+    }
+    
+    @Cacheable("userProfiles", key = "#userId")
+    private fun getCachedUserProfile(userId: String): UserProfile? {
+        return cacheManager.getCache("userProfiles")?.get(userId, UserProfile::class.java)
+    }
+    
+    private fun cacheUserProfile(userId: String, profile: UserProfile) {
+        cacheManager.getCache("userProfiles")?.put(userId, profile)
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Fan-out pattern correctly distributes events to multiple channels
-- [ ] User preferences properly filter notifications
-- [ ] All notification channels (email, SMS, push) working correctly
-- [ ] Delivery tracking provides visibility into success/failure rates
-- [ ] Failure recovery handles retries and dead letter scenarios
-- [ ] Performance handles high-volume notification bursts (&gt;10k/min)
-- [ ] Business rules prevent spam and respect user preferences
+- [ ] Message transformation correctly maps fields between formats
+- [ ] Content-based filtering routes messages to appropriate destinations  
+- [ ] Data enrichment enhances messages with external data
+- [ ] Field mapping handles nested object transformations
+- [ ] Pipeline processes messages without data loss
+- [ ] Performance meets throughput requirements (&gt;1000 msg/sec)
+- [ ] Error handling captures and routes failed transformations
 
 ## 🚀 Getting Started
 
-### 1. Configure Notification Topics
-```bash
-# Create notification topics for each channel
-kafka-topics --create --topic notifications-email --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic notifications-sms --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092  
-kafka-topics --create --topic notifications-push --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic notifications-webhook --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic notification-delivery-tracking --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
+### 1. Configure Transformation Pipeline
+```kotlin
+@Service
+class TransformationPipelineService {
+    
+    @KafkaListener(topics = ["raw-events"])
+    fun processRawEvent(
+        @Payload rawEvent: String,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
+    ) {
+        try {
+            // Parse raw message
+            val parsedMessage = objectMapper.readValue(rawEvent, Map::class.java)
+            
+            // Apply transformations
+            val transformationRules = getTransformationRules(topic)
+            val transformResult = transformationEngine.transform(parsedMessage, transformationRules)
+            
+            if (transformResult.isSuccess) {
+                // Apply filters
+                val filterRules = getFilterRules()
+                val filterResult = filterEngine.applyFilters(transformResult.transformedMessage, filterRules)
+                
+                if (filterResult.shouldProcess) {
+                    // Enrich data
+                    val enrichedMessage = dataEnricher.enrich(transformResult.transformedMessage)
+                    
+                    // Send to destination
+                    kafkaTemplate.send(filterResult.destination, enrichedMessage)
+                    
+                    logger.info("Successfully processed message to ${filterResult.destination}")
+                }
+            } else {
+                // Send to DLQ with error details
+                sendToDeadLetterQueue(rawEvent, transformResult.error)
+            }
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process raw event", e)
+            sendToDeadLetterQueue(rawEvent, e.message)
+        }
+    }
+}
 ```
 
-### 2. Test Fan-out Notification
+### 2. Test Transformation Pipeline
 ```bash
-# Send order confirmation event
-curl -X POST http://localhost:8090/api/notifications/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "eventType": "ORDER_CONFIRMATION",
-    "recipientId": "user-123",
-    "templateId": "order-confirmation-v1",
-    "payload": {
-      "orderId": "ORD-456",
-      "amount": "99.99",
-      "items": ["Kafka T-Shirt", "Spring Boot Mug"]
-    },
-    "priority": "HIGH"
-  }'
+# Send raw event
+kafka-console-producer --topic raw-events --bootstrap-server localhost:9092 \
+  --property "parse.key=true" --property "key.separator=:"
+
+# Input: user-123:{"uid":"123","act":"view","ts":1645123456,"prod_id":"456"}
+
+# Monitor transformed output
+kafka-console-consumer --topic analytics-events --from-beginning --bootstrap-server localhost:9092
+kafka-console-consumer --topic high-priority-topic --from-beginning --bootstrap-server localhost:9092
 ```
 
-### 3. Monitor Delivery Metrics
+### 3. Monitor Transformation Metrics
 ```bash
-# Check delivery status
-curl http://localhost:8090/api/notifications/delivery/user-123
+# Check processing metrics
+curl http://localhost:8090/actuator/metrics/kafka.transformation
 
-# View channel metrics
-curl http://localhost:8090/api/notifications/metrics/channels
+# View transformation rules
+curl http://localhost:8090/api/transformation/rules
 
-# Monitor notification topics
-kafka-console-consumer --topic notifications-email --from-beginning --bootstrap-server localhost:9092
+# Check enrichment cache
+curl http://localhost:8090/api/enrichment/cache/stats
 ```
 
 ## 🎯 Best Practices
 
-### Fan-out Design
-- **Use separate topics** for each notification channel
-- **Implement user preferences** to respect opt-outs
-- **Apply rate limiting** to prevent spam
-- **Use templates** for consistent messaging
-
-### Channel Management
-- **Handle channel failures** independently
-- **Implement fallback channels** for critical notifications
-- **Monitor delivery rates** and optimize underperforming channels
-- **Respect channel-specific limits** (SMS character limits, etc.)
+### Transformation Design
+- **Keep transformations stateless** for scalability
+- **Use schemas** to validate input and output formats
+- **Cache enrichment data** to reduce external service calls
+- **Handle missing fields** gracefully with defaults
 
 ### Performance Optimization
-- **Batch similar notifications** when possible
-- **Use channel-specific partitioning** for parallel processing
-- **Implement caching** for user preferences and templates
-- **Monitor and alert** on delivery delays
+- **Batch transformations** when possible
+- **Use appropriate serialization** for performance
+- **Monitor transformation latency** and optimize bottlenecks
+- **Implement circuit breakers** for external enrichment services
+
+### Error Handling
+- **Validate inputs** before transformation
+- **Preserve original messages** in error scenarios
+- **Use dead letter queues** for failed transformations
+- **Include transformation metadata** in output messages
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **High delivery failures** - Check channel service health and configuration
-2. **Notification delays** - Monitor Kafka consumer lag and processing time
-3. **User complaints about spam** - Review frequency limits and preferences
-4. **Template rendering errors** - Validate template syntax and data
+1. **Slow transformations** - Check enrichment service latency and caching
+2. **Data loss** - Verify error handling and dead letter queue setup
+3. **Memory leaks** - Monitor object creation in transformation rules
+4. **Cache misses** - Tune cache TTL and eviction policies
 
 ### Debug Commands
 ```bash
-# Check notification consumer lag
-kafka-consumer-groups --bootstrap-server localhost:9092 --group notification-email-group --describe
+# Check transformation cache
+redis-cli INFO keyspace
 
-# Monitor delivery tracking
-kafka-console-consumer --topic notification-delivery-tracking --from-beginning --bootstrap-server localhost:9092
+# Monitor transformation performance
+curl http://localhost:8090/actuator/metrics/transformation.time
 
-# Check template rendering
-curl http://localhost:8090/api/templates/render/order-confirmation-v1 -d '{"orderId":"123"}'
+# View DLQ messages
+kafka-console-consumer --topic transformation-dlq --from-beginning --bootstrap-server localhost:9092
 ```
 
 ## 🚀 Next Steps
-Fan-out notifications mastered? Time to integrate with REST APIs! Move to [Lesson 12: Hybrid REST + Kafka Architecture](../lesson_12/README.md) to learn seamless integration patterns.
+Message transformation mastered? Time to build notification systems! Move to [Lesson 11: Fan-out Pattern & Notification Systems](../lesson_12/README.md) to learn one-to-many messaging patterns.

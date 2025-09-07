@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_7/README",
-  "title": "Workshop: Consumer Groups & Load Balancing",
+  "title": "Workshop: Development Tools & Testing Framework",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_7/README.md",
   "sourceDirName": "workshop/lesson_7",
@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_7/concept"
+    "title": "Workshop",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_7/workshop"
   },
   "next": {
     "title": "Concept",

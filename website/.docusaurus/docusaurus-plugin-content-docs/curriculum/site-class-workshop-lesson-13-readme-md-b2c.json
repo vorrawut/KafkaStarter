@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_13/README",
-  "title": "Workshop: Request-Reply Patterns with Kafka",
+  "title": "Workshop: Hybrid REST + Kafka Architecture",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_13/README.md",
   "sourceDirName": "workshop/lesson_13",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
+    "title": "Concept",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_13/concept"
   },
   "next": {
-    "title": "Concept",
+    "title": "Lesson 13: Request-Reply Patterns - Advanced Synchronous Communication over Kafka",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_14/concept"
   }
 }

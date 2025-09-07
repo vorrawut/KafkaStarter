@@ -1,249 +1,556 @@
-# Workshop: Request-Reply Patterns with Kafka
+# Workshop: Hybrid REST + Kafka Architecture
 
 ## 🎯 Objective
-Master request-reply patterns over Kafka for synchronous communication needs, implementing correlation-based responses, timeout handling, and high-performance request-response systems using asynchronous messaging.
+Master hybrid architectures that seamlessly combine REST APIs with Kafka event streaming, implementing command-query separation, event-driven microservices, and synchronous-asynchronous integration patterns.
 
 ## 📋 Workshop Tasks
 
-### Task 1: Request-Reply Infrastructure
-Implement request-reply in `requestreply/RequestReplyInfrastructure.kt`
+### Task 1: REST to Kafka Bridge
+Implement API gateway in `rest/KafkaRestBridge.kt`
 
-### Task 2: Correlation Management
-Build correlation handling in `correlation/CorrelationManager.kt`
+### Task 2: Command-Query Separation
+Build CQRS pattern in `cqrs/CommandQuerySeparation.kt`
 
-### Task 3: Async Response Handling
-Create response handling in `response/AsyncResponseHandler.kt`
+### Task 3: Event-Driven Workflows
+Create workflows in `workflow/EventDrivenWorkflow.kt`
 
-### Task 4: Timeout Management
-Implement timeouts in `timeout/TimeoutManager.kt`
+### Task 4: Synchronous Response Handling
+Implement sync responses in `sync/SynchronousResponseHandler.kt`
 
-### Task 5: Performance Optimization
-Optimize performance in `optimization/RequestReplyOptimizer.kt`
+### Task 5: API Composition
+Build composite APIs in `composition/APICompositionService.kt`
 
-## 🏗️ Request-Reply Architecture
+## 🏗️ Hybrid Architecture Pattern
 ```mermaid
 graph TB
-    subgraph "Client Applications"
-        WEB[Web Application<br/>Synchronous API calls]
-        MOBILE[Mobile App<br/>Real-time queries]
-        API[External API<br/>Third-party integration]
-        BATCH[Batch Jobs<br/>Bulk processing]
+    subgraph "Client Layer"
+        WEB[Web Application]
+        MOBILE[Mobile App]
+        API_CLIENT[API Client]
+        WEBHOOK[Webhook Consumer]
     end
     
-    subgraph "Request-Reply Gateway"
-        GATEWAY[Request-Reply Gateway<br/>Correlation management]
-        CORRELATION[Correlation Store<br/>Redis/Memory]
-        TIMEOUT[Timeout Handler<br/>Cleanup expired requests]
-        RESPONSE_CACHE[Response Cache<br/>Performance optimization]
+    subgraph "API Gateway Layer"
+        GATEWAY[API Gateway<br/>Load Balancer + Auth]
+        RATE_LIMIT[Rate Limiting]
+        TRANSFORM[Request Transformation]
+        CIRCUIT[Circuit Breaker]
     end
     
-    subgraph "Kafka Infrastructure"
-        REQUEST_TOPIC[Request Topics<br/>user-query-requests<br/>order-lookup-requests<br/>analytics-requests]
-        REPLY_TOPIC[Reply Topics<br/>user-query-responses<br/>order-lookup-responses<br/>analytics-responses]
+    subgraph "REST API Layer"
+        ORDER_API[Order API<br/>Synchronous Commands]
+        USER_API[User API<br/>CRUD Operations]
+        QUERY_API[Query API<br/>Read-only Views]
+        WEBHOOK_API[Webhook API<br/>External Integration]
     end
     
-    subgraph "Backend Services"
-        USER_SVC[User Service<br/>User data queries]
-        ORDER_SVC[Order Service<br/>Order lookups]
-        ANALYTICS_SVC[Analytics Service<br/>Complex analytics]
-        INVENTORY_SVC[Inventory Service<br/>Stock queries]
+    subgraph "Kafka Event Backbone"
+        ORDER_EVENTS[order-events]
+        USER_EVENTS[user-events]
+        PAYMENT_EVENTS[payment-events]
+        NOTIFICATION_EVENTS[notification-events]
     end
     
-    subgraph "Response Processing"
-        RESPONSE_ROUTER[Response Router<br/>Correlation-based routing]
-        RESULT_AGGREGATOR[Result Aggregator<br/>Multi-service responses]
-        ERROR_HANDLER[Error Handler<br/>Failure management]
+    subgraph "Event-Driven Services"
+        PAYMENT_SVC[Payment Service<br/>Event Consumer]
+        INVENTORY_SVC[Inventory Service<br/>Event Consumer]
+        NOTIFICATION_SVC[Notification Service<br/>Event Consumer]
+        ANALYTICS_SVC[Analytics Service<br/>Stream Processor]
+    end
+    
+    subgraph "Data Layer"
+        ORDER_DB[(Order Database<br/>Write Model)]
+        USER_DB[(User Database<br/>Master Data)]
+        QUERY_DB[(Query Database<br/>Read Model)]
+        CACHE[(Redis Cache<br/>Session Store)]
     end
     
     WEB --> GATEWAY
     MOBILE --> GATEWAY
-    API --> GATEWAY
-    BATCH --> GATEWAY
+    API_CLIENT --> GATEWAY
+    WEBHOOK --> WEBHOOK_API
     
-    GATEWAY --> CORRELATION
-    GATEWAY --> TIMEOUT
-    GATEWAY --> RESPONSE_CACHE
+    GATEWAY --> RATE_LIMIT
+    RATE_LIMIT --> TRANSFORM
+    TRANSFORM --> CIRCUIT
     
-    GATEWAY --> REQUEST_TOPIC
-    REQUEST_TOPIC --> USER_SVC
-    REQUEST_TOPIC --> ORDER_SVC
-    REQUEST_TOPIC --> ANALYTICS_SVC
-    REQUEST_TOPIC --> INVENTORY_SVC
+    CIRCUIT --> ORDER_API
+    CIRCUIT --> USER_API
+    CIRCUIT --> QUERY_API
     
-    USER_SVC --> REPLY_TOPIC
-    ORDER_SVC --> REPLY_TOPIC
-    ANALYTICS_SVC --> REPLY_TOPIC
-    INVENTORY_SVC --> REPLY_TOPIC
+    ORDER_API --> ORDER_EVENTS
+    USER_API --> USER_EVENTS
+    ORDER_API --> ORDER_DB
+    USER_API --> USER_DB
     
-    REPLY_TOPIC --> RESPONSE_ROUTER
-    RESPONSE_ROUTER --> RESULT_AGGREGATOR
-    RESPONSE_ROUTER --> ERROR_HANDLER
+    ORDER_EVENTS --> PAYMENT_SVC
+    ORDER_EVENTS --> INVENTORY_SVC
+    ORDER_EVENTS --> NOTIFICATION_SVC
     
-    RESULT_AGGREGATOR --> GATEWAY
-    ERROR_HANDLER --> GATEWAY
+    PAYMENT_SVC --> PAYMENT_EVENTS
+    INVENTORY_SVC --> ORDER_EVENTS
+    NOTIFICATION_SVC --> NOTIFICATION_EVENTS
+    
+    USER_EVENTS --> ANALYTICS_SVC
+    ORDER_EVENTS --> ANALYTICS_SVC
+    ANALYTICS_SVC --> QUERY_DB
+    
+    QUERY_API --> QUERY_DB
+    QUERY_API --> CACHE
     
     style GATEWAY fill:#ff6b6b
-    style CORRELATION fill:#4ecdc4
-    style REQUEST_TOPIC fill:#a8e6cf
-    style REPLY_TOPIC fill:#ffe66d
+    style ORDER_EVENTS fill:#4ecdc4
+    style PAYMENT_SVC fill:#a8e6cf
+    style QUERY_DB fill:#ffe66d
 ```
 
-## 🔄 Request-Reply Flow
+## 🔄 REST to Kafka Integration Flow
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Gateway as Request-Reply Gateway
-    participant Correlation as Correlation Store
-    participant RequestTopic as Request Topic
-    participant Service as Backend Service
-    participant ResponseTopic as Response Topic
-    participant ResponseRouter as Response Router
+    participant REST_API as REST API
+    participant Kafka as Kafka Topic
+    participant EventConsumer as Event Consumer
+    participant Database
+    participant QueryAPI as Query API
     
-    Client->>Gateway: API Request (GET /users/123/profile)
-    Gateway->>Gateway: Generate Correlation ID
-    Gateway->>Correlation: Store Request Context
+    Note over Client,QueryAPI: Synchronous Command with Async Processing
     
-    Gateway->>RequestTopic: Publish Request + Correlation ID
-    Gateway->>Gateway: Start Timeout Timer
-    Gateway-->>Client: Return Future/Promise
+    Client->>REST_API: POST /orders (Create Order)
+    REST_API->>REST_API: Validate Request
+    REST_API->>Database: Store Order (Pending)
+    REST_API->>Kafka: Publish OrderCreated Event
+    REST_API-->>Client: 202 Accepted + Order ID
     
-    RequestTopic->>Service: Request Message
-    Service->>Service: Process Request
-    Service->>ResponseTopic: Publish Response + Correlation ID
+    Note over Kafka,EventConsumer: Asynchronous Event Processing
     
-    ResponseTopic->>ResponseRouter: Response Message
-    ResponseRouter->>Correlation: Lookup Request Context
-    ResponseRouter->>Gateway: Complete Request with Response
+    Kafka->>EventConsumer: OrderCreated Event
+    EventConsumer->>EventConsumer: Process Order
+    EventConsumer->>Database: Update Order Status
+    EventConsumer->>Kafka: Publish OrderProcessed Event
     
-    Gateway->>Correlation: Remove Request Context
-    Gateway-->>Client: Return Response Data
+    Note over Client,QueryAPI: Query Current State
     
-    Note over Gateway,Client: Request-Reply Complete
+    Client->>QueryAPI: GET /orders/{id}/status
+    QueryAPI->>Database: Query Order Status
+    QueryAPI-->>Client: Order Status Response
     
-    alt Timeout Scenario
-        Gateway->>Gateway: Timeout Expired
-        Gateway->>Correlation: Remove Request Context
-        Gateway-->>Client: Return Timeout Error
-    end
+    Note over Kafka,EventConsumer: Notification Flow
+    
+    Kafka->>EventConsumer: OrderProcessed Event
+    EventConsumer->>EventConsumer: Send Notifications
+    EventConsumer->>Kafka: Publish NotificationSent Event
 ```
 
 ## 🎯 Key Concepts
 
-### **Request-Reply Benefits**
-- **Synchronous Interface**: Traditional request-response semantics over async messaging
-- **Scalability**: Leverage Kafka's horizontal scaling capabilities
-- **Reliability**: Built-in retry and fault tolerance
-- **Performance**: High-throughput request processing
-
-### **Correlation Strategies**
-
-#### **UUID-Based Correlation**
+### **Command-Query Responsibility Segregation (CQRS)**
 ```mermaid
-graph LR
-    REQUEST[Request<br/>correlationId: uuid-123] --> KAFKA[Kafka Topic]
-    KAFKA --> SERVICE[Backend Service]
-    SERVICE --> RESPONSE[Response<br/>correlationId: uuid-123]
-    RESPONSE --> ROUTER[Response Router]
-    ROUTER --> MATCH[Match by UUID]
+graph TB
+    subgraph "Command Side (Write Model)"
+        CMD_API[Command API<br/>POST, PUT, DELETE]
+        CMD_HANDLER[Command Handlers]
+        WRITE_DB[(Write Database<br/>Normalized schema)]
+        EVENT_STORE[Event Store<br/>Audit trail]
+    end
     
-    style REQUEST fill:#ff6b6b
-    style RESPONSE fill:#4ecdc4
-    style MATCH fill:#a8e6cf
+    subgraph "Event Bus"
+        KAFKA_EVENTS[Kafka Events<br/>Domain events]
+    end
+    
+    subgraph "Query Side (Read Model)"
+        QUERY_API[Query API<br/>GET operations]
+        READ_DB[(Read Database<br/>Denormalized views)]
+        PROJECTIONS[Event Projections<br/>View builders]
+        CACHE[Query Cache<br/>Fast access]
+    end
+    
+    CMD_API --> CMD_HANDLER
+    CMD_HANDLER --> WRITE_DB
+    CMD_HANDLER --> EVENT_STORE
+    CMD_HANDLER --> KAFKA_EVENTS
+    
+    KAFKA_EVENTS --> PROJECTIONS
+    PROJECTIONS --> READ_DB
+    
+    QUERY_API --> READ_DB
+    QUERY_API --> CACHE
+    
+    style CMD_API fill:#ff6b6b
+    style KAFKA_EVENTS fill:#4ecdc4
+    style QUERY_API fill:#a8e6cf
+    style READ_DB fill:#ffe66d
 ```
 
-#### **Structured Correlation**
+### **Event-Driven Workflow Patterns**
+
+#### **Saga Orchestration**
+```mermaid
+stateDiagram-v2
+    [*] --> OrderCreated: Create Order API Call
+    
+    OrderCreated --> PaymentRequested: Publish Payment Event
+    PaymentRequested --> PaymentCompleted: Payment Success
+    PaymentRequested --> PaymentFailed: Payment Failure
+    
+    PaymentCompleted --> InventoryReserved: Reserve Inventory
+    InventoryReserved --> OrderConfirmed: All Steps Complete
+    InventoryReserved --> InventoryFailed: Insufficient Stock
+    
+    PaymentFailed --> OrderCancelled: Cancel Order
+    InventoryFailed --> PaymentRefunded: Refund Payment
+    PaymentRefunded --> OrderCancelled: Complete Cancellation
+    
+    OrderConfirmed --> [*]
+    OrderCancelled --> [*]
+```
+
+#### **Request-Reply Pattern**
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as REST API
+    participant RequestTopic as Request Topic
+    participant Service as Backend Service
+    participant ReplyTopic as Reply Topic
+    participant ResponseCache as Response Cache
+    
+    Client->>API: GET /complex-query
+    API->>API: Generate Correlation ID
+    API->>RequestTopic: Publish Query Request
+    API->>ResponseCache: Start Waiting for Response
+    
+    RequestTopic->>Service: Process Query Request
+    Service->>Service: Execute Complex Logic
+    Service->>ReplyTopic: Publish Query Response
+    
+    ReplyTopic->>ResponseCache: Store Response by Correlation ID
+    ResponseCache->>API: Notify Response Ready
+    API->>ResponseCache: Retrieve Response
+    API-->>Client: Return Query Result
+```
+
+## ⚙️ REST-Kafka Bridge Implementation
+
+### Command API with Event Publishing
 ```kotlin
-data class CorrelationId(
-    val requestId: String,          // Unique request identifier
-    val clientId: String,           // Client application identifier
-    val sessionId: String?,         // User session identifier
-    val timestamp: Long,            // Request timestamp
-    val timeoutMs: Long,            // Request timeout
-    val replyTopic: String,         // Where to send response
-    val retryCount: Int = 0         // Number of retries
-) {
-    fun toCorrelationString(): String {
-        return "$requestId:$clientId:${sessionId ?: "none"}:$timestamp:$timeoutMs:$replyTopic:$retryCount"
+@RestController
+@RequestMapping("/api/orders")
+class OrderCommandController {
+    
+    @Autowired
+    private lateinit var orderService: OrderService
+    
+    @Autowired
+    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
+    
+    @PostMapping
+    fun createOrder(@RequestBody @Valid request: CreateOrderRequest): ResponseEntity<OrderResponse> {
+        return try {
+            // Validate request
+            validateOrderRequest(request)
+            
+            // Store in database (write model)
+            val order = orderService.createOrder(request)
+            
+            // Publish event to Kafka
+            val orderEvent = OrderCreatedEvent(
+                orderId = order.id,
+                customerId = order.customerId,
+                items = order.items,
+                totalAmount = order.totalAmount,
+                timestamp = Instant.now(),
+                correlationId = MDC.get("correlationId")
+            )
+            
+            kafkaTemplate.send("order-events", order.id, orderEvent)
+                .whenComplete { result, throwable ->
+                    if (throwable != null) {
+                        logger.error("Failed to publish order event: ${order.id}", throwable)
+                        // Consider compensation logic
+                    } else {
+                        logger.info("Order event published successfully: ${order.id}")
+                    }
+                }
+            
+            // Return immediate response
+            ResponseEntity.accepted()
+                .header("Location", "/api/orders/${order.id}")
+                .body(OrderResponse(
+                    orderId = order.id,
+                    status = OrderStatus.PENDING,
+                    message = "Order created and queued for processing"
+                ))
+                
+        } catch (e: ValidationException) {
+            ResponseEntity.badRequest()
+                .body(ErrorResponse("VALIDATION_ERROR", e.message))
+        } catch (e: Exception) {
+            logger.error("Failed to create order", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse("INTERNAL_ERROR", "Order creation failed"))
+        }
     }
     
-    companion object {
-        fun fromString(correlationString: String): CorrelationId {
-            val parts = correlationString.split(":")
-            return CorrelationId(
-                requestId = parts[0],
-                clientId = parts[1],
-                sessionId = parts[2].takeIf { it != "none" },
-                timestamp = parts[3].toLong(),
-                timeoutMs = parts[4].toLong(),
-                replyTopic = parts[5],
-                retryCount = parts.getOrElse(6) { "0" }.toInt()
+    @PutMapping("/{orderId}/cancel")
+    fun cancelOrder(@PathVariable orderId: String): ResponseEntity<OrderResponse> {
+        return try {
+            val order = orderService.getOrder(orderId)
+                ?: return ResponseEntity.notFound().build()
+            
+            // Check if cancellation is allowed
+            if (!order.isCancellable()) {
+                return ResponseEntity.badRequest()
+                    .body(ErrorResponse("INVALID_STATE", "Order cannot be cancelled"))
+            }
+            
+            // Update order status
+            orderService.cancelOrder(orderId)
+            
+            // Publish cancellation event
+            val cancellationEvent = OrderCancelledEvent(
+                orderId = orderId,
+                customerId = order.customerId,
+                reason = "Customer requested cancellation",
+                timestamp = Instant.now()
             )
+            
+            kafkaTemplate.send("order-events", orderId, cancellationEvent)
+            
+            ResponseEntity.ok(OrderResponse(
+                orderId = orderId,
+                status = OrderStatus.CANCELLED,
+                message = "Order cancellation initiated"
+            ))
+            
+        } catch (e: Exception) {
+            logger.error("Failed to cancel order: $orderId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse("INTERNAL_ERROR", "Order cancellation failed"))
         }
     }
 }
 ```
 
-## ⚙️ Request-Reply Infrastructure
+### Query API with Read Models
+```kotlin
+@RestController
+@RequestMapping("/api/orders")
+class OrderQueryController {
+    
+    @Autowired
+    private lateinit var orderQueryService: OrderQueryService
+    
+    @Autowired
+    private lateinit var cacheManager: CacheManager
+    
+    @GetMapping("/{orderId}")
+    fun getOrder(@PathVariable orderId: String): ResponseEntity<OrderView> {
+        return try {
+            val orderView = orderQueryService.getOrderView(orderId)
+                ?: return ResponseEntity.notFound().build()
+            
+            ResponseEntity.ok(orderView)
+            
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve order: $orderId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+    
+    @GetMapping
+    fun getOrdersByCustomer(
+        @RequestParam customerId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) status: OrderStatus?
+    ): ResponseEntity<PagedResponse<OrderSummary>> {
+        
+        val cacheKey = "orders:$customerId:$page:$size:${status?.name ?: "ALL"}"
+        
+        // Try cache first
+        val cachedResult = cacheManager.getCache("order-queries")
+            ?.get(cacheKey, PagedResponse::class.java)
+        
+        if (cachedResult != null) {
+            return ResponseEntity.ok(cachedResult as PagedResponse<OrderSummary>)
+        }
+        
+        // Query from read model
+        val result = orderQueryService.getOrdersByCustomer(
+            customerId = customerId,
+            page = page,
+            size = size,
+            status = status
+        )
+        
+        // Cache the result
+        cacheManager.getCache("order-queries")?.put(cacheKey, result)
+        
+        return ResponseEntity.ok(result)
+    }
+    
+    @GetMapping("/{orderId}/timeline")
+    fun getOrderTimeline(@PathVariable orderId: String): ResponseEntity<OrderTimeline> {
+        return try {
+            val timeline = orderQueryService.getOrderTimeline(orderId)
+                ?: return ResponseEntity.notFound().build()
+            
+            ResponseEntity.ok(timeline)
+            
+        } catch (e: Exception) {
+            logger.error("Failed to retrieve order timeline: $orderId", e)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+}
+```
 
-### Request-Reply Gateway
+## 🔄 Event-Driven Workflow Engine
+
+### Saga Orchestrator
 ```kotlin
 @Component
-class RequestReplyGateway {
+class OrderProcessingSaga {
+    
+    @KafkaListener(topics = ["order-events"])
+    fun handleOrderEvent(
+        @Payload event: OrderEvent,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
+    ) {
+        when (event) {
+            is OrderCreatedEvent -> initiateOrderProcessing(event)
+            is PaymentCompletedEvent -> continueAfterPayment(event)
+            is PaymentFailedEvent -> handlePaymentFailure(event)
+            is InventoryReservedEvent -> continueAfterInventoryReservation(event)
+            is InventoryReservationFailedEvent -> handleInventoryFailure(event)
+            is OrderConfirmedEvent -> completeOrderProcessing(event)
+            is OrderCancelledEvent -> handleOrderCancellation(event)
+        }
+    }
+    
+    private fun initiateOrderProcessing(event: OrderCreatedEvent) {
+        logger.info("Starting order processing saga: ${event.orderId}")
+        
+        try {
+            // Step 1: Request payment processing
+            val paymentRequest = PaymentRequestEvent(
+                orderId = event.orderId,
+                customerId = event.customerId,
+                amount = event.totalAmount,
+                correlationId = event.correlationId
+            )
+            
+            kafkaTemplate.send("payment-requests", event.orderId, paymentRequest)
+            
+            // Update saga state
+            sagaStateService.createSagaState(
+                sagaId = event.orderId,
+                currentStep = SagaStep.PAYMENT_REQUESTED,
+                sagaData = event
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Failed to initiate payment for order: ${event.orderId}", e)
+            handleSagaFailure(event.orderId, "Payment initiation failed")
+        }
+    }
+    
+    private fun continueAfterPayment(event: PaymentCompletedEvent) {
+        logger.info("Payment completed for order: ${event.orderId}")
+        
+        try {
+            // Step 2: Reserve inventory
+            val inventoryRequest = InventoryReservationEvent(
+                orderId = event.orderId,
+                items = getOrderItems(event.orderId),
+                correlationId = event.correlationId
+            )
+            
+            kafkaTemplate.send("inventory-requests", event.orderId, inventoryRequest)
+            
+            // Update saga state
+            sagaStateService.updateSagaState(
+                sagaId = event.orderId,
+                currentStep = SagaStep.INVENTORY_REQUESTED
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Failed to request inventory for order: ${event.orderId}", e)
+            // Compensate: refund payment
+            initiatePaymentRefund(event.orderId)
+        }
+    }
+    
+    private fun handlePaymentFailure(event: PaymentFailedEvent) {
+        logger.warn("Payment failed for order: ${event.orderId}, reason: ${event.reason}")
+        
+        // Cancel the order
+        val cancellationEvent = OrderCancelledEvent(
+            orderId = event.orderId,
+            customerId = event.customerId,
+            reason = "Payment failed: ${event.reason}",
+            timestamp = Instant.now()
+        )
+        
+        kafkaTemplate.send("order-events", event.orderId, cancellationEvent)
+        
+        // Update saga state
+        sagaStateService.completeSaga(
+            sagaId = event.orderId,
+            status = SagaStatus.FAILED,
+            reason = "Payment failed"
+        )
+    }
+}
+```
+
+## 🔄 Synchronous-Asynchronous Bridging
+
+### Request-Reply Pattern Implementation
+```kotlin
+@Component
+class SynchronousQueryBridge {
     
     @Autowired
     private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
     
     @Autowired
-    private lateinit var correlationManager: CorrelationManager
+    private lateinit var responseWaitingService: ResponseWaitingService
     
-    @Autowired
-    private lateinit var timeoutManager: TimeoutManager
-    
-    fun <T> sendRequest(
-        requestTopic: String,
-        request: Any,
-        responseType: Class<T>,
-        timeoutMs: Long = 30000
-    ): CompletableFuture<T> {
-        
-        val correlationId = generateCorrelationId()
-        val future = CompletableFuture<T>()
+    fun executeComplexQuery(query: ComplexQuery): CompletableFuture<QueryResult> {
+        val correlationId = UUID.randomUUID().toString()
+        val future = CompletableFuture<QueryResult>()
         
         try {
-            // Store request context
-            val requestContext = RequestContext(
-                correlationId = correlationId,
-                requestTopic = requestTopic,
-                responseType = responseType,
-                future = future,
-                timeoutMs = timeoutMs,
-                startTime = System.currentTimeMillis()
-            )
-            
-            correlationManager.storeRequestContext(correlationId, requestContext)
-            
-            // Prepare request message
-            val requestMessage = RequestMessage(
-                correlationId = correlationId,
-                payload = request,
-                timestamp = System.currentTimeMillis(),
-                replyTopic = determineReplyTopic(requestTopic),
-                timeoutMs = timeoutMs
-            )
-            
-            // Send request
-            kafkaTemplate.send(requestTopic, correlationId, requestMessage)
-                .whenComplete { sendResult, throwable ->
-                    if (throwable != null) {
-                        correlationManager.removeRequestContext(correlationId)
-                        future.completeExceptionally(
-                            RequestSendException("Failed to send request", throwable)
-                        )
-                    } else {
-                        // Start timeout monitoring
-                        timeoutManager.scheduleTimeout(correlationId, timeoutMs)
-                    }
+            // Register response handler
+            responseWaitingService.registerResponseHandler(correlationId) { response ->
+                try {
+                    val result = objectMapper.readValue(response, QueryResult::class.java)
+                    future.complete(result)
+                } catch (e: Exception) {
+                    future.completeExceptionally(e)
                 }
+            }
+            
+            // Send query request
+            val queryRequest = QueryRequest(
+                queryId = correlationId,
+                query = query,
+                requestedAt = Instant.now(),
+                replyTopic = "query-responses",
+                timeout = Duration.ofSeconds(30)
+            )
+            
+            kafkaTemplate.send("query-requests", correlationId, queryRequest)
+            
+            // Set timeout
+            CompletableFuture.delayedExecutor(30, TimeUnit.SECONDS).execute {
+                if (!future.isDone) {
+                    responseWaitingService.removeResponseHandler(correlationId)
+                    future.completeExceptionally(TimeoutException("Query timeout"))
+                }
+            }
             
         } catch (e: Exception) {
             future.completeExceptionally(e)
@@ -251,395 +558,144 @@ class RequestReplyGateway {
         
         return future
     }
-    
-    fun <T> sendBatchRequest(
-        requestTopic: String,
-        requests: List<Any>,
-        responseType: Class<T>,
-        timeoutMs: Long = 30000
-    ): CompletableFuture<List<T>> {
-        
-        val batchId = UUID.randomUUID().toString()
-        val futures = requests.mapIndexed { index, request ->
-            val correlationId = "$batchId-$index"
-            sendRequest(requestTopic, request, responseType, timeoutMs)
-        }
-        
-        return CompletableFuture.allOf(*futures.toTypedArray())
-            .thenApply { futures.map { it.get() } }
-    }
-    
-    private fun generateCorrelationId(): String {
-        return UUID.randomUUID().toString()
-    }
-    
-    private fun determineReplyTopic(requestTopic: String): String {
-        return requestTopic.replace("-requests", "-responses")
-    }
 }
-```
 
-### Response Handler
-```kotlin
 @Component
-class AsyncResponseHandler {
+class ResponseWaitingService {
     
-    @Autowired
-    private lateinit var correlationManager: CorrelationManager
+    private val responseHandlers = ConcurrentHashMap<String, (String) -> Unit>()
     
-    @Autowired
-    private lateinit var timeoutManager: TimeoutManager
-    
-    @KafkaListener(topics = [
-        "user-query-responses",
-        "order-lookup-responses", 
-        "analytics-responses",
-        "inventory-query-responses"
-    ])
-    fun handleResponse(
-        @Payload responseMessage: ResponseMessage,
-        @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) correlationId: String,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
+    @KafkaListener(topics = ["query-responses"])
+    fun handleQueryResponse(
+        @Payload response: String,
+        @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) correlationId: String
     ) {
-        try {
-            logger.debug("Received response for correlation ID: $correlationId")
-            
-            val requestContext = correlationManager.getRequestContext(correlationId)
-            if (requestContext == null) {
-                logger.warn("No request context found for correlation ID: $correlationId")
-                return
-            }
-            
-            // Cancel timeout
-            timeoutManager.cancelTimeout(correlationId)
-            
-            // Process response
-            when {
-                responseMessage.isSuccess -> {
-                    completeRequestWithSuccess(requestContext, responseMessage)
-                }
-                responseMessage.isError -> {
-                    completeRequestWithError(requestContext, responseMessage)
-                }
-                else -> {
-                    completeRequestWithError(
-                        requestContext, 
-                        ResponseMessage.error(correlationId, "Invalid response format")
-                    )
-                }
-            }
-            
-            // Clean up
-            correlationManager.removeRequestContext(correlationId)
-            
-        } catch (e: Exception) {
-            logger.error("Failed to handle response for correlation ID: $correlationId", e)
-        }
+        val handler = responseHandlers.remove(correlationId)
+        handler?.invoke(response)
+            ?: logger.warn("No handler found for correlation ID: $correlationId")
     }
     
-    private fun completeRequestWithSuccess(
-        requestContext: RequestContext<*>,
-        responseMessage: ResponseMessage
-    ) {
-        try {
-            val responseData = when (requestContext.responseType) {
-                String::class.java -> responseMessage.payload.toString()
-                else -> objectMapper.convertValue(responseMessage.payload, requestContext.responseType)
-            }
-            
-            @Suppress("UNCHECKED_CAST")
-            val future = requestContext.future as CompletableFuture<Any>
-            future.complete(responseData)
-            
-            // Record metrics
-            recordResponseMetrics(requestContext, "success")
-            
-        } catch (e: Exception) {
-            logger.error("Failed to deserialize response", e)
-            completeRequestWithError(
-                requestContext,
-                ResponseMessage.error(requestContext.correlationId, "Response deserialization failed")
-            )
-        }
+    fun registerResponseHandler(correlationId: String, handler: (String) -> Unit) {
+        responseHandlers[correlationId] = handler
     }
     
-    private fun completeRequestWithError(
-        requestContext: RequestContext<*>,
-        responseMessage: ResponseMessage
-    ) {
-        val exception = RequestReplyException(
-            correlationId = requestContext.correlationId,
-            errorCode = responseMessage.errorCode ?: "UNKNOWN_ERROR",
-            errorMessage = responseMessage.errorMessage ?: "Unknown error occurred"
-        )
-        
-        requestContext.future.completeExceptionally(exception)
-        
-        // Record metrics
-        recordResponseMetrics(requestContext, "error")
-    }
-    
-    private fun recordResponseMetrics(requestContext: RequestContext<*>, status: String) {
-        val duration = System.currentTimeMillis() - requestContext.startTime
-        
-        meterRegistry.timer(
-            "request.reply.duration",
-            "topic", requestContext.requestTopic,
-            "status", status
-        ).record(duration, TimeUnit.MILLISECONDS)
-        
-        meterRegistry.counter(
-            "request.reply.total",
-            "topic", requestContext.requestTopic,
-            "status", status
-        ).increment()
-    }
-}
-```
-
-## ⏱️ Timeout Management
-
-### Timeout Handler
-```kotlin
-@Component
-class TimeoutManager {
-    
-    private val timeoutTasks = ConcurrentHashMap<String, ScheduledFuture<*>>()
-    private val executorService = Executors.newScheduledThreadPool(10)
-    
-    @Autowired
-    private lateinit var correlationManager: CorrelationManager
-    
-    fun scheduleTimeout(correlationId: String, timeoutMs: Long) {
-        val timeoutTask = executorService.schedule({
-            handleTimeout(correlationId)
-        }, timeoutMs, TimeUnit.MILLISECONDS)
-        
-        timeoutTasks[correlationId] = timeoutTask
-    }
-    
-    fun cancelTimeout(correlationId: String) {
-        timeoutTasks.remove(correlationId)?.cancel(false)
-    }
-    
-    private fun handleTimeout(correlationId: String) {
-        logger.warn("Request timeout for correlation ID: $correlationId")
-        
-        val requestContext = correlationManager.getRequestContext(correlationId)
-        if (requestContext != null) {
-            val timeoutException = RequestTimeoutException(
-                correlationId = correlationId,
-                timeoutMs = requestContext.timeoutMs,
-                message = "Request timed out after ${requestContext.timeoutMs}ms"
-            )
-            
-            requestContext.future.completeExceptionally(timeoutException)
-            correlationManager.removeRequestContext(correlationId)
-            
-            // Record timeout metrics
-            meterRegistry.counter(
-                "request.reply.timeout",
-                "topic", requestContext.requestTopic
-            ).increment()
-        }
-        
-        // Clean up
-        timeoutTasks.remove(correlationId)
-    }
-    
-    @PreDestroy
-    fun cleanup() {
-        timeoutTasks.values.forEach { it.cancel(false) }
-        executorService.shutdown()
-    }
-}
-```
-
-## 🎮 High-Level API Integration
-
-### REST Controller with Request-Reply
-```kotlin
-@RestController
-@RequestMapping("/api/users")
-class UserQueryController {
-    
-    @Autowired
-    private lateinit var requestReplyGateway: RequestReplyGateway
-    
-    @GetMapping("/{userId}/profile")
-    fun getUserProfile(@PathVariable userId: String): CompletableFuture<ResponseEntity<UserProfile>> {
-        
-        val profileQuery = UserProfileQuery(
-            userId = userId,
-            includePreferences = true,
-            includeActivity = false
-        )
-        
-        return requestReplyGateway.sendRequest(
-            requestTopic = "user-profile-requests",
-            request = profileQuery,
-            responseType = UserProfile::class.java,
-            timeoutMs = 5000
-        ).thenApply { profile ->
-            ResponseEntity.ok(profile)
-        }.exceptionally { throwable ->
-            when (throwable.cause) {
-                is RequestTimeoutException -> {
-                    ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
-                        .body(null)
-                }
-                is RequestReplyException -> {
-                    ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(null)
-                }
-                else -> {
-                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(null)
-                }
-            }
-        }
-    }
-    
-    @GetMapping("/{userId}/orders")
-    fun getUserOrders(
-        @PathVariable userId: String,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int
-    ): CompletableFuture<ResponseEntity<PagedResponse<OrderSummary>>> {
-        
-        val orderQuery = UserOrderQuery(
-            userId = userId,
-            page = page,
-            size = size,
-            includeDetails = false
-        )
-        
-        return requestReplyGateway.sendRequest(
-            requestTopic = "user-order-requests",
-            request = orderQuery,
-            responseType = object : TypeReference<PagedResponse<OrderSummary>>() {}.type,
-            timeoutMs = 10000
-        ).thenApply { orders ->
-            ResponseEntity.ok(orders)
-        }.exceptionally { throwable ->
-            logger.error("Failed to retrieve user orders", throwable)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
-        }
-    }
-    
-    @PostMapping("/batch-lookup")
-    fun batchUserLookup(@RequestBody userIds: List<String>): CompletableFuture<ResponseEntity<List<UserSummary>>> {
-        
-        val batchQuery = UserBatchQuery(
-            userIds = userIds,
-            fields = listOf("id", "name", "email", "status")
-        )
-        
-        return requestReplyGateway.sendRequest(
-            requestTopic = "user-batch-requests",
-            request = batchQuery,
-            responseType = object : TypeReference<List<UserSummary>>() {}.type,
-            timeoutMs = 15000
-        ).thenApply { users ->
-            ResponseEntity.ok(users)
-        }.exceptionally { throwable ->
-            logger.error("Failed to perform batch user lookup", throwable)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null)
-        }
+    fun removeResponseHandler(correlationId: String) {
+        responseHandlers.remove(correlationId)
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] Request-reply infrastructure handles synchronous communication over Kafka
-- [ ] Correlation management correctly matches requests with responses
-- [ ] Timeout handling prevents hanging requests
-- [ ] Performance optimization achieves target throughput (&gt;1000 req/sec)
-- [ ] Error handling provides meaningful feedback to clients
-- [ ] Batch requests work efficiently for bulk operations
-- [ ] Integration with REST APIs is seamless
+- [ ] REST APIs correctly publish events to Kafka topics
+- [ ] Command-query separation maintains data consistency
+- [ ] Event-driven workflows handle complex business processes
+- [ ] Synchronous response handling works for real-time queries
+- [ ] API composition provides unified interfaces
+- [ ] Error handling and compensation logic prevents data corruption
+- [ ] Performance meets requirements for hybrid workloads
 
 ## 🚀 Getting Started
 
-### 1. Configure Request-Reply Topics
-```bash
-# Create request-reply topic pairs
-kafka-topics --create --topic user-profile-requests --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic user-profile-responses --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
-
-kafka-topics --create --topic order-lookup-requests --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic order-lookup-responses --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
-
-kafka-topics --create --topic analytics-requests --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
-kafka-topics --create --topic analytics-responses --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+### 1. Configure Hybrid Architecture
+```kotlin
+@Configuration
+class HybridArchitectureConfig {
+    
+    @Bean
+    fun restToKafkaInterceptor(): RestToKafkaInterceptor {
+        return RestToKafkaInterceptor(kafkaTemplate())
+    }
+    
+    @Bean
+    fun sagaOrchestrator(): SagaOrchestrator {
+        return SagaOrchestrator(
+            kafkaTemplate = kafkaTemplate(),
+            sagaStateService = sagaStateService(),
+            compensationService = compensationService()
+        )
+    }
+    
+    @Bean
+    fun queryBridge(): SynchronousQueryBridge {
+        return SynchronousQueryBridge(
+            kafkaTemplate = kafkaTemplate(),
+            responseWaitingService = responseWaitingService()
+        )
+    }
+}
 ```
 
-### 2. Test Request-Reply
+### 2. Test Hybrid Workflows
 ```bash
-# Send user profile request
-curl http://localhost:8090/api/users/USER-123/profile
-
-# Send batch user lookup
-curl -X POST http://localhost:8090/api/users/batch-lookup \
+# Create order via REST API
+curl -X POST http://localhost:8090/api/orders \
   -H "Content-Type: application/json" \
-  -d '["USER-123", "USER-456", "USER-789"]'
+  -d '{
+    "customerId": "CUST-123",
+    "items": [
+      {"productId": "PROD-456", "quantity": 2, "price": 29.99}
+    ]
+  }'
 
-# Monitor request-reply metrics
-curl http://localhost:8090/actuator/metrics/request.reply.duration
+# Query order status
+curl http://localhost:8090/api/orders/ORDER-789/status
+
+# Monitor event flow
+kafka-console-consumer --topic order-events --from-beginning --bootstrap-server localhost:9092
+kafka-console-consumer --topic payment-events --from-beginning --bootstrap-server localhost:9092
 ```
 
-### 3. Monitor Performance
+### 3. Monitor Hybrid Performance
 ```bash
-# Check correlation store size
-curl http://localhost:8090/api/debug/correlation-store/size
+# Check REST API metrics
+curl http://localhost:8090/actuator/metrics/http.server.requests
 
-# View active timeouts
-curl http://localhost:8090/api/debug/timeouts/active
+# Check Kafka integration metrics  
+curl http://localhost:8090/actuator/metrics/kafka.producer
 
-# Monitor request-reply topics
-kafka-console-consumer --topic user-profile-requests --from-beginning --bootstrap-server localhost:9092
-kafka-console-consumer --topic user-profile-responses --from-beginning --bootstrap-server localhost:9092
+# Monitor saga execution
+curl http://localhost:8090/api/sagas/ORDER-789/status
 ```
 
 ## 🎯 Best Practices
 
-### Request-Reply Design
-- **Use appropriate timeouts** based on expected response times
-- **Implement idempotent operations** to handle retries safely
-- **Design for failure** with proper error handling and fallbacks
-- **Monitor correlation store** to prevent memory leaks
+### API Design
+- **Use appropriate HTTP status codes** (202 for async operations)
+- **Provide correlation IDs** for request tracing
+- **Implement proper error handling** with meaningful messages
+- **Version your APIs** to support evolution
 
-### Performance Optimization
-- **Use connection pooling** for Kafka producers/consumers
-- **Implement response caching** for frequently requested data
-- **Batch similar requests** to reduce overhead
-- **Tune partition counts** based on expected load
+### Event Design
+- **Use domain events** that reflect business operations
+- **Include correlation IDs** for distributed tracing
+- **Design for idempotency** to handle duplicate events
+- **Version your events** for backward compatibility
 
-### Error Handling
-- **Distinguish timeout vs processing errors** for appropriate responses
-- **Implement circuit breakers** for failing services
-- **Use dead letter topics** for unprocessable requests
-- **Provide meaningful error messages** to API consumers
+### Integration Patterns
+- **Separate commands from queries** for scalability
+- **Use eventual consistency** where appropriate
+- **Implement compensation** for failed operations
+- **Monitor end-to-end latency** for user experience
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Memory leaks from orphaned correlations** - Implement proper cleanup
-2. **High timeout rates** - Adjust timeout values and check service health
-3. **Poor response times** - Optimize consumer processing and partition distribution
-4. **Lost responses** - Verify topic configuration and consumer group setup
+1. **Event ordering problems** - Use partition keys appropriately
+2. **Duplicate processing** - Implement idempotent consumers
+3. **Saga timeouts** - Configure appropriate timeouts and compensation
+4. **Memory leaks** - Clean up response handlers and saga state
 
 ### Debug Commands
 ```bash
-# Check correlation store contents
-redis-cli KEYS "correlation:*"
+# Check saga state
+curl http://localhost:8090/api/sagas/ORDER-123/state
 
-# Monitor request-reply latency
-curl 'http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,rate(request_reply_duration_bucket[5m]))'
+# Monitor response handlers
+curl http://localhost:8090/api/debug/response-handlers
 
-# View timeout statistics
-curl http://localhost:8090/api/debug/timeout-stats
+# View event timeline
+curl http://localhost:8090/api/orders/ORDER-123/events
 ```
 
 ## 🚀 Next Steps
-Request-reply mastered? Time for advanced state management! Move to [Lesson 16: Local State Stores & Fault Tolerance](../lesson_16/README.md) to learn persistent state in stream processing.
+Hybrid architecture mastered? Time to implement request-reply patterns! Move to [Lesson 13: Request-Reply Patterns with Kafka](../lesson_14/README.md) to learn synchronous communication over async messaging.

@@ -1,0 +1,15 @@
+{
+  "id": "modules/lesson_10/workshop",
+  "title": "Workshop",
+  "description": "Manual Acknowledgment & Idempotent Consumers",
+  "source": "@site/../class/modules/lesson_10/workshop.md",
+  "sourceDirName": "modules/lesson_10",
+  "slug": "/modules/lesson_10/workshop",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_10/workshop",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_10/workshop.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

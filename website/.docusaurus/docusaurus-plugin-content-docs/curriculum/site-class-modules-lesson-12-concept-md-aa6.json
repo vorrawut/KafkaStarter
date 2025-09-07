@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_12/concept",
   "title": "Concept",
-  "description": "Kafka-Triggered REST & Command APIs - Hybrid Event-Driven Architecture",
+  "description": "Fan-out Pattern - Notification Systems & Parallel Processing",
   "source": "@site/../class/modules/lesson_12/concept.md",
   "sourceDirName": "modules/lesson_12",
   "slug": "/modules/lesson_12/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Fan-out Pattern & Notification Systems",
+    "title": "Workshop: Message Transformation & Filtering",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_11/"
   },
   "next": {
-    "title": "Workshop: Hybrid REST + Kafka Architecture",
+    "title": "Workshop: Fan-out Pattern & Notification Systems",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_12/"
   }
 }

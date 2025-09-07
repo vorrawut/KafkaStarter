@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_19/concept",
   "title": "Concept",
-  "description": "Observability & Monitoring - Production Operations Excellence",
+  "description": "Kafka Security & ACLs - Production Security Implementation",
   "source": "@site/../class/modules/lesson_19/concept.md",
   "sourceDirName": "modules/lesson_19",
   "slug": "/modules/lesson_19/concept",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Kafka Security & ACLs",
+    "title": "Workshop: Building a Real-time Dashboard Application",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_18/"
   },
   "next": {
-    "title": "Workshop: Observability & Monitoring",
+    "title": "Workshop: Kafka Security & ACLs",
     "permalink": "/KafkaStarter/curriculum/workshop/lesson_19/"
   }
 }

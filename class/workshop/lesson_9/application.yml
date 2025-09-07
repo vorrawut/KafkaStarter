@@ -1,8 +1,8 @@
 spring:
   application:
-    name: kafka-manual-ack-lesson9
+    name: kafka-error-handling-lesson8
 
-  # Kafka configuration for Lesson 9 - Manual Acknowledgment & Idempotent Consumers
+  # Kafka configuration for Lesson 8 - Retry Strategies & Dead Letter Topics
   kafka:
     bootstrap-servers: localhost:9092
     
@@ -11,18 +11,17 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
-      # TODO: Configure idempotent producer settings
-      
+    
     consumer:
-      group-id: lesson9-manual-ack-group
+      group-id: lesson8-error-handling-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
-      # TODO: Configure manual acknowledgment settings
-      # TODO: Configure session timeout and heartbeat for manual ack
+      # TODO: Configure error handling properties
+      # TODO: Configure retry settings
 
 server:
-  port: 8089
+  port: 8088
 
 logging:
   level:

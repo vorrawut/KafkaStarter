@@ -1,701 +1,640 @@
-# Workshop: Hybrid REST + Kafka Architecture
+# Workshop: Fan-out Pattern & Notification Systems
 
 ## 🎯 Objective
-Master hybrid architectures that seamlessly combine REST APIs with Kafka event streaming, implementing command-query separation, event-driven microservices, and synchronous-asynchronous integration patterns.
+Master the fan-out messaging pattern for building scalable notification systems that deliver messages across multiple channels (email, SMS, push notifications, webhooks) with reliable delivery and failure handling.
 
 ## 📋 Workshop Tasks
 
-### Task 1: REST to Kafka Bridge
-Implement API gateway in `rest/KafkaRestBridge.kt`
+### Task 1: Fan-out Event Publisher
+Implement fan-out publisher in `fanout/NotificationEventPublisher.kt`
 
-### Task 2: Command-Query Separation
-Build CQRS pattern in `cqrs/CommandQuerySeparation.kt`
+### Task 2: Multi-Channel Notification
+Build notification channels in `channels/NotificationChannelManager.kt`
 
-### Task 3: Event-Driven Workflows
-Create workflows in `workflow/EventDrivenWorkflow.kt`
+### Task 3: Delivery Tracking
+Implement delivery tracking in `tracking/DeliveryTracker.kt`
 
-### Task 4: Synchronous Response Handling
-Implement sync responses in `sync/SynchronousResponseHandler.kt`
+### Task 4: Channel Routing
+Create routing logic in `routing/ChannelRouter.kt`
 
-### Task 5: API Composition
-Build composite APIs in `composition/APICompositionService.kt`
+### Task 5: Failure Recovery
+Handle failures in `recovery/FailureRecoveryService.kt`
 
-## 🏗️ Hybrid Architecture Pattern
+## 🏗️ Fan-out Notification Architecture
 ```mermaid
 graph TB
-    subgraph "Client Layer"
-        WEB[Web Application]
-        MOBILE[Mobile App]
-        API_CLIENT[API Client]
-        WEBHOOK[Webhook Consumer]
+    subgraph "Event Sources"
+        ORDER[Order Events<br/>order-placed, order-shipped]
+        USER[User Events<br/>user-registered, password-reset]
+        PAYMENT[Payment Events<br/>payment-successful, payment-failed]
+        SYSTEM[System Events<br/>maintenance, alerts]
     end
     
-    subgraph "API Gateway Layer"
-        GATEWAY[API Gateway<br/>Load Balancer + Auth]
-        RATE_LIMIT[Rate Limiting]
-        TRANSFORM[Request Transformation]
-        CIRCUIT[Circuit Breaker]
+    subgraph "Fan-out Engine"
+        DISPATCHER[Event Dispatcher<br/>Routes to channels]
+        TEMPLATE[Template Engine<br/>Message formatting]
+        PREFERENCES[User Preferences<br/>Channel selection]
+        RULES[Business Rules<br/>Event filtering]
     end
     
-    subgraph "REST API Layer"
-        ORDER_API[Order API<br/>Synchronous Commands]
-        USER_API[User API<br/>CRUD Operations]
-        QUERY_API[Query API<br/>Read-only Views]
-        WEBHOOK_API[Webhook API<br/>External Integration]
+    subgraph "Notification Channels"
+        EMAIL[Email Service<br/>SMTP delivery]
+        SMS[SMS Service<br/>Twilio/AWS SNS]
+        PUSH[Push Notifications<br/>Firebase/APNs]
+        WEBHOOK[Webhooks<br/>HTTP callbacks]
+        SLACK[Slack Integration<br/>Team notifications]
+        IN_APP[In-App Notifications<br/>Real-time UI]
     end
     
-    subgraph "Kafka Event Backbone"
-        ORDER_EVENTS[order-events]
-        USER_EVENTS[user-events]
-        PAYMENT_EVENTS[payment-events]
-        NOTIFICATION_EVENTS[notification-events]
+    subgraph "Delivery Tracking"
+        TRACKER[Delivery Tracker<br/>Status monitoring]
+        RETRY[Retry Service<br/>Failed deliveries]
+        ANALYTICS[Analytics<br/>Delivery metrics]
+        AUDIT[Audit Log<br/>Compliance tracking]
     end
     
-    subgraph "Event-Driven Services"
-        PAYMENT_SVC[Payment Service<br/>Event Consumer]
-        INVENTORY_SVC[Inventory Service<br/>Event Consumer]
-        NOTIFICATION_SVC[Notification Service<br/>Event Consumer]
-        ANALYTICS_SVC[Analytics Service<br/>Stream Processor]
-    end
+    ORDER --> DISPATCHER
+    USER --> DISPATCHER
+    PAYMENT --> DISPATCHER
+    SYSTEM --> DISPATCHER
     
-    subgraph "Data Layer"
-        ORDER_DB[(Order Database<br/>Write Model)]
-        USER_DB[(User Database<br/>Master Data)]
-        QUERY_DB[(Query Database<br/>Read Model)]
-        CACHE[(Redis Cache<br/>Session Store)]
-    end
+    DISPATCHER --> TEMPLATE
+    DISPATCHER --> PREFERENCES
+    DISPATCHER --> RULES
     
-    WEB --> GATEWAY
-    MOBILE --> GATEWAY
-    API_CLIENT --> GATEWAY
-    WEBHOOK --> WEBHOOK_API
+    TEMPLATE --> EMAIL
+    TEMPLATE --> SMS
+    TEMPLATE --> PUSH
+    TEMPLATE --> WEBHOOK
+    TEMPLATE --> SLACK
+    TEMPLATE --> IN_APP
     
-    GATEWAY --> RATE_LIMIT
-    RATE_LIMIT --> TRANSFORM
-    TRANSFORM --> CIRCUIT
+    EMAIL --> TRACKER
+    SMS --> TRACKER
+    PUSH --> TRACKER
+    WEBHOOK --> TRACKER
     
-    CIRCUIT --> ORDER_API
-    CIRCUIT --> USER_API
-    CIRCUIT --> QUERY_API
+    TRACKER --> RETRY
+    TRACKER --> ANALYTICS
+    TRACKER --> AUDIT
     
-    ORDER_API --> ORDER_EVENTS
-    USER_API --> USER_EVENTS
-    ORDER_API --> ORDER_DB
-    USER_API --> USER_DB
-    
-    ORDER_EVENTS --> PAYMENT_SVC
-    ORDER_EVENTS --> INVENTORY_SVC
-    ORDER_EVENTS --> NOTIFICATION_SVC
-    
-    PAYMENT_SVC --> PAYMENT_EVENTS
-    INVENTORY_SVC --> ORDER_EVENTS
-    NOTIFICATION_SVC --> NOTIFICATION_EVENTS
-    
-    USER_EVENTS --> ANALYTICS_SVC
-    ORDER_EVENTS --> ANALYTICS_SVC
-    ANALYTICS_SVC --> QUERY_DB
-    
-    QUERY_API --> QUERY_DB
-    QUERY_API --> CACHE
-    
-    style GATEWAY fill:#ff6b6b
-    style ORDER_EVENTS fill:#4ecdc4
-    style PAYMENT_SVC fill:#a8e6cf
-    style QUERY_DB fill:#ffe66d
+    style DISPATCHER fill:#ff6b6b
+    style EMAIL fill:#4ecdc4
+    style SMS fill:#a8e6cf
+    style PUSH fill:#ffe66d
+    style TRACKER fill:#ffa8e6
 ```
 
-## 🔄 REST to Kafka Integration Flow
+## 🌟 Fan-out Pattern Flow
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant REST_API as REST API
-    participant Kafka as Kafka Topic
-    participant EventConsumer as Event Consumer
-    participant Database
-    participant QueryAPI as Query API
+    participant Source as Event Source
+    participant Fanout as Fan-out Engine
+    participant Email as Email Channel
+    participant SMS as SMS Channel
+    participant Push as Push Channel
+    participant Tracker as Delivery Tracker
     
-    Note over Client,QueryAPI: Synchronous Command with Async Processing
+    Source->>Fanout: Order Shipped Event
+    Fanout->>Fanout: Load User Preferences
+    Fanout->>Fanout: Apply Business Rules
+    Fanout->>Fanout: Generate Templates
     
-    Client->>REST_API: POST /orders (Create Order)
-    REST_API->>REST_API: Validate Request
-    REST_API->>Database: Store Order (Pending)
-    REST_API->>Kafka: Publish OrderCreated Event
-    REST_API-->>Client: 202 Accepted + Order ID
+    par Parallel Delivery
+        Fanout->>Email: Email Notification
+        Fanout->>SMS: SMS Notification  
+        Fanout->>Push: Push Notification
+    end
     
-    Note over Kafka,EventConsumer: Asynchronous Event Processing
+    Email->>Tracker: Delivery Success
+    SMS->>Tracker: Delivery Failed
+    Push->>Tracker: Delivery Success
     
-    Kafka->>EventConsumer: OrderCreated Event
-    EventConsumer->>EventConsumer: Process Order
-    EventConsumer->>Database: Update Order Status
-    EventConsumer->>Kafka: Publish OrderProcessed Event
+    Tracker->>SMS: Schedule Retry
+    SMS->>Tracker: Retry Success
     
-    Note over Client,QueryAPI: Query Current State
-    
-    Client->>QueryAPI: GET /orders/{id}/status
-    QueryAPI->>Database: Query Order Status
-    QueryAPI-->>Client: Order Status Response
-    
-    Note over Kafka,EventConsumer: Notification Flow
-    
-    Kafka->>EventConsumer: OrderProcessed Event
-    EventConsumer->>EventConsumer: Send Notifications
-    EventConsumer->>Kafka: Publish NotificationSent Event
+    Note over Tracker: All channels delivered successfully
 ```
 
 ## 🎯 Key Concepts
 
-### **Command-Query Responsibility Segregation (CQRS)**
+### **Fan-out Pattern Benefits**
+- **Parallel Processing**: Multiple channels processed simultaneously
+- **Channel Independence**: Failures in one channel don't affect others
+- **Scalability**: Easy to add new notification channels
+- **User Choice**: Respect user preferences and opt-outs
+
+### **Notification Event Models**
+
+#### **Base Notification Event**
+```kotlin
+data class NotificationEvent(
+    val eventId: String,
+    val eventType: NotificationEventType,
+    val recipientId: String,
+    val templateId: String,
+    val payload: Map<String, Any>,
+    val priority: NotificationPriority = NotificationPriority.NORMAL,
+    val scheduledTime: Instant? = null,
+    val expiryTime: Instant? = null,
+    val correlationId: String,
+    val metadata: Map<String, String> = emptyMap()
+)
+
+enum class NotificationEventType {
+    ORDER_CONFIRMATION,
+    ORDER_SHIPPED,
+    ORDER_DELIVERED,
+    PAYMENT_SUCCESSFUL,
+    PAYMENT_FAILED,
+    USER_WELCOME,
+    PASSWORD_RESET,
+    SECURITY_ALERT,
+    MAINTENANCE_NOTICE,
+    PROMOTIONAL_OFFER
+}
+
+enum class NotificationPriority {
+    LOW,
+    NORMAL, 
+    HIGH,
+    URGENT
+}
+```
+
+#### **Channel-Specific Messages**
+```kotlin
+data class EmailNotification(
+    val recipientEmail: String,
+    val subject: String,
+    val htmlBody: String,
+    val textBody: String,
+    val attachments: List<Attachment> = emptyList(),
+    val replyTo: String? = null,
+    val headers: Map<String, String> = emptyMap()
+)
+
+data class SMSNotification(
+    val recipientPhone: String,
+    val message: String,
+    val countryCode: String,
+    val shortCode: String? = null
+)
+
+data class PushNotification(
+    val deviceTokens: List<String>,
+    val title: String,
+    val body: String,
+    val badge: Int? = null,
+    val sound: String? = null,
+    val data: Map<String, String> = emptyMap()
+)
+
+data class WebhookNotification(
+    val url: String,
+    val method: String = "POST",
+    val headers: Map<String, String> = emptyMap(),
+    val payload: Any,
+    val timeout: Duration = Duration.ofSeconds(30)
+)
+```
+
+### **User Preference Management**
 ```mermaid
 graph TB
-    subgraph "Command Side (Write Model)"
-        CMD_API[Command API<br/>POST, PUT, DELETE]
-        CMD_HANDLER[Command Handlers]
-        WRITE_DB[(Write Database<br/>Normalized schema)]
-        EVENT_STORE[Event Store<br/>Audit trail]
+    subgraph "User Preferences"
+        GLOBAL[Global Settings<br/>Enable/Disable notifications]
+        CHANNEL[Channel Preferences<br/>Email, SMS, Push enabled]
+        EVENT[Event Preferences<br/>Which events to receive]
+        TIMING[Timing Preferences<br/>Quiet hours, frequency]
     end
     
-    subgraph "Event Bus"
-        KAFKA_EVENTS[Kafka Events<br/>Domain events]
+    subgraph "Preference Rules"
+        OPTOUT[Opt-out Lists<br/>Unsubscribed users]
+        GDPR[GDPR Compliance<br/>Consent management]
+        FREQUENCY[Frequency Limits<br/>Anti-spam protection]
+        TIMEZONE[Timezone Awareness<br/>Local delivery times]
     end
     
-    subgraph "Query Side (Read Model)"
-        QUERY_API[Query API<br/>GET operations]
-        READ_DB[(Read Database<br/>Denormalized views)]
-        PROJECTIONS[Event Projections<br/>View builders]
-        CACHE[Query Cache<br/>Fast access]
+    subgraph "Dynamic Routing"
+        ROUTER[Channel Router]
+        FILTER[Preference Filter]
+        SCHEDULER[Delivery Scheduler]
     end
     
-    CMD_API --> CMD_HANDLER
-    CMD_HANDLER --> WRITE_DB
-    CMD_HANDLER --> EVENT_STORE
-    CMD_HANDLER --> KAFKA_EVENTS
+    GLOBAL --> ROUTER
+    CHANNEL --> ROUTER
+    EVENT --> FILTER
+    TIMING --> SCHEDULER
     
-    KAFKA_EVENTS --> PROJECTIONS
-    PROJECTIONS --> READ_DB
+    OPTOUT --> FILTER
+    GDPR --> FILTER
+    FREQUENCY --> SCHEDULER
+    TIMEZONE --> SCHEDULER
     
-    QUERY_API --> READ_DB
-    QUERY_API --> CACHE
-    
-    style CMD_API fill:#ff6b6b
-    style KAFKA_EVENTS fill:#4ecdc4
-    style QUERY_API fill:#a8e6cf
-    style READ_DB fill:#ffe66d
+    style ROUTER fill:#4ecdc4
+    style FILTER fill:#ff6b6b
+    style SCHEDULER fill:#ffe66d
 ```
 
-### **Event-Driven Workflow Patterns**
+## ⚙️ Fan-out Engine Implementation
 
-#### **Saga Orchestration**
-```mermaid
-stateDiagram-v2
-    [*] --> OrderCreated: Create Order API Call
-    
-    OrderCreated --> PaymentRequested: Publish Payment Event
-    PaymentRequested --> PaymentCompleted: Payment Success
-    PaymentRequested --> PaymentFailed: Payment Failure
-    
-    PaymentCompleted --> InventoryReserved: Reserve Inventory
-    InventoryReserved --> OrderConfirmed: All Steps Complete
-    InventoryReserved --> InventoryFailed: Insufficient Stock
-    
-    PaymentFailed --> OrderCancelled: Cancel Order
-    InventoryFailed --> PaymentRefunded: Refund Payment
-    PaymentRefunded --> OrderCancelled: Complete Cancellation
-    
-    OrderConfirmed --> [*]
-    OrderCancelled --> [*]
-```
-
-#### **Request-Reply Pattern**
-```mermaid
-sequenceDiagram
-    participant Client
-    participant API as REST API
-    participant RequestTopic as Request Topic
-    participant Service as Backend Service
-    participant ReplyTopic as Reply Topic
-    participant ResponseCache as Response Cache
-    
-    Client->>API: GET /complex-query
-    API->>API: Generate Correlation ID
-    API->>RequestTopic: Publish Query Request
-    API->>ResponseCache: Start Waiting for Response
-    
-    RequestTopic->>Service: Process Query Request
-    Service->>Service: Execute Complex Logic
-    Service->>ReplyTopic: Publish Query Response
-    
-    ReplyTopic->>ResponseCache: Store Response by Correlation ID
-    ResponseCache->>API: Notify Response Ready
-    API->>ResponseCache: Retrieve Response
-    API-->>Client: Return Query Result
-```
-
-## ⚙️ REST-Kafka Bridge Implementation
-
-### Command API with Event Publishing
+### Notification Event Publisher
 ```kotlin
-@RestController
-@RequestMapping("/api/orders")
-class OrderCommandController {
+@Component
+class NotificationEventPublisher {
     
     @Autowired
-    private lateinit var orderService: OrderService
+    private lateinit var kafkaTemplate: KafkaTemplate<String, NotificationEvent>
     
     @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
+    private lateinit var userPreferenceService: UserPreferenceService
     
-    @PostMapping
-    fun createOrder(@RequestBody @Valid request: CreateOrderRequest): ResponseEntity<OrderResponse> {
-        return try {
-            // Validate request
-            validateOrderRequest(request)
-            
-            // Store in database (write model)
-            val order = orderService.createOrder(request)
-            
-            // Publish event to Kafka
-            val orderEvent = OrderCreatedEvent(
-                orderId = order.id,
-                customerId = order.customerId,
-                items = order.items,
-                totalAmount = order.totalAmount,
-                timestamp = Instant.now(),
-                correlationId = MDC.get("correlationId")
-            )
-            
-            kafkaTemplate.send("order-events", order.id, orderEvent)
-                .whenComplete { result, throwable ->
-                    if (throwable != null) {
-                        logger.error("Failed to publish order event: ${order.id}", throwable)
-                        // Consider compensation logic
-                    } else {
-                        logger.info("Order event published successfully: ${order.id}")
-                    }
-                }
-            
-            // Return immediate response
-            ResponseEntity.accepted()
-                .header("Location", "/api/orders/${order.id}")
-                .body(OrderResponse(
-                    orderId = order.id,
-                    status = OrderStatus.PENDING,
-                    message = "Order created and queued for processing"
-                ))
+    @Autowired
+    private lateinit var templateService: TemplateService
+    
+    fun publishNotification(event: NotificationEvent): CompletableFuture<Void> {
+        logger.info("Publishing notification event: ${event.eventId}")
+        
+        return CompletableFuture.runAsync {
+            try {
+                // Load user preferences
+                val preferences = userPreferenceService.getUserPreferences(event.recipientId)
                 
-        } catch (e: ValidationException) {
-            ResponseEntity.badRequest()
-                .body(ErrorResponse("VALIDATION_ERROR", e.message))
-        } catch (e: Exception) {
-            logger.error("Failed to create order", e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse("INTERNAL_ERROR", "Order creation failed"))
-        }
-    }
-    
-    @PutMapping("/{orderId}/cancel")
-    fun cancelOrder(@PathVariable orderId: String): ResponseEntity<OrderResponse> {
-        return try {
-            val order = orderService.getOrder(orderId)
-                ?: return ResponseEntity.notFound().build()
-            
-            // Check if cancellation is allowed
-            if (!order.isCancellable()) {
-                return ResponseEntity.badRequest()
-                    .body(ErrorResponse("INVALID_STATE", "Order cannot be cancelled"))
-            }
-            
-            // Update order status
-            orderService.cancelOrder(orderId)
-            
-            // Publish cancellation event
-            val cancellationEvent = OrderCancelledEvent(
-                orderId = orderId,
-                customerId = order.customerId,
-                reason = "Customer requested cancellation",
-                timestamp = Instant.now()
-            )
-            
-            kafkaTemplate.send("order-events", orderId, cancellationEvent)
-            
-            ResponseEntity.ok(OrderResponse(
-                orderId = orderId,
-                status = OrderStatus.CANCELLED,
-                message = "Order cancellation initiated"
-            ))
-            
-        } catch (e: Exception) {
-            logger.error("Failed to cancel order: $orderId", e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse("INTERNAL_ERROR", "Order cancellation failed"))
-        }
-    }
-}
-```
-
-### Query API with Read Models
-```kotlin
-@RestController
-@RequestMapping("/api/orders")
-class OrderQueryController {
-    
-    @Autowired
-    private lateinit var orderQueryService: OrderQueryService
-    
-    @Autowired
-    private lateinit var cacheManager: CacheManager
-    
-    @GetMapping("/{orderId}")
-    fun getOrder(@PathVariable orderId: String): ResponseEntity<OrderView> {
-        return try {
-            val orderView = orderQueryService.getOrderView(orderId)
-                ?: return ResponseEntity.notFound().build()
-            
-            ResponseEntity.ok(orderView)
-            
-        } catch (e: Exception) {
-            logger.error("Failed to retrieve order: $orderId", e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
-    
-    @GetMapping
-    fun getOrdersByCustomer(
-        @RequestParam customerId: String,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
-        @RequestParam(required = false) status: OrderStatus?
-    ): ResponseEntity<PagedResponse<OrderSummary>> {
-        
-        val cacheKey = "orders:$customerId:$page:$size:${status?.name ?: "ALL"}"
-        
-        // Try cache first
-        val cachedResult = cacheManager.getCache("order-queries")
-            ?.get(cacheKey, PagedResponse::class.java)
-        
-        if (cachedResult != null) {
-            return ResponseEntity.ok(cachedResult as PagedResponse<OrderSummary>)
-        }
-        
-        // Query from read model
-        val result = orderQueryService.getOrdersByCustomer(
-            customerId = customerId,
-            page = page,
-            size = size,
-            status = status
-        )
-        
-        // Cache the result
-        cacheManager.getCache("order-queries")?.put(cacheKey, result)
-        
-        return ResponseEntity.ok(result)
-    }
-    
-    @GetMapping("/{orderId}/timeline")
-    fun getOrderTimeline(@PathVariable orderId: String): ResponseEntity<OrderTimeline> {
-        return try {
-            val timeline = orderQueryService.getOrderTimeline(orderId)
-                ?: return ResponseEntity.notFound().build()
-            
-            ResponseEntity.ok(timeline)
-            
-        } catch (e: Exception) {
-            logger.error("Failed to retrieve order timeline: $orderId", e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
-}
-```
-
-## 🔄 Event-Driven Workflow Engine
-
-### Saga Orchestrator
-```kotlin
-@Component
-class OrderProcessingSaga {
-    
-    @KafkaListener(topics = ["order-events"])
-    fun handleOrderEvent(
-        @Payload event: OrderEvent,
-        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String
-    ) {
-        when (event) {
-            is OrderCreatedEvent -> initiateOrderProcessing(event)
-            is PaymentCompletedEvent -> continueAfterPayment(event)
-            is PaymentFailedEvent -> handlePaymentFailure(event)
-            is InventoryReservedEvent -> continueAfterInventoryReservation(event)
-            is InventoryReservationFailedEvent -> handleInventoryFailure(event)
-            is OrderConfirmedEvent -> completeOrderProcessing(event)
-            is OrderCancelledEvent -> handleOrderCancellation(event)
-        }
-    }
-    
-    private fun initiateOrderProcessing(event: OrderCreatedEvent) {
-        logger.info("Starting order processing saga: ${event.orderId}")
-        
-        try {
-            // Step 1: Request payment processing
-            val paymentRequest = PaymentRequestEvent(
-                orderId = event.orderId,
-                customerId = event.customerId,
-                amount = event.totalAmount,
-                correlationId = event.correlationId
-            )
-            
-            kafkaTemplate.send("payment-requests", event.orderId, paymentRequest)
-            
-            // Update saga state
-            sagaStateService.createSagaState(
-                sagaId = event.orderId,
-                currentStep = SagaStep.PAYMENT_REQUESTED,
-                sagaData = event
-            )
-            
-        } catch (e: Exception) {
-            logger.error("Failed to initiate payment for order: ${event.orderId}", e)
-            handleSagaFailure(event.orderId, "Payment initiation failed")
-        }
-    }
-    
-    private fun continueAfterPayment(event: PaymentCompletedEvent) {
-        logger.info("Payment completed for order: ${event.orderId}")
-        
-        try {
-            // Step 2: Reserve inventory
-            val inventoryRequest = InventoryReservationEvent(
-                orderId = event.orderId,
-                items = getOrderItems(event.orderId),
-                correlationId = event.correlationId
-            )
-            
-            kafkaTemplate.send("inventory-requests", event.orderId, inventoryRequest)
-            
-            // Update saga state
-            sagaStateService.updateSagaState(
-                sagaId = event.orderId,
-                currentStep = SagaStep.INVENTORY_REQUESTED
-            )
-            
-        } catch (e: Exception) {
-            logger.error("Failed to request inventory for order: ${event.orderId}", e)
-            // Compensate: refund payment
-            initiatePaymentRefund(event.orderId)
-        }
-    }
-    
-    private fun handlePaymentFailure(event: PaymentFailedEvent) {
-        logger.warn("Payment failed for order: ${event.orderId}, reason: ${event.reason}")
-        
-        // Cancel the order
-        val cancellationEvent = OrderCancelledEvent(
-            orderId = event.orderId,
-            customerId = event.customerId,
-            reason = "Payment failed: ${event.reason}",
-            timestamp = Instant.now()
-        )
-        
-        kafkaTemplate.send("order-events", event.orderId, cancellationEvent)
-        
-        // Update saga state
-        sagaStateService.completeSaga(
-            sagaId = event.orderId,
-            status = SagaStatus.FAILED,
-            reason = "Payment failed"
-        )
-    }
-}
-```
-
-## 🔄 Synchronous-Asynchronous Bridging
-
-### Request-Reply Pattern Implementation
-```kotlin
-@Component
-class SynchronousQueryBridge {
-    
-    @Autowired
-    private lateinit var kafkaTemplate: KafkaTemplate<String, Any>
-    
-    @Autowired
-    private lateinit var responseWaitingService: ResponseWaitingService
-    
-    fun executeComplexQuery(query: ComplexQuery): CompletableFuture<QueryResult> {
-        val correlationId = UUID.randomUUID().toString()
-        val future = CompletableFuture<QueryResult>()
-        
-        try {
-            // Register response handler
-            responseWaitingService.registerResponseHandler(correlationId) { response ->
-                try {
-                    val result = objectMapper.readValue(response, QueryResult::class.java)
-                    future.complete(result)
-                } catch (e: Exception) {
-                    future.completeExceptionally(e)
+                // Apply business rules and filters
+                if (shouldSendNotification(event, preferences)) {
+                    
+                    // Get enabled channels for this user and event type
+                    val enabledChannels = getEnabledChannels(event, preferences)
+                    
+                    // Fan out to each enabled channel
+                    enabledChannels.forEach { channel ->
+                        val channelEvent = enrichEventForChannel(event, channel)
+                        val topicName = "notifications-${channel.name.lowercase()}"
+                        
+                        kafkaTemplate.send(topicName, event.recipientId, channelEvent)
+                            .whenComplete { result, throwable ->
+                                if (throwable != null) {
+                                    logger.error("Failed to send to $channel for event ${event.eventId}", throwable)
+                                } else {
+                                    logger.debug("Successfully sent to $channel for event ${event.eventId}")
+                                }
+                            }
+                    }
+                    
+                    // Publish to delivery tracking
+                    publishDeliveryTracking(event, enabledChannels)
+                } else {
+                    logger.info("Notification filtered out: ${event.eventId}")
                 }
+                
+            } catch (e: Exception) {
+                logger.error("Failed to publish notification: ${event.eventId}", e)
+                throw e
             }
+        }
+    }
+    
+    private fun shouldSendNotification(
+        event: NotificationEvent, 
+        preferences: UserPreferences
+    ): Boolean {
+        // Check global notification settings
+        if (!preferences.notificationsEnabled) return false
+        
+        // Check event type preferences
+        if (!preferences.enabledEventTypes.contains(event.eventType)) return false
+        
+        // Check quiet hours
+        if (isInQuietHours(preferences)) return false
+        
+        // Check frequency limits
+        if (exceedsFrequencyLimit(event, preferences)) return false
+        
+        return true
+    }
+    
+    private fun getEnabledChannels(
+        event: NotificationEvent,
+        preferences: UserPreferences
+    ): List<NotificationChannel> {
+        return NotificationChannel.values().filter { channel ->
+            preferences.enabledChannels.contains(channel) &&
+            isChannelAvailableForEvent(channel, event.eventType)
+        }
+    }
+}
+```
+
+### Multi-Channel Delivery System
+```kotlin
+@Component
+class EmailNotificationConsumer {
+    
+    @KafkaListener(topics = ["notifications-email"])
+    fun processEmailNotification(
+        @Payload event: NotificationEvent,
+        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) partition: Int
+    ) {
+        try {
+            logger.info("Processing email notification: ${event.eventId}")
             
-            // Send query request
-            val queryRequest = QueryRequest(
-                queryId = correlationId,
-                query = query,
-                requestedAt = Instant.now(),
-                replyTopic = "query-responses",
-                timeout = Duration.ofSeconds(30)
+            // Generate email content from template
+            val emailContent = templateService.generateEmailContent(event)
+            
+            // Send email
+            val deliveryResult = emailService.sendEmail(
+                recipient = emailContent.recipientEmail,
+                subject = emailContent.subject,
+                htmlBody = emailContent.htmlBody,
+                textBody = emailContent.textBody
             )
             
-            kafkaTemplate.send("query-requests", correlationId, queryRequest)
-            
-            // Set timeout
-            CompletableFuture.delayedExecutor(30, TimeUnit.SECONDS).execute {
-                if (!future.isDone) {
-                    responseWaitingService.removeResponseHandler(correlationId)
-                    future.completeExceptionally(TimeoutException("Query timeout"))
-                }
-            }
+            // Track delivery
+            deliveryTracker.recordDelivery(
+                eventId = event.eventId,
+                channel = NotificationChannel.EMAIL,
+                status = if (deliveryResult.success) DeliveryStatus.DELIVERED else DeliveryStatus.FAILED,
+                providerId = deliveryResult.messageId,
+                error = deliveryResult.error
+            )
             
         } catch (e: Exception) {
-            future.completeExceptionally(e)
+            logger.error("Failed to process email notification: ${event.eventId}", e)
+            
+            deliveryTracker.recordDelivery(
+                eventId = event.eventId,
+                channel = NotificationChannel.EMAIL,
+                status = DeliveryStatus.FAILED,
+                error = e.message
+            )
         }
-        
-        return future
     }
 }
 
 @Component
-class ResponseWaitingService {
+class SMSNotificationConsumer {
     
-    private val responseHandlers = ConcurrentHashMap<String, (String) -> Unit>()
-    
-    @KafkaListener(topics = ["query-responses"])
-    fun handleQueryResponse(
-        @Payload response: String,
-        @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) correlationId: String
+    @KafkaListener(topics = ["notifications-sms"])
+    fun processSMSNotification(
+        @Payload event: NotificationEvent
     ) {
-        val handler = responseHandlers.remove(correlationId)
-        handler?.invoke(response)
-            ?: logger.warn("No handler found for correlation ID: $correlationId")
+        try {
+            logger.info("Processing SMS notification: ${event.eventId}")
+            
+            // Generate SMS content
+            val smsContent = templateService.generateSMSContent(event)
+            
+            // Send SMS
+            val deliveryResult = smsService.sendSMS(
+                recipient = smsContent.recipientPhone,
+                message = smsContent.message,
+                countryCode = smsContent.countryCode
+            )
+            
+            // Track delivery
+            deliveryTracker.recordDelivery(
+                eventId = event.eventId,
+                channel = NotificationChannel.SMS,
+                status = if (deliveryResult.success) DeliveryStatus.DELIVERED else DeliveryStatus.FAILED,
+                providerId = deliveryResult.messageId,
+                error = deliveryResult.error
+            )
+            
+        } catch (e: Exception) {
+            logger.error("Failed to process SMS notification: ${event.eventId}", e)
+            
+            deliveryTracker.recordDelivery(
+                eventId = event.eventId,
+                channel = NotificationChannel.SMS,
+                status = DeliveryStatus.FAILED,
+                error = e.message
+            )
+        }
+    }
+}
+```
+
+## 📊 Delivery Tracking & Analytics
+
+### Delivery Status Monitoring
+```mermaid
+graph TB
+    subgraph "Delivery States"
+        QUEUED[Queued<br/>Waiting to send]
+        SENT[Sent<br/>Delivered to provider]
+        DELIVERED[Delivered<br/>Confirmed by recipient]
+        FAILED[Failed<br/>Delivery unsuccessful]
+        RETRYING[Retrying<br/>Attempting retry]
+        EXPIRED[Expired<br/>TTL exceeded]
+    end
+    
+    subgraph "Tracking Metrics"
+        DELIVERY_RATE[Delivery Rate<br/>% successful deliveries]
+        CHANNEL_PERF[Channel Performance<br/>Speed and reliability]
+        FAILURE_RATE[Failure Rate<br/>% failed deliveries]
+        RETRY_SUCCESS[Retry Success Rate<br/>Recovery effectiveness]
+    end
+    
+    subgraph "Business Metrics"
+        ENGAGEMENT[User Engagement<br/>Open/click rates]
+        CONVERSION[Conversion Rate<br/>Action completion]
+        UNSUBSCRIBE[Unsubscribe Rate<br/>User opt-outs]
+        REVENUE[Revenue Impact<br/>Notification ROI]
+    end
+    
+    QUEUED --> SENT
+    SENT --> DELIVERED
+    SENT --> FAILED
+    FAILED --> RETRYING
+    RETRYING --> DELIVERED
+    RETRYING --> EXPIRED
+    
+    DELIVERED --> DELIVERY_RATE
+    FAILED --> FAILURE_RATE
+    RETRYING --> RETRY_SUCCESS
+    
+    DELIVERED --> ENGAGEMENT
+    ENGAGEMENT --> CONVERSION
+    CONVERSION --> REVENUE
+    
+    style DELIVERED fill:#4ecdc4
+    style FAILED fill:#ff6b6b
+    style EXPIRED fill:#ff6b6b
+    style ENGAGEMENT fill:#a8e6cf
+```
+
+### Delivery Tracker Implementation
+```kotlin
+@Component
+class DeliveryTracker {
+    
+    @Autowired
+    private lateinit var deliveryRepository: DeliveryRepository
+    
+    @Autowired
+    private lateinit var metricsRegistry: MeterRegistry
+    
+    fun recordDelivery(
+        eventId: String,
+        channel: NotificationChannel,
+        status: DeliveryStatus,
+        providerId: String? = null,
+        error: String? = null,
+        metadata: Map<String, String> = emptyMap()
+    ) {
+        val delivery = DeliveryRecord(
+            id = generateDeliveryId(),
+            eventId = eventId,
+            channel = channel,
+            status = status,
+            providerId = providerId,
+            error = error,
+            attemptCount = 1,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now(),
+            metadata = metadata
+        )
+        
+        deliveryRepository.save(delivery)
+        
+        // Record metrics
+        metricsRegistry.counter(
+            "notification.delivery",
+            "channel", channel.name,
+            "status", status.name
+        ).increment()
+        
+        logger.info("Recorded delivery: $eventId -> $channel -> $status")
     }
     
-    fun registerResponseHandler(correlationId: String, handler: (String) -> Unit) {
-        responseHandlers[correlationId] = handler
+    fun getDeliveryStatus(eventId: String): List<DeliveryRecord> {
+        return deliveryRepository.findByEventId(eventId)
     }
     
-    fun removeResponseHandler(correlationId: String) {
-        responseHandlers.remove(correlationId)
+    fun getDeliveryMetrics(
+        timeRange: TimeRange,
+        channels: List<NotificationChannel>? = null
+    ): DeliveryMetrics {
+        val deliveries = deliveryRepository.findByTimeRange(timeRange, channels)
+        
+        val totalDeliveries = deliveries.size
+        val successfulDeliveries = deliveries.count { it.status == DeliveryStatus.DELIVERED }
+        val failedDeliveries = deliveries.count { it.status == DeliveryStatus.FAILED }
+        
+        val channelMetrics = deliveries.groupBy { it.channel }
+            .mapValues { (channel, channelDeliveries) ->
+                ChannelMetrics(
+                    channel = channel,
+                    totalSent = channelDeliveries.size,
+                    successful = channelDeliveries.count { it.status == DeliveryStatus.DELIVERED },
+                    failed = channelDeliveries.count { it.status == DeliveryStatus.FAILED },
+                    averageDeliveryTime = calculateAverageDeliveryTime(channelDeliveries)
+                )
+            }
+        
+        return DeliveryMetrics(
+            timeRange = timeRange,
+            totalDeliveries = totalDeliveries,
+            successfulDeliveries = successfulDeliveries,
+            failedDeliveries = failedDeliveries,
+            overallDeliveryRate = if (totalDeliveries > 0) successfulDeliveries.toDouble() / totalDeliveries else 0.0,
+            channelMetrics = channelMetrics.values.toList()
+        )
     }
 }
 ```
 
 ## ✅ Success Criteria
-- [ ] REST APIs correctly publish events to Kafka topics
-- [ ] Command-query separation maintains data consistency
-- [ ] Event-driven workflows handle complex business processes
-- [ ] Synchronous response handling works for real-time queries
-- [ ] API composition provides unified interfaces
-- [ ] Error handling and compensation logic prevents data corruption
-- [ ] Performance meets requirements for hybrid workloads
+- [ ] Fan-out pattern correctly distributes events to multiple channels
+- [ ] User preferences properly filter notifications
+- [ ] All notification channels (email, SMS, push) working correctly
+- [ ] Delivery tracking provides visibility into success/failure rates
+- [ ] Failure recovery handles retries and dead letter scenarios
+- [ ] Performance handles high-volume notification bursts (&gt;10k/min)
+- [ ] Business rules prevent spam and respect user preferences
 
 ## 🚀 Getting Started
 
-### 1. Configure Hybrid Architecture
-```kotlin
-@Configuration
-class HybridArchitectureConfig {
-    
-    @Bean
-    fun restToKafkaInterceptor(): RestToKafkaInterceptor {
-        return RestToKafkaInterceptor(kafkaTemplate())
-    }
-    
-    @Bean
-    fun sagaOrchestrator(): SagaOrchestrator {
-        return SagaOrchestrator(
-            kafkaTemplate = kafkaTemplate(),
-            sagaStateService = sagaStateService(),
-            compensationService = compensationService()
-        )
-    }
-    
-    @Bean
-    fun queryBridge(): SynchronousQueryBridge {
-        return SynchronousQueryBridge(
-            kafkaTemplate = kafkaTemplate(),
-            responseWaitingService = responseWaitingService()
-        )
-    }
-}
+### 1. Configure Notification Topics
+```bash
+# Create notification topics for each channel
+kafka-topics --create --topic notifications-email --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic notifications-sms --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092  
+kafka-topics --create --topic notifications-push --partitions 6 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic notifications-webhook --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
+kafka-topics --create --topic notification-delivery-tracking --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092
 ```
 
-### 2. Test Hybrid Workflows
+### 2. Test Fan-out Notification
 ```bash
-# Create order via REST API
-curl -X POST http://localhost:8090/api/orders \
+# Send order confirmation event
+curl -X POST http://localhost:8090/api/notifications/send \
   -H "Content-Type: application/json" \
   -d '{
-    "customerId": "CUST-123",
-    "items": [
-      {"productId": "PROD-456", "quantity": 2, "price": 29.99}
-    ]
+    "eventType": "ORDER_CONFIRMATION",
+    "recipientId": "user-123",
+    "templateId": "order-confirmation-v1",
+    "payload": {
+      "orderId": "ORD-456",
+      "amount": "99.99",
+      "items": ["Kafka T-Shirt", "Spring Boot Mug"]
+    },
+    "priority": "HIGH"
   }'
-
-# Query order status
-curl http://localhost:8090/api/orders/ORDER-789/status
-
-# Monitor event flow
-kafka-console-consumer --topic order-events --from-beginning --bootstrap-server localhost:9092
-kafka-console-consumer --topic payment-events --from-beginning --bootstrap-server localhost:9092
 ```
 
-### 3. Monitor Hybrid Performance
+### 3. Monitor Delivery Metrics
 ```bash
-# Check REST API metrics
-curl http://localhost:8090/actuator/metrics/http.server.requests
+# Check delivery status
+curl http://localhost:8090/api/notifications/delivery/user-123
 
-# Check Kafka integration metrics  
-curl http://localhost:8090/actuator/metrics/kafka.producer
+# View channel metrics
+curl http://localhost:8090/api/notifications/metrics/channels
 
-# Monitor saga execution
-curl http://localhost:8090/api/sagas/ORDER-789/status
+# Monitor notification topics
+kafka-console-consumer --topic notifications-email --from-beginning --bootstrap-server localhost:9092
 ```
 
 ## 🎯 Best Practices
 
-### API Design
-- **Use appropriate HTTP status codes** (202 for async operations)
-- **Provide correlation IDs** for request tracing
-- **Implement proper error handling** with meaningful messages
-- **Version your APIs** to support evolution
+### Fan-out Design
+- **Use separate topics** for each notification channel
+- **Implement user preferences** to respect opt-outs
+- **Apply rate limiting** to prevent spam
+- **Use templates** for consistent messaging
 
-### Event Design
-- **Use domain events** that reflect business operations
-- **Include correlation IDs** for distributed tracing
-- **Design for idempotency** to handle duplicate events
-- **Version your events** for backward compatibility
+### Channel Management
+- **Handle channel failures** independently
+- **Implement fallback channels** for critical notifications
+- **Monitor delivery rates** and optimize underperforming channels
+- **Respect channel-specific limits** (SMS character limits, etc.)
 
-### Integration Patterns
-- **Separate commands from queries** for scalability
-- **Use eventual consistency** where appropriate
-- **Implement compensation** for failed operations
-- **Monitor end-to-end latency** for user experience
+### Performance Optimization
+- **Batch similar notifications** when possible
+- **Use channel-specific partitioning** for parallel processing
+- **Implement caching** for user preferences and templates
+- **Monitor and alert** on delivery delays
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Event ordering problems** - Use partition keys appropriately
-2. **Duplicate processing** - Implement idempotent consumers
-3. **Saga timeouts** - Configure appropriate timeouts and compensation
-4. **Memory leaks** - Clean up response handlers and saga state
+1. **High delivery failures** - Check channel service health and configuration
+2. **Notification delays** - Monitor Kafka consumer lag and processing time
+3. **User complaints about spam** - Review frequency limits and preferences
+4. **Template rendering errors** - Validate template syntax and data
 
 ### Debug Commands
 ```bash
-# Check saga state
-curl http://localhost:8090/api/sagas/ORDER-123/state
+# Check notification consumer lag
+kafka-consumer-groups --bootstrap-server localhost:9092 --group notification-email-group --describe
 
-# Monitor response handlers
-curl http://localhost:8090/api/debug/response-handlers
+# Monitor delivery tracking
+kafka-console-consumer --topic notification-delivery-tracking --from-beginning --bootstrap-server localhost:9092
 
-# View event timeline
-curl http://localhost:8090/api/orders/ORDER-123/events
+# Check template rendering
+curl http://localhost:8090/api/templates/render/order-confirmation-v1 -d '{"orderId":"123"}'
 ```
 
 ## 🚀 Next Steps
-Hybrid architecture mastered? Time to implement request-reply patterns! Move to [Lesson 13: Request-Reply Patterns with Kafka](../lesson_13/README.md) to learn synchronous communication over async messaging.
+Fan-out notifications mastered? Time to integrate with REST APIs! Move to [Lesson 12: Hybrid REST + Kafka Architecture](../lesson_13/README.md) to learn seamless integration patterns.

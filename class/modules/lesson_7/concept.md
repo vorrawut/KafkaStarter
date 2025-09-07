@@ -1,588 +1,677 @@
-# Concept
+# Concept 
 
-## Consumer Groups & Load Balancing - Scaling Kafka Consumers
+## Development Tools - Debugging, Testing & Monitoring Kafka Applications
 
 ## 🎯 Objective
 
-Master consumer groups for horizontal scaling, fault tolerance, and load balancing in Kafka applications. Learn partition assignment strategies, rebalancing protocols, and production scaling patterns.
+Master the essential development tools and techniques for building, debugging, testing, and monitoring production-ready Kafka applications. Learn industry-standard practices for troubleshooting, performance optimization, and operational excellence.
 
-## 🧱 **Consumer Groups: The Scaling Foundation**
+## 🛠️ **Essential Kafka Development Tools**
 
-Consumer groups enable **horizontal scaling** by distributing partition consumption across multiple consumer instances.
+### 🔍 **Debugging & Inspection Tools**
+
+#### 1. **Kafka UI (Primary Tool)**
+```
+URL: http://localhost:8080
+Features:
+- Topic browsing and message inspection
+- Consumer group monitoring  
+- Schema Registry integration
+- Real-time metrics and performance data
+- Partition and offset management
+```
+
+#### 2. **AKHQ (Alternative UI)**
+```
+URL: http://localhost:8082  
+Features:
+- Advanced message filtering
+- JSON/Avro/Protobuf message viewing
+- Consumer group management
+- Topic configuration editing
+```
+
+#### 3. **Kafka CLI Tools**
+```bash
+# Essential CLI commands for debugging
+docker exec kafka-starter-broker kafka-topics --list --bootstrap-server localhost:9092
+docker exec kafka-starter-broker kafka-console-consumer --topic user-events --from-beginning --bootstrap-server localhost:9092
+docker exec kafka-starter-broker kafka-consumer-groups --bootstrap-server localhost:9092 --list
+```
+
+### 📊 **Monitoring & Observability Stack**
 
 ```mermaid
 graph TB
-    subgraph "Topic: order-events (6 partitions)"
-        P0[Partition 0]
-        P1[Partition 1]
-        P2[Partition 2]
-        P3[Partition 3]
-        P4[Partition 4]
-        P5[Partition 5]
+    subgraph "Monitoring Architecture"
+        APP[Spring Boot App]
+        
+        subgraph "Metrics Collection"
+            MICROMETER[Micrometer]
+            JMX[JMX Metrics]
+            ACTUATOR[Spring Actuator]
+        end
+        
+        subgraph "Storage & Processing"
+            PROMETHEUS[Prometheus]
+            INFLUX[InfluxDB]
+        end
+        
+        subgraph "Visualization"
+            GRAFANA[Grafana Dashboards]
+            KIBANA[Kibana Logs]
+        end
+        
+        subgraph "Alerting"
+            ALERTS[Prometheus Alerts]
+            SLACK[Slack Notifications]
+        end
     end
     
-    subgraph "Consumer Group: order-processors"
-        C1[Consumer 1]
-        C2[Consumer 2]
-        C3[Consumer 3]
-    end
+    APP --> MICROMETER
+    APP --> JMX
+    APP --> ACTUATOR
     
-    P0 --> C1
-    P1 --> C1
-    P2 --> C2
-    P3 --> C2
-    P4 --> C3
-    P5 --> C3
+    MICROMETER --> PROMETHEUS
+    JMX --> PROMETHEUS
+    ACTUATOR --> PROMETHEUS
     
-    style C1 fill:#e1f5fe
-    style C2 fill:#e8f5e8
-    style C3 fill:#fff3e0
+    PROMETHEUS --> GRAFANA
+    PROMETHEUS --> ALERTS
+    
+    ALERTS --> SLACK
 ```
 
-**Key Benefits:**
-- ✅ **Parallel processing** - Multiple consumers process simultaneously
-- ✅ **Fault tolerance** - Failed consumers trigger rebalancing
-- ✅ **Elastic scaling** - Add/remove consumers dynamically
-- ✅ **Load distribution** - Even partition assignment across consumers
+## 🧪 **Testing Strategies for Kafka Applications**
 
-## 🔄 **Consumer Group Mechanics**
-
-### 1. **Group Membership & Coordination**
+### 1. **Unit Testing with Mocks**
 
 ```kotlin
-@KafkaListener(
-    topics = ["order-events"],
-    groupId = "order-processing-group", // Consumer group identifier
-    concurrency = "3"                  // Number of consumer threads
-)
-fun processOrder(
-    @Payload order: OrderEvent,
-    @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
-    @Header(KafkaHeaders.CONSUMER_ID) consumerId: String
-) {
-    logger.info("Consumer $consumerId processing order from partition $partition")
-    // Process order
+@ExtendWith(MockitoExtension::class)
+class UserEventProducerTest {
+    
+    @Mock
+    private lateinit var kafkaTemplate: KafkaTemplate<String, UserRegisteredEvent>
+    
+    @InjectMocks
+    private lateinit var userEventProducer: UserEventProducer
+    
+    @Test
+    fun `should send user registration event`() {
+        // Given
+        val event = UserRegisteredEvent("user123", "test@example.com", "api")
+        val future = CompletableFuture<SendResult<String, UserRegisteredEvent>>()
+        
+        `when`(kafkaTemplate.send("user-registration", "user123", event))
+            .thenReturn(future)
+        
+        // When
+        userEventProducer.publishUserRegistered(event)
+        
+        // Then
+        verify(kafkaTemplate).send("user-registration", "user123", event)
+    }
 }
 ```
 
-### 2. **Partition Assignment Strategies**
+### 2. **Integration Testing with Embedded Kafka**
 
-#### **Range Assignor (Default)**
-```
-Topic: orders (partitions 0-5), 3 consumers
-Consumer 1: [0, 1]    # First 2 partitions
-Consumer 2: [2, 3]    # Next 2 partitions  
-Consumer 3: [4, 5]    # Last 2 partitions
-```
-
-#### **Round Robin Assignor**
-```
-Topic: orders (partitions 0-5), 3 consumers  
-Consumer 1: [0, 3]    # Every 3rd partition starting from 0
-Consumer 2: [1, 4]    # Every 3rd partition starting from 1
-Consumer 3: [2, 5]    # Every 3rd partition starting from 2
-```
-
-#### **Sticky Assignor**
-```
-# Minimizes partition movement during rebalancing
-Initial:  C1:[0,1], C2:[2,3], C3:[4,5]
-C2 fails: C1:[0,1], C3:[2,4,5]  # Sticky keeps existing assignments
-```
-
-### 3. **Configuration for Different Strategies**
-
-```yaml
-spring:
-  kafka:
-    consumer:
-      group-id: order-processing-group
-      properties:
-        # Range Assignor (default)
-        partition.assignment.strategy: org.apache.kafka.clients.consumer.RangeAssignor
+```kotlin
+@SpringBootTest
+@EmbeddedKafka(
+    partitions = 1,
+    topics = ["test-user-events"],
+    brokerProperties = ["listeners=PLAINTEXT://localhost:9000", "port=9000"]
+)
+@TestPropertySource(properties = ["spring.kafka.bootstrap-servers=localhost:9000"])
+class KafkaIntegrationTest {
+    
+    @Autowired
+    private lateinit var userEventProducer: UserEventProducer
+    
+    @Autowired
+    private lateinit var userEventConsumer: UserEventConsumer
+    
+    @Test
+    fun `should process user event end-to-end`() {
+        // Given
+        val event = UserRegisteredEvent("test-user", "test@test.com", "test")
+        val latch = CountDownLatch(1)
         
-        # Round Robin Assignor
-        # partition.assignment.strategy: org.apache.kafka.clients.consumer.RoundRobinAssignor
+        // When
+        userEventProducer.publishUserRegistered(event)
         
-        # Sticky Assignor (best for rebalancing)
-        # partition.assignment.strategy: org.apache.kafka.clients.consumer.StickyAssignor
-        
-        # Cooperative Sticky (incremental rebalancing)
-        # partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+        // Then
+        assertTrue(latch.await(5, TimeUnit.SECONDS))
+        // Verify processing occurred
+    }
+}
 ```
 
-## ⚖️ **Consumer Rebalancing Deep Dive**
+### 3. **TestContainers for Real Kafka Testing**
 
-### 1. **Rebalancing Triggers**
-- **New consumer joins** the group
-- **Existing consumer leaves** (graceful shutdown)
-- **Consumer failure** (heartbeat timeout)
-- **Topic metadata changes** (partition addition)
-
-### 2. **Rebalancing Process**
-
-```mermaid
-sequenceDiagram
-    participant C1 as Consumer 1
-    participant C2 as Consumer 2
-    participant C3 as Consumer 3
-    participant GC as Group Coordinator
+```kotlin
+@SpringBootTest
+@Testcontainers
+class KafkaTestContainersTest {
     
-    Note over GC: Consumer 3 joins group
+    companion object {
+        @Container
+        @JvmStatic
+        val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"))
+            .withExposedPorts(9093)
+    }
     
-    GC->>C1: Revoke current partitions
-    GC->>C2: Revoke current partitions
-    C1->>GC: Partitions revoked
-    C2->>GC: Partitions revoked
+    @DynamicPropertySource
+    @JvmStatic
+    fun setProperties(registry: DynamicPropertyRegistry) {
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers)
+    }
     
-    GC->>GC: Calculate new assignment
-    
-    GC->>C1: Assign partitions [0,1]
-    GC->>C2: Assign partitions [2,3]
-    GC->>C3: Assign partitions [4,5]
-    
-    C1->>GC: Assignment acknowledged
-    C2->>GC: Assignment acknowledged
-    C3->>GC: Assignment acknowledged
-    
-    Note over C1,C3: Resume processing
+    @Test
+    fun `should work with real Kafka container`() {
+        // Test with actual Kafka instance
+        assertTrue(kafka.isRunning)
+    }
+}
 ```
 
-### 3. **Rebalancing Listener Implementation**
+## 🔧 **Debugging Techniques & Tools**
+
+### 1. **Message Inspection & Debugging**
 
 ```kotlin
 @Component
-class RebalanceAwareConsumer : ConsumerRebalanceListener {
+class KafkaDebugger {
     
-    private val logger = LoggerFactory.getLogger(RebalanceAwareConsumer::class.java)
+    private val logger = LoggerFactory.getLogger(KafkaDebugger::class.java)
     
-    override fun onPartitionsRevoked(partitions: Collection<TopicPartition>) {
-        logger.info("Partitions revoked: {}", partitions.map { "${it.topic()}-${it.partition()}" })
-        
-        // Graceful shutdown: finish processing current messages
-        finishCurrentProcessing()
-        
-        // Commit any pending offsets
-        commitPendingOffsets()
-        
-        // Clean up resources
-        cleanupResources(partitions)
-    }
-    
-    override fun onPartitionsAssigned(partitions: Collection<TopicPartition>) {
-        logger.info("Partitions assigned: {}", partitions.map { "${it.topic()}-${it.partition()}" })
-        
-        // Initialize resources for new partitions
-        initializeResources(partitions)
-        
-        // Set up state for new assignments
-        setupPartitionState(partitions)
-    }
-    
-    @KafkaListener(
-        topics = ["order-events"],
-        groupId = "rebalance-aware-group"
-    )
-    fun processOrder(
-        @Payload order: OrderEvent,
-        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
-        acknowledgment: Acknowledgment
+    fun inspectMessage(
+        topic: String,
+        partition: Int,
+        offset: Long,
+        key: String?,
+        value: Any?,
+        headers: RecordHeaders
     ) {
+        logger.debug("""
+            📨 Message Debug Info:
+            Topic: $topic
+            Partition: $partition  
+            Offset: $offset
+            Key: $key
+            Value Type: ${value?.javaClass?.simpleName}
+            Headers: ${headers.map { "${it.key()}=${String(it.value())}" }}
+            Timestamp: ${System.currentTimeMillis()}
+        """.trimIndent())
+    }
+    
+    fun inspectConsumerState(consumer: Consumer<*, *>) {
+        val assignment = consumer.assignment()
+        val positions = assignment.map { partition ->
+            "$partition: ${consumer.position(partition)}"
+        }
+        
+        logger.debug("""
+            🔍 Consumer Debug Info:
+            Assignment: $assignment
+            Positions: $positions
+            Committed: ${consumer.committed(assignment)}
+        """.trimIndent())
+    }
+}
+```
+
+### 2. **Performance Profiling**
+
+```kotlin
+@Component
+class KafkaPerformanceProfiler {
+    
+    private val processingTimes = mutableMapOf<String, MutableList<Long>>()
+    
+    fun profileOperation(operationName: String, operation: () -> Unit) {
+        val startTime = System.nanoTime()
+        
         try {
-            // Process order
-            orderService.processOrder(order)
+            operation()
+        } finally {
+            val duration = System.nanoTime() - startTime
+            processingTimes.computeIfAbsent(operationName) { mutableListOf() }.add(duration)
             
-            // Acknowledge after successful processing
-            acknowledgment.acknowledge()
+            // Log if operation is slow
+            if (duration > 1_000_000_000) { // 1 second
+                logger.warn("Slow operation detected: $operationName took ${duration / 1_000_000}ms")
+            }
+        }
+    }
+    
+    fun getPerformanceReport(): Map<String, Map<String, Double>> {
+        return processingTimes.mapValues { (_, times) ->
+            mapOf(
+                "avg" to times.average(),
+                "min" to times.minOrNull()?.toDouble() ?: 0.0,
+                "max" to times.maxOrNull()?.toDouble() ?: 0.0,
+                "count" to times.size.toDouble()
+            )
+        }
+    }
+}
+```
+
+### 3. **Error Tracking & Analysis**
+
+```kotlin
+@Component
+class KafkaErrorTracker {
+    
+    private val errorCounts = ConcurrentHashMap<String, AtomicLong>()
+    private val recentErrors = ConcurrentLinkedQueue<ErrorInfo>()
+    
+    data class ErrorInfo(
+        val timestamp: Instant,
+        val topic: String,
+        val partition: Int,
+        val offset: Long,
+        val errorType: String,
+        val message: String
+    )
+    
+    fun trackError(
+        topic: String,
+        partition: Int,
+        offset: Long,
+        exception: Exception
+    ) {
+        val errorType = exception.javaClass.simpleName
+        errorCounts.computeIfAbsent(errorType) { AtomicLong(0) }.incrementAndGet()
+        
+        recentErrors.offer(ErrorInfo(
+            timestamp = Instant.now(),
+            topic = topic,
+            partition = partition,
+            offset = offset,
+            errorType = errorType,
+            message = exception.message ?: "Unknown error"
+        ))
+        
+        // Keep only recent errors (last 100)
+        while (recentErrors.size > 100) {
+            recentErrors.poll()
+        }
+        
+        logger.error("Kafka processing error: topic=$topic, partition=$partition, offset=$offset", exception)
+    }
+    
+    fun getErrorSummary(): Map<String, Any> {
+        return mapOf(
+            "errorCounts" to errorCounts.mapValues { it.value.get() },
+            "recentErrors" to recentErrors.toList(),
+            "totalErrors" to errorCounts.values.sumOf { it.get() }
+        )
+    }
+}
+```
+
+## 📈 **Monitoring & Metrics Setup**
+
+### 1. **Application Metrics with Micrometer**
+
+```kotlin
+@Configuration
+class KafkaMetricsConfig {
+    
+    @Bean
+    fun kafkaMetrics(): MeterBinder {
+        return object : MeterBinder {
+            override fun bindTo(registry: MeterRegistry) {
+                // Producer metrics
+                Gauge.builder("kafka.producer.connections")
+                    .description("Number of active producer connections")
+                    .register(registry) { getActiveProducerConnections() }
+                
+                // Consumer metrics  
+                Gauge.builder("kafka.consumer.lag.max")
+                    .description("Maximum consumer lag across all partitions")
+                    .register(registry) { getMaxConsumerLag() }
+                
+                // Processing metrics
+                Timer.builder("kafka.message.processing.time")
+                    .description("Time to process Kafka messages")
+                    .register(registry)
+            }
+        }
+    }
+    
+    private fun getActiveProducerConnections(): Double {
+        // Implementation to get producer connection count
+        return 0.0
+    }
+    
+    private fun getMaxConsumerLag(): Double {
+        // Implementation to get max consumer lag
+        return 0.0
+    }
+}
+```
+
+### 2. **Health Checks**
+
+```kotlin
+@Component
+class KafkaHealthIndicator : HealthIndicator {
+    
+    @Autowired
+    private lateinit var kafkaAdmin: KafkaAdmin
+    
+    override fun health(): Health {
+        return try {
+            // Test connectivity
+            val adminClient = AdminClient.create(kafkaAdmin.configurationProperties)
+            val clusterInfo = adminClient.describeCluster()
+            val nodeCount = clusterInfo.nodes().get(5, TimeUnit.SECONDS).size
             
+            adminClient.close()
+            
+            Health.up()
+                .withDetail("cluster_id", clusterInfo.clusterId().get())
+                .withDetail("node_count", nodeCount)
+                .withDetail("bootstrap_servers", kafkaAdmin.configurationProperties["bootstrap.servers"])
+                .build()
+                
         } catch (e: Exception) {
-            logger.error("Failed to process order: ${order.orderId}", e)
-            // Don't acknowledge - message will be retried
+            Health.down()
+                .withDetail("error", e.message)
+                .build()
         }
     }
 }
 ```
 
-## 📊 **Scaling Patterns & Best Practices**
-
-### 1. **Optimal Consumer Count**
-
-```kotlin
-// Rule of thumb: consumers ≤ partitions
-val topicPartitions = 12
-val optimalConsumers = min(topicPartitions, availableCpuCores)
-
-// Over-provisioning consumers wastes resources
-val consumers = 15  // ❌ Only 12 will be active
-val consumers = 8   // ✅ All consumers active, room for scaling
-```
-
-### 2. **Consumer Configuration for Scaling**
-
-```yaml
-spring:
-  kafka:
-    consumer:
-      # Faster rebalancing
-      session-timeout-ms: 10000      # Default: 30000
-      heartbeat-interval-ms: 3000    # Default: 3000
-      
-      # Processing optimization  
-      max-poll-records: 100          # Default: 500
-      max-poll-interval-ms: 300000   # Default: 300000
-      
-      # Memory and performance
-      fetch-min-size: 50000          # Default: 1
-      fetch-max-wait-ms: 500         # Default: 500
-```
-
-### 3. **Dynamic Scaling Implementation**
+### 3. **Custom Actuator Endpoints**
 
 ```kotlin
 @Component
-class DynamicConsumerScaler {
+@Endpoint(id = "kafka")
+class KafkaActuatorEndpoint {
     
     @Autowired
-    private lateinit var kafkaListenerEndpointRegistry: KafkaListenerEndpointRegistry
-    
-    @Scheduled(fixedRate = 60000) // Check every minute
-    fun checkAndScale() {
-        val consumerLag = getConsumerLag("order-processing-group")
-        val currentConcurrency = getCurrentConcurrency()
-        
-        when {
-            consumerLag > 1000 && currentConcurrency < maxConcurrency -> {
-                scaleUp()
-                logger.info("Scaled up consumers due to high lag: $consumerLag")
-            }
-            consumerLag < 100 && currentConcurrency > minConcurrency -> {
-                scaleDown()
-                logger.info("Scaled down consumers due to low lag: $consumerLag")
-            }
-        }
-    }
-    
-    private fun scaleUp() {
-        val container = kafkaListenerEndpointRegistry.getListenerContainer("order-processor")
-        container?.let {
-            it.concurrency = it.concurrency + 1
-            logger.info("Increased concurrency to: ${it.concurrency}")
-        }
-    }
-    
-    private fun scaleDown() {
-        val container = kafkaListenerEndpointRegistry.getListenerContainer("order-processor")
-        container?.let {
-            if (it.concurrency > 1) {
-                it.concurrency = it.concurrency - 1
-                logger.info("Decreased concurrency to: ${it.concurrency}")
-            }
-        }
-    }
-}
-```
-
-## 🔧 **Advanced Consumer Group Management**
-
-### 1. **Multiple Consumer Groups per Topic**
-
-```mermaid
-graph TB
-    subgraph "Topic: user-events"
-        P0[Partition 0]
-        P1[Partition 1]
-        P2[Partition 2]
-    end
-    
-    subgraph "Group 1: email-service"
-        E1[Email Consumer 1]
-        E2[Email Consumer 2]
-    end
-    
-    subgraph "Group 2: analytics-service"
-        A1[Analytics Consumer 1]
-        A2[Analytics Consumer 2]
-    end
-    
-    subgraph "Group 3: audit-service"
-        AU1[Audit Consumer]
-    end
-    
-    P0 --> E1
-    P1 --> E2
-    P2 --> E1
-    
-    P0 --> A1
-    P1 --> A2
-    P2 --> A1
-    
-    P0 --> AU1
-    P1 --> AU1
-    P2 --> AU1
-```
-
-```kotlin
-// Email service consumer
-@KafkaListener(
-    topics = ["user-events"],
-    groupId = "email-service-group"
-)
-fun processForEmail(@Payload event: UserEvent) {
-    emailService.sendWelcomeEmail(event)
-}
-
-// Analytics service consumer
-@KafkaListener(
-    topics = ["user-events"],
-    groupId = "analytics-service-group"
-)
-fun processForAnalytics(@Payload event: UserEvent) {
-    analyticsService.trackUserEvent(event)
-}
-
-// Audit service consumer
-@KafkaListener(
-    topics = ["user-events"],
-    groupId = "audit-service-group"
-)
-fun processForAudit(@Payload event: UserEvent) {
-    auditService.logUserEvent(event)
-}
-```
-
-### 2. **Consumer Group Monitoring**
-
-```kotlin
-@Component
-class ConsumerGroupMonitor {
+    private lateinit var kafkaErrorTracker: KafkaErrorTracker
     
     @Autowired
-    private lateinit var adminClient: AdminClient
+    private lateinit var kafkaPerformanceProfiler: KafkaPerformanceProfiler
     
-    fun getConsumerGroupInfo(groupId: String): ConsumerGroupInfo {
-        val groupDescription = adminClient.describeConsumerGroups(listOf(groupId))
-            .all()
-            .get()
-            .getValue(groupId)
-        
-        val groupOffsets = adminClient.listConsumerGroupOffsets(groupId)
-            .partitionsToOffsetAndMetadata()
-            .get()
-        
-        return ConsumerGroupInfo(
-            groupId = groupId,
-            state = groupDescription.state().toString(),
-            members = groupDescription.members().map { member ->
-                ConsumerMemberInfo(
-                    memberId = member.consumerId(),
-                    clientId = member.clientId(),
-                    host = member.host(),
-                    assignment = member.assignment().topicPartitions().map { 
-                        "${it.topic()}-${it.partition()}" 
-                    }
-                )
-            },
-            totalLag = calculateTotalLag(groupOffsets)
+    @ReadOperation
+    fun kafkaInfo(): Map<String, Any> {
+        return mapOf(
+            "errors" to kafkaErrorTracker.getErrorSummary(),
+            "performance" to kafkaPerformanceProfiler.getPerformanceReport(),
+            "topics" to getTopicInfo(),
+            "consumers" to getConsumerGroupInfo()
         )
     }
     
-    @Scheduled(fixedRate = 30000)
-    fun monitorConsumerGroups() {
-        val groups = listOf("email-service-group", "analytics-service-group", "audit-service-group")
-        
-        groups.forEach { groupId ->
-            try {
-                val info = getConsumerGroupInfo(groupId)
-                logger.info("Consumer group $groupId: state=${info.state}, members=${info.members.size}, lag=${info.totalLag}")
-                
-                if (info.totalLag > 1000) {
-                    logger.warn("High consumer lag detected for group $groupId: ${info.totalLag}")
-                    // Trigger alert or scaling action
-                }
-                
-            } catch (e: Exception) {
-                logger.error("Failed to monitor consumer group $groupId", e)
-            }
+    @ReadOperation
+    fun kafkaHealth(@Selector component: String): Map<String, Any> {
+        return when (component) {
+            "producers" -> getProducerHealth()
+            "consumers" -> getConsumerHealth()
+            "topics" -> getTopicHealth()
+            else -> mapOf("error" to "Unknown component: $component")
         }
+    }
+    
+    private fun getTopicInfo(): List<Map<String, Any>> {
+        // Implementation to get topic information
+        return emptyList()
+    }
+    
+    private fun getConsumerGroupInfo(): List<Map<String, Any>> {
+        // Implementation to get consumer group information
+        return emptyList()
+    }
+    
+    private fun getProducerHealth(): Map<String, Any> {
+        // Implementation to check producer health
+        return mapOf("status" to "UP")
+    }
+    
+    private fun getConsumerHealth(): Map<String, Any> {
+        // Implementation to check consumer health
+        return mapOf("status" to "UP")
+    }
+    
+    private fun getTopicHealth(): Map<String, Any> {
+        // Implementation to check topic health
+        return mapOf("status" to "UP")
     }
 }
 ```
 
-### 3. **Consumer Group Reset & Management**
+## 🚀 **CLI Tools & Automation**
 
-```kotlin
-@RestController
-@RequestMapping("/api/consumer-groups")
-class ConsumerGroupController {
-    
-    @Autowired
-    private lateinit var adminClient: AdminClient
-    
-    @PostMapping("/{groupId}/reset")
-    fun resetConsumerGroup(
-        @PathVariable groupId: String,
-        @RequestParam strategy: ResetStrategy = ResetStrategy.EARLIEST
-    ): ResponseEntity<String> {
-        
-        return try {
-            // Stop consumers first (in production, coordinate this carefully)
-            stopConsumers(groupId)
-            
-            // Reset offsets based on strategy
-            when (strategy) {
-                ResetStrategy.EARLIEST -> resetToEarliest(groupId)
-                ResetStrategy.LATEST -> resetToLatest(groupId)
-                ResetStrategy.TIMESTAMP -> resetToTimestamp(groupId, Instant.now().minusSeconds(3600))
-            }
-            
-            ResponseEntity.ok("Consumer group $groupId reset successfully")
-            
-        } catch (e: Exception) {
-            ResponseEntity.status(500).body("Failed to reset consumer group: ${e.message}")
-        }
-    }
-    
-    @GetMapping("/{groupId}/lag")
-    fun getConsumerGroupLag(@PathVariable groupId: String): ResponseEntity<Map<String, Long>> {
-        return try {
-            val lag = calculateConsumerGroupLag(groupId)
-            ResponseEntity.ok(lag)
-        } catch (e: Exception) {
-            ResponseEntity.status(500).body(emptyMap())
-        }
-    }
-}
-```
+### 1. **Custom CLI Scripts**
 
-## ⚠️ **Common Pitfalls & Solutions**
+```bash
+#!/bin/bash
+# kafka-dev-tools.sh - Development automation script
 
-### 1. **Rebalancing Storms**
+# Set Kafka broker
+KAFKA_BROKER="localhost:9092"
+KAFKA_CONTAINER="kafka-starter-broker"
 
-```kotlin
-// ❌ Problem: Frequent rebalancing due to long processing
-@KafkaListener(topics = ["slow-topic"])
-fun slowProcessor(event: Event) {
-    Thread.sleep(60000) // 1 minute processing
-    // Exceeds max.poll.interval.ms, triggers rebalancing
+function list_topics() {
+    echo "📋 Available Topics:"
+    docker exec $KAFKA_CONTAINER kafka-topics \
+        --list \
+        --bootstrap-server $KAFKA_BROKER
 }
 
-// ✅ Solution: Optimize processing or increase timeout
-@KafkaListener(topics = ["slow-topic"])
-fun optimizedProcessor(event: Event) {
-    // Break down processing into smaller chunks
-    processInChunks(event)
-    
-    // Or increase max.poll.interval.ms in configuration
+function describe_topic() {
+    local topic=$1
+    echo "🔍 Topic Details: $topic"
+    docker exec $KAFKA_CONTAINER kafka-topics \
+        --describe \
+        --topic $topic \
+        --bootstrap-server $KAFKA_BROKER
 }
-```
 
-### 2. **Uneven Partition Distribution**
-
-```kotlin
-// ❌ Problem: Hot partitions with uneven load
-val userKey = event.userId // Some users much more active
-
-// ✅ Solution: Better partition key strategy
-val partitionKey = "${event.userId}-${event.timestamp % 1000}" // Spread load
-```
-
-### 3. **Consumer Lag Accumulation**
-
-```kotlin
-// ❌ Problem: Single slow consumer blocks entire group
-@KafkaListener(topics = ["mixed-load-topic"], concurrency = "1")
-fun slowConsumer(event: Event) { /* slow processing */ }
-
-// ✅ Solution: Separate fast and slow processing
-@KafkaListener(topics = ["fast-events"], concurrency = "5")
-fun fastConsumer(event: FastEvent) { /* quick processing */ }
-
-@KafkaListener(topics = ["slow-events"], concurrency = "2")  
-fun slowConsumer(event: SlowEvent) { /* deliberate slow processing */ }
-```
-
-## 📈 **Performance Optimization**
-
-### 1. **Batching for Efficiency**
-
-```kotlin
-@Component
-class BatchProcessor {
-    
-    private val batch = mutableListOf<OrderEvent>()
-    private val batchSize = 100
-    
-    @KafkaListener(topics = ["orders"])
-    fun processOrder(@Payload event: OrderEvent, acknowledgment: Acknowledgment) {
-        synchronized(batch) {
-            batch.add(event)
-            
-            if (batch.size >= batchSize) {
-                processBatch(batch.toList())
-                batch.clear()
-            }
-        }
-        
-        acknowledgment.acknowledge()
-    }
-    
-    @Scheduled(fixedRate = 5000) // Process remaining every 5 seconds
-    fun processRemainingBatch() {
-        synchronized(batch) {
-            if (batch.isNotEmpty()) {
-                processBatch(batch.toList())
-                batch.clear()
-            }
-        }
-    }
+function tail_topic() {
+    local topic=$1
+    echo "👁️ Watching topic: $topic (Ctrl+C to stop)"
+    docker exec -it $KAFKA_CONTAINER kafka-console-consumer \
+        --topic $topic \
+        --bootstrap-server $KAFKA_BROKER \
+        --from-beginning
 }
+
+function check_consumer_lag() {
+    local group=$1
+    echo "📊 Consumer Group Lag: $group"
+    docker exec $KAFKA_CONTAINER kafka-consumer-groups \
+        --bootstrap-server $KAFKA_BROKER \
+        --group $group \
+        --describe
+}
+
+function reset_consumer_group() {
+    local group=$1
+    local topic=$2
+    echo "🔄 Resetting consumer group: $group for topic: $topic"
+    docker exec $KAFKA_CONTAINER kafka-consumer-groups \
+        --bootstrap-server $KAFKA_BROKER \
+        --group $group \
+        --topic $topic \
+        --reset-offsets \
+        --to-earliest \
+        --execute
+}
+
+# Main menu
+case "$1" in
+    "topics") list_topics ;;
+    "describe") describe_topic $2 ;;
+    "tail") tail_topic $2 ;;
+    "lag") check_consumer_lag $2 ;;
+    "reset") reset_consumer_group $2 $3 ;;
+    *)
+        echo "Kafka Development Tools"
+        echo "Usage: $0 {topics|describe|tail|lag|reset} [args]"
+        echo ""
+        echo "Commands:"
+        echo "  topics              - List all topics"
+        echo "  describe <topic>    - Show topic details"
+        echo "  tail <topic>        - Watch topic messages"
+        echo "  lag <group>         - Check consumer group lag"
+        echo "  reset <group> <topic> - Reset consumer offsets"
+        ;;
+esac
 ```
 
-### 2. **Memory-Efficient Processing**
+### 2. **Development Environment Setup**
 
-```yaml
-spring:
-  kafka:
-    consumer:
-      # Limit memory usage
-      max-poll-records: 50           # Smaller batches
-      fetch-max-bytes: 52428800      # 50MB max fetch
-      
-      # Optimize for throughput
-      fetch-min-size: 100000         # Wait for more data
-      fetch-max-wait-ms: 1000        # But not too long
+```bash
+#!/bin/bash
+# setup-dev-env.sh - Initialize development environment
+
+echo "🚀 Setting up Kafka development environment..."
+
+# Start Docker services
+echo "📦 Starting Docker services..."
+cd docker && docker-compose up -d
+
+# Wait for services to be ready
+echo "⏳ Waiting for Kafka to be ready..."
+sleep 30
+
+# Create development topics
+echo "📝 Creating development topics..."
+docker exec kafka-starter-broker kafka-topics \
+    --create --topic user-events-dev \
+    --bootstrap-server localhost:9092 \
+    --partitions 3 --replication-factor 1
+
+docker exec kafka-starter-broker kafka-topics \
+    --create --topic order-events-dev \
+    --bootstrap-server localhost:9092 \
+    --partitions 6 --replication-factor 1
+
+# Verify setup
+echo "✅ Verifying setup..."
+curl -f http://localhost:8080/api/health > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "✅ Kafka UI is ready: http://localhost:8080"
+else
+    echo "❌ Kafka UI is not responding"
+fi
+
+curl -f http://localhost:8081/ > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "✅ Schema Registry is ready: http://localhost:8081"
+else
+    echo "❌ Schema Registry is not responding"
+fi
+
+echo "🎉 Development environment is ready!"
+echo ""
+echo "🔗 Useful URLs:"
+echo "  Kafka UI: http://localhost:8080"
+echo "  AKHQ: http://localhost:8082"
+echo "  Schema Registry: http://localhost:8081"
+echo ""
+echo "🛠️ Useful commands:"
+echo "  ./kafka-dev-tools.sh topics"
+echo "  ./kafka-dev-tools.sh describe user-events-dev"
+echo "  ./kafka-dev-tools.sh tail user-events-dev"
+```
+
+## 🔍 **Troubleshooting Guide**
+
+### Common Issues & Solutions
+
+#### 1. **Consumer Lag Issues**
+```bash
+# Symptoms: Messages piling up, slow processing
+# Diagnosis:
+docker exec kafka-starter-broker kafka-consumer-groups \
+    --bootstrap-server localhost:9092 \
+    --group your-group \
+    --describe
+
+# Solutions:
+# - Increase consumer instances
+# - Optimize processing logic
+# - Check for poison messages
+# - Review partition strategy
+```
+
+#### 2. **Schema Registry Issues**
+```bash
+# Symptoms: Serialization errors, schema not found
+# Diagnosis:
+curl http://localhost:8081/subjects
+curl http://localhost:8081/subjects/your-topic-value/versions
+
+# Solutions:
+# - Verify schema registration
+# - Check compatibility settings
+# - Validate schema format
+# - Review trusted packages config
+```
+
+#### 3. **Connection Issues**
+```bash
+# Symptoms: Unable to connect to Kafka
+# Diagnosis:
+docker-compose ps
+docker-compose logs kafka
+telnet localhost 9092
+
+# Solutions:
+# - Check Docker services are running
+# - Verify port mappings
+# - Review network configuration
+# - Check firewall settings
 ```
 
 ## ✅ **Best Practices Summary**
 
-### 🎯 **Consumer Group Design**
-- **Align partitions with expected consumer count**
-- **Use meaningful group IDs** that reflect business purpose
-- **Plan for scaling** - start with fewer consumers than partitions
-- **Monitor rebalancing frequency** and optimize accordingly
+### 🧪 **Testing**
+- **Unit test** business logic with mocks
+- **Integration test** with embedded Kafka
+- **Load test** with realistic data volumes
+- **Chaos test** failure scenarios
 
-### ⚖️ **Rebalancing Optimization**
-- **Use Cooperative Sticky Assignor** for minimal disruption
-- **Implement graceful shutdown** in rebalance listeners
-- **Optimize processing time** to avoid timeouts
-- **Monitor and alert on rebalancing events**
+### 🔍 **Debugging**
+- **Enable debug logging** for Kafka clients
+- **Use structured logging** with correlation IDs
+- **Monitor consumer lag** and partition distribution
+- **Track message processing times**
 
-### 📊 **Scaling Strategy**
-- **Start small and scale up** based on lag monitoring
-- **Use multiple small groups** rather than one large group
-- **Implement automatic scaling** based on metrics
-- **Test scaling scenarios** in development
+### 📊 **Monitoring**
+- **Set up dashboards** for key metrics
+- **Create alerts** for anomalies
+- **Monitor JVM metrics** alongside Kafka metrics
+- **Track business metrics** not just technical ones
 
-### 🔍 **Monitoring & Alerting**
-- **Track consumer lag** per partition and group
-- **Monitor rebalancing frequency and duration**
-- **Alert on consumer failures** and group instability
-- **Measure processing throughput and latency**
+### 🛠️ **Development Workflow**
+- **Automate environment setup** with scripts
+- **Use version control** for schemas
+- **Implement circuit breakers** for resilience
+- **Practice failure scenarios** regularly
 
 ## 🚀 **What's Next?**
 
-You've mastered consumer scaling and load balancing! Next, learn how to handle failures gracefully in [Lesson 8: Retry Strategies & Dead Letter Topics](../lesson_8/concept.md), where you'll implement robust error handling and recovery patterns.
+Congratulations! You've completed **Phase 1: Kafka Foundations**. You now have solid grounding in:
+
+✅ **Event-driven architecture** principles  
+✅ **Producer/Consumer patterns** with Spring Boot  
+✅ **Topic and partition management**  
+✅ **Schema evolution** with Avro/Protobuf  
+✅ **Development tools** and best practices  
+
+Ready for **Phase 2: Building Resilient Messaging Patterns**? Start with [Lesson 7: Consumer Groups & Load Balancing](../lesson_8/concept.md) to learn advanced consumer patterns and scalability techniques.
 
 ---
 
-*Consumer groups are the foundation of scalable Kafka architectures. With proper group management and scaling strategies, you can build systems that handle millions of events while maintaining reliability and performance.*
+*With these development tools and techniques, you're equipped to build, debug, and monitor production-ready Kafka applications. The foundation is complete - time to build resilient, scalable systems!*

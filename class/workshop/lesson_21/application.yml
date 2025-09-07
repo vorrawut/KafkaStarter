@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: kafka-deployment-lesson20
+
+  # Kafka configuration for Lesson 20 - Deployment & Scaling
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      # TODO: Add production-ready producer configuration
+      
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:lesson20-deployment-group}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      # TODO: Add production-ready consumer configuration
+
+server:
+  port: ${SERVER_PORT:8096}
+
+# TODO: Configure for different environments
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
+
+# TODO: Configure production monitoring and observability
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  # TODO: Add production monitoring configuration
+
+# TODO: Configure logging for production
+logging:
+  level:
+    com.learning.KafkaStarter: ${LOG_LEVEL:INFO}
+    org.springframework.kafka: WARN
+
+# TODO: Configure deployment-specific settings
+deployment:
+  # TODO: Add scaling and deployment configuration

@@ -1,6 +1,6 @@
 {
   "id": "workshop/lesson_8/README",
-  "title": "Workshop: Error Handling & Dead Letter Topics",
+  "title": "Workshop: Consumer Groups & Load Balancing",
   "description": "🎯 Objective",
   "source": "@site/../class/workshop/lesson_8/README.md",
   "sourceDirName": "workshop/lesson_8",

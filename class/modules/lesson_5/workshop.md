@@ -441,7 +441,7 @@ After completing this workshop, you'll understand:
 
 ## 🚀 Next Steps
 
-Once you've mastered structured data with Schema Registry, you're ready for [Lesson 6: Development Tools](../lesson_6/concept.md), where you'll learn debugging, testing, and monitoring tools for production Kafka applications.
+Once you've mastered structured data with Schema Registry, you're ready for [Lesson 6: Development Tools](../lesson_7/concept.md), where you'll learn debugging, testing, and monitoring tools for production Kafka applications.
 
 ---
 
