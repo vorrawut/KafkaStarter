@@ -44,15 +44,15 @@ export default [
   },
   {
     path: '/KafkaStarter/curriculum',
-    component: ComponentCreator('/KafkaStarter/curriculum', '942'),
+    component: ComponentCreator('/KafkaStarter/curriculum', 'd7c'),
     routes: [
       {
         path: '/KafkaStarter/curriculum',
-        component: ComponentCreator('/KafkaStarter/curriculum', '3fa'),
+        component: ComponentCreator('/KafkaStarter/curriculum', 'ebe'),
         routes: [
           {
             path: '/KafkaStarter/curriculum',
-            component: ComponentCreator('/KafkaStarter/curriculum', '205'),
+            component: ComponentCreator('/KafkaStarter/curriculum', 'a2c'),
             routes: [
               {
                 path: '/KafkaStarter/curriculum/CURRICULUM_GUIDE',
@@ -318,33 +318,28 @@ export default [
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_3/',
-                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_3/', 'dd9'),
-                exact: true,
-                sidebar: "tutorialSidebar"
+                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_3/', '4ed'),
+                exact: true
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_4/',
-                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_4/', 'ace'),
-                exact: true,
-                sidebar: "tutorialSidebar"
+                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_4/', '0e4'),
+                exact: true
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_5/',
-                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_5/', 'f97'),
-                exact: true,
-                sidebar: "tutorialSidebar"
+                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_5/', 'af5'),
+                exact: true
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_6/',
-                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_6/', '959'),
-                exact: true,
-                sidebar: "tutorialSidebar"
+                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_6/', '530'),
+                exact: true
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_7/',
-                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_7/', '640'),
-                exact: true,
-                sidebar: "tutorialSidebar"
+                component: ComponentCreator('/KafkaStarter/curriculum/workshop/lesson_7/', '12b'),
+                exact: true
               },
               {
                 path: '/KafkaStarter/curriculum/workshop/lesson_8/',

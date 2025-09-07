@@ -37,7 +37,6 @@ const sidebars = {
           items: [
             "modules/lesson_3/concept",
             "modules/lesson_3/workshop",
-            "workshop/lesson_3/README",
           ],
         },
         {
@@ -46,7 +45,6 @@ const sidebars = {
           items: [
             "modules/lesson_4/concept",
             "modules/lesson_4/workshop",
-            "workshop/lesson_4/README",
           ],
         },
         {
@@ -55,7 +53,6 @@ const sidebars = {
           items: [
             "modules/lesson_5/concept",
             "modules/lesson_5/workshop",
-            "workshop/lesson_5/README",
           ],
         },
         {
@@ -64,7 +61,6 @@ const sidebars = {
           items: [
             "modules/lesson_6/concept",
             "modules/lesson_6/workshop",
-            "workshop/lesson_6/README",
           ],
         },
         {
@@ -73,7 +69,6 @@ const sidebars = {
           items: [
             "modules/lesson_7/concept",
             "modules/lesson_7/workshop",
-            "workshop/lesson_7/README",
           ],
         },
       ],

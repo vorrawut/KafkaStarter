@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: Development Tools & Testing Framework",
-    "permalink": "/KafkaStarter/curriculum/workshop/lesson_7/"
+    "title": "Workshop",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_7/workshop"
   },
   "next": {
     "title": "Workshop: Consumer Groups & Load Balancing",

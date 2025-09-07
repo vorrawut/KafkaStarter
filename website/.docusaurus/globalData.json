@@ -230,28 +230,23 @@
             },
             {
               "id": "workshop/lesson_3/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_3/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_3/"
             },
             {
               "id": "workshop/lesson_4/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_4/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_4/"
             },
             {
               "id": "workshop/lesson_5/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_5/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_5/"
             },
             {
               "id": "workshop/lesson_6/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_6/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_6/"
             },
             {
               "id": "workshop/lesson_7/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_7/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_7/"
             },
             {
               "id": "workshop/lesson_8/README",

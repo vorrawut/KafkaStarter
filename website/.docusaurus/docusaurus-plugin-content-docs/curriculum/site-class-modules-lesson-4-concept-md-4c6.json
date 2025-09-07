@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Workshop: First Producer/Consumer - Hello Kafka!",
-    "permalink": "/KafkaStarter/curriculum/workshop/lesson_3/"
+    "title": "workshop",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/workshop"
   },
   "next": {
     "title": "Workshop",
