@@ -1,20 +1,19 @@
 # Concept
 
+
+## What is Kafka? 
+
+Apache Kafka is a **distributed messaging system** that acts like a **digital post office** for applications. It allows different software systems to send and receive messages (called events) in real-time, without needing to talk directly to each other.
+
+### Kafka in real-world scenario
+
+คุณกำลังนั่งทำงานอยู่ในคาเฟ่แห่งนึง อยู่ดี ๆ คุณก็ได้ยินเสียงสนทนาของผู้หญิง 2 คนกำลังนินทาคนอื่นอยู่ เมื่อคุณเริ่มได้ยินดังนั้นคุณจึงเริ่มแอบฟัง (subscribe) อย่างเงียบ ๆ
+
+![meme_lesson1](resources/meme_lesson1.png "subscribe topic")
+
 ## Why Kafka? Understanding Event-Driven Architecture
 
-## 🎯 Learning Objectives
-
-By the end of this lesson, you will:
-- **Understand** event-driven architecture principles and benefits
-- **Compare** traditional synchronous vs event-driven approaches  
-- **Identify** real-world scenarios where Kafka excels
-- **Design** basic event flows for business processes
-- **Evaluate** when to use events vs direct service calls
-
 ## 🧠 Core Concepts
-
-### Imagine
-้เราอยู่ในที่สาธารณะ ถ้าเรานั่งเหม่อ ๆ  ก็เหมือนไม่ได้ฟัง topic อะไร ถ้าเราเริ่มสนใจเรื่องของใครซักคนแปลว่าเราเริ่ม subscribe แล้ว
 
 ### What is Event-Driven Architecture?
 
@@ -104,6 +103,13 @@ sequenceDiagram
 - **Independent Scaling**: Each service scales based on its workload
 - **Easy Extension**: New services can subscribe to existing events
 
+| **Without Kafka** | **With Kafka** |
+|------------------|----------------|
+| Services call each other directly | Services communicate through events |
+| If one service fails, others break | Services work independently |
+| Hard to add new features | Easy to add new services |
+| Tightly connected (rigid) | Loosely connected (flexible) |
+
 ## 🏢 Real-World Use Cases
 
 ### 1. **E-Commerce Platforms**
@@ -134,62 +140,6 @@ sequenceDiagram
 - Real-time feed updates and notifications
 - Content recommendation engines
 
-## 🎯 When to Use Events vs Direct Calls
-
-### Use Events When:
-- ✅ **Multiple consumers** need the same information
-- ✅ **Decoupling** is important for independent development
-- ✅ **Audit trails** and event history are required
-- ✅ **Asynchronous processing** is acceptable
-- ✅ **Scalability** and fault tolerance are priorities
-
-### Use Direct Calls When:
-- ✅ **Immediate response** is required
-- ✅ **Simple request-response** pattern suffices
-- ✅ **Strong consistency** is critical
-- ✅ **Low complexity** and few integrations
-- ✅ **Synchronous workflows** are necessary
-
-## 📊 Decision Framework
-
-```mermaid
-flowchart TD
-    A[New Integration Need] --> B{Multiple Consumers?}
-    B -->|Yes| C[Use Events]
-    B -->|No| D{Need Decoupling?}
-    D -->|Yes| C
-    D -->|No| E{Async OK?}
-    E -->|Yes| F{Audit Trail Needed?}
-    E -->|No| G[Direct Call]
-    F -->|Yes| C
-    F -->|No| H{High Volume?}
-    H -->|Yes| C
-    H -->|No| G
-    
-    style C fill:#4ecdc4
-    style G fill:#ffe66d
-```
-
-## 🔄 Common Patterns
-
-### **Event Sourcing**
-Store events as the primary source of truth
-```
-UserRegistered → UserEmailChanged → UserUpgraded
-```
-
-### **CQRS (Command Query Responsibility Segregation)**
-Separate read and write models using events
-```
-Commands → Events → Read Models
-```
-
-### **Saga Pattern**
-Manage distributed transactions through event choreography
-```
-OrderCreated → PaymentRequested → InventoryReserved → OrderConfirmed
-```
-
 ## 🎪 Real-World Example: Netflix
 
 Netflix processes trillions of events daily:
@@ -203,14 +153,3 @@ This enables:
 - **Global Content Delivery**: Optimized based on viewing patterns
 - **Operational Excellence**: Predictive scaling and maintenance
 - **Business Intelligence**: Content investment decisions
-
-
-## 🚀 What's Next?
-
-Now that you understand **why** event-driven architecture and Kafka matter, let's get hands-on! 
-
-**Next**: [Lesson 2 - Environment Setup](../lesson_2/concept.md) where you'll set up your complete Kafka development environment and see events in action.
-
----
-
-*"The best way to understand events is to start producing and consuming them. Let's build something real!"*
