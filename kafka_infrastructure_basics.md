@@ -1,12 +1,12 @@
-# Concept
+# Kafka Infrastructure Basics - 101 Guide
 
-## Kafka Infrastructure
+## 🏗️ Overview: The Kafka Ecosystem
 
 Think of Kafka infrastructure like a **large apartment complex** with multiple buildings, mailboxes, and delivery systems all working together.
 
 ## 🏢 Core Infrastructure Components
 
-### 1. **Kafka Cluster**
+### 1. **Kafka Cluster** 
 The entire apartment complex
 - A group of servers working together
 - Provides high availability and fault tolerance
@@ -26,43 +26,43 @@ graph TB
     style B3 fill:#4fc3f7
 ```
 
-### 2. **Brokers**
+### 2. **Brokers** 
 Individual apartment buildings
 - **What it is**: A single Kafka server in the cluster
 - **What it does**: Stores and serves messages
 - **Key points**:
-   - Each broker has a unique ID (0, 1, 2, etc.)
-   - Can handle thousands of topics and partitions
-   - Automatically distributes load
+  - Each broker has a unique ID (0, 1, 2, etc.)
+  - Can handle thousands of topics and partitions
+  - Automatically distributes load
 
-### 3. **Zookeeper/KRaft**
+### 3. **Zookeeper/KRaft** 
 The management office
 - **Zookeeper** (Traditional): External coordination service
 - **KRaft** (New): Built-in coordination (Kafka 2.8+)
 - **Responsibilities**:
-   - Elects broker leaders
-   - Maintains cluster metadata
-   - Manages configuration
+  - Elects broker leaders
+  - Maintains cluster metadata
+  - Manages configuration
 
 ## 📋 Data Organization
 
-### 4. **Topics**
+### 4. **Topics** 
 Different types of mailboxes (e.g., "Bills", "Personal", "Work")
 - **What it is**: A category or feed name
 - **Examples**: `user-activity`, `order-events`, `payment-transactions`
 - **Characteristics**:
-   - Identified by name
-   - Can have multiple producers and consumers
-   - Messages are ordered within partitions
+  - Identified by name
+  - Can have multiple producers and consumers
+  - Messages are ordered within partitions
 
-### 5. **Partitions**
+### 5. **Partitions** 
 Individual slots within each mailbox type
 - **What it is**: A subdivision of a topic
 - **Why needed**: Enables parallel processing and scaling
 - **Key concepts**:
-   - Each partition is ordered (0, 1, 2, 3...)
-   - Messages get sequential IDs called "offsets"
-   - More partitions = more parallelism
+  - Each partition is ordered (0, 1, 2, 3...)
+  - Messages get sequential IDs called "offsets"
+  - More partitions = more parallelism
 
 ```mermaid
 graph TB
@@ -78,7 +78,7 @@ graph TB
     style P2 fill:#ce93d8
 ```
 
-### 6. **Replication**
+### 6. **Replication** 
 Making copies for safety
 - **What it is**: Each partition is copied to multiple brokers
 - **Replication Factor**: Number of copies (typically 3)
@@ -104,20 +104,20 @@ graph LR
 
 ## 🔄 Client Components
 
-### 7. **Producers**
+### 7. **Producers** 
 Mail senders
 - **Role**: Send messages to topics
 - **Smart routing**: Automatically find the right broker
 - **Load balancing**: Distribute messages across partitions
 - **Acknowledgments**: Can wait for confirmation
 
-### 8. **Consumers**
+### 8. **Consumers** 
 Mail receivers
 - **Role**: Read messages from topics
 - **Offset tracking**: Remember what they've read
 - **Pull model**: Consumers request messages (not pushed)
 
-### 9. **Consumer Groups**
+### 9. **Consumer Groups** 
 Households sharing mail delivery
 - **What it is**: Multiple consumers working together
 - **Load sharing**: Each partition assigned to one consumer in group
