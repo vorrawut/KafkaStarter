@@ -1,15 +1,6 @@
 # Concept
 
-## Environment Setup & Kafka Infrastructure
-
-## 🎯 Learning Objectives
-
-By the end of this lesson, you will:
-- **Set up** a complete Kafka development environment using Docker
-- **Understand** the core components of the Kafka ecosystem
-- **Validate** that all services are properly configured and accessible
-- **Master** basic Kafka operations and troubleshooting
-- **Configure** monitoring and observability tools
+## Kafka Infrastructure
 
 ## 🏗️ Kafka Ecosystem Architecture
 

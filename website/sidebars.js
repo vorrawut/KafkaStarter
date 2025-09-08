@@ -24,12 +24,12 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 1: Why Kafka?",
-          items: ["modules/lesson_1/concept", "workshop/lesson_1/README"],
+          items: ["modules/lesson_1/concept"],
         },
         {
           type: "category",
-          label: "Lesson 2: Environment Setup",
-          items: ["modules/lesson_2/concept", "workshop/lesson_2/README"],
+          label: "Lesson 2: Kafka Infrastructure",
+          items: ["modules/lesson_2/concept"],
         },
         {
           type: "category",
