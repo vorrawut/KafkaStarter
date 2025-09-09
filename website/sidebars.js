@@ -35,7 +35,6 @@ const sidebars = {
           type: "category",
           label: "Lesson 3: First Producer/Consumer",
           items: [
-            "modules/lesson_3/concept",
             "modules/lesson_3/workshop",
           ],
         },

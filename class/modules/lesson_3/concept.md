@@ -1,3 +1,0 @@
-# Concept
-
-## First Producer/Consumer
