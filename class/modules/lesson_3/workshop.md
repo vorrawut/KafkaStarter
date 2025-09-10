@@ -107,7 +107,7 @@ kafka-console-consumer   --bootstrap-server localhost:9092   --topic test-topic 
 ```
 
 ### Try sending message over internet!
-Create a properties file named `client.properties`
+Create a properties file named `client.properties` and save into any folder!
 ```properties
 bootstrap.servers=pkc-l7j7w.asia-east1.gcp.confluent.cloud:9092
 security.protocol=SASL_SSL
