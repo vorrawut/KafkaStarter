@@ -93,35 +93,65 @@ A Kafka message has several fields:
 
 ---
 
-## 5. Example: Thermostat Readings
+## 5. log
+![log_cleanup.png](images/log_cleanup.png)
 
-### Database table approach
-| sensor_id | location | temperature | timestamp           |
-|-----------|----------|-------------|---------------------|
-| 42        | kitchen  | 22          | 2025-10-01 10:00:00 |
-| 42        | kitchen  | 24          | 2025-10-01 11:00:00 |
+### Kafka Log Retention vs Compaction
 
-❌ Updates overwrite data → history lost.
+Kafka topics can manage stored messages in two main ways: **retention** and **compaction**.  
+These control *how long* or *which messages* are kept in the log.
 
-### Kafka topic approach
-| Offset | Key (sensor_id) | Value (temperature) | Timestamp           |
-|--------|-----------------|---------------------|---------------------|
-| 0      | 42              | 22                  | 2025-10-01 10:00:00 |
-| 1      | 42              | 24                  | 2025-10-01 11:00:00 |
+### Retention 🕒
+- Keeps **all messages** for a configured time (e.g. 7 days) or until the log reaches a certain size.
+- Messages are removed only after this period/limit, even if they’ve been consumed.
+- Good for event history, analytics, or replay scenarios.
 
-✅ History preserved.
+**Analogy:** Like CCTV footage — everything is recorded and kept for a week, then old recordings are deleted.
 
----
+### Compaction ✂️
+- Keeps **only the latest message per key**, removing older duplicates.
+- Ensures the log always has the most recent state for each key.
+- Good for stateful data (e.g. user profiles, account balances, configuration).
 
-### Kafka topic approach
-Topic: thermostat_readings
+**Analogy:** Like a ledger — you don’t keep every transaction slip, just the latest balance for each account.
 
-Offset | Key (sensor_id) | Value (temperature) | Timestamp
-0 | 42 | 22 | 10:00
-1 | 42 | 24 | 11:00
+=============
+
+**Example**
+
+Imagine you’re tracking **usernames**.  
+Users can change their username many times, but you only care about the **latest username** for each user.
 
 
-✅ History preserved.
+### Without Compaction (Normal Retention)
+
+Kafka log might look like this:
+
+```(user1, Alice)
+(user2, Bob)
+(user1, Alicia)
+(user2, Bobby)
+(user1, Al)
+```
+
+- All historical events are kept until the **retention period** ends (e.g. 7 days).
+- Even if you only need the latest value, the old messages are still stored.
+
+
+### With Compaction
+
+Kafka cleans up old values for the same key (`user1`, `user2`) and keeps only the most recent:
+
+```(user1, Al)
+(user2, Bobby)
+```
+
+👉 This means the topic always contains the **latest version per key**, no matter how many times it was updated before.
+
+### Analogy
+
+- **Retention** = keeping **all your receipts** for 7 days, even for coffee you already drank.
+- **Compaction** = just writing your **current wallet balance** on a sticky note and updating it whenever it changes.
 
 ---
 
