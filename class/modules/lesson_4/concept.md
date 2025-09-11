@@ -142,7 +142,8 @@ Kafka log might look like this:
 
 Kafka cleans up old values for the same key (`user1`, `user2`) and keeps only the most recent:
 
-```(user1, Al)
+```
+(user1, Al)
 (user2, Bobby)
 ```
 
