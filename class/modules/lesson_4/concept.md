@@ -25,9 +25,9 @@
 - **Log = sequence of immutable events/messages**.
 - The equivalent of a table = **topic**.
 
----
-
 ![topic.png](images/topic.png)
+
+---
 
 ## 2. Kafka Topics
 - A **topic** is a named log that stores messages (events).
@@ -79,6 +79,7 @@ A Kafka topic (log) is like a notebook: when someone reads a page, the page does
 ## 4. Kafka Message Structure
 
 ![message.png](images/message.png)
+
 A Kafka message has several fields:
 
 1. **Value** → main event data (JSON, Avro, Protobuf, string, integer, etc.)
