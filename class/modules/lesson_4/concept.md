@@ -50,6 +50,10 @@
 ![img.png](images/kafka_message_3.png)
 
 - There is no fixed limit on the number of topics a Kafka cluster can handle.
+
+**Derive topic from other**
+![deriv_topic.png](images/deriv_topic.png)
+
 ---
 
 ## 3. Kafka ≠ Queue
@@ -68,10 +72,13 @@ A Kafka topic (log) is like a notebook: when someone reads a page, the page does
 
 ⚠️ Don’t call it a “Kafka Queue.” Kafka uses **logs**.
 
+![logs.png](images/logs.png)
+
 ---
 
 ## 4. Kafka Message Structure
 
+![message.png](images/message.png)
 A Kafka message has several fields:
 
 1. **Value** → main event data (JSON, Avro, Protobuf, string, integer, etc.)
@@ -80,6 +87,8 @@ A Kafka message has several fields:
 4. **Headers** → optional key–value metadata
 5. **Topic Name** → which topic it belongs to
 6. **Offset** → message’s position in the topic (starts at `0` and increments)
+
+![structure.png](images/structure.png)
 
 ---
 
