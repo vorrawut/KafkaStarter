@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_4/replication",
+  "title": "Replication",
+  "description": "Why it Matters",
+  "source": "@site/../class/modules/lesson_4/replication.md",
+  "sourceDirName": "modules/lesson_4",
+  "slug": "/modules/lesson_4/replication",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_4/replication",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_4/replication.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "broker",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/broker"
+  },
+  "next": {
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
+  }
+}

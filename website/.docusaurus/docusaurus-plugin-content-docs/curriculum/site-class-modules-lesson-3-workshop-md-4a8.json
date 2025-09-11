@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_3/workshop",
-  "title": "workshop",
-  "description": "",
+  "title": "Workshop",
+  "description": "First Producer/Consumer",
   "source": "@site/../class/modules/lesson_3/workshop.md",
   "sourceDirName": "modules/lesson_3",
   "slug": "/modules/lesson_3/workshop",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
   },
   "next": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/concept"
+    "title": "Topic",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/topic"
   }
 }

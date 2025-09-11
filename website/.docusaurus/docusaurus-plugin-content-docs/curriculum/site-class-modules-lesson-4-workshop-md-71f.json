@@ -11,14 +11,5 @@
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_4/workshop.md",
   "tags": [],
   "version": "current",
-  "frontMatter": {},
-  "sidebar": "tutorialSidebar",
-  "previous": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/concept"
-  },
-  "next": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
-  }
+  "frontMatter": {}
 }

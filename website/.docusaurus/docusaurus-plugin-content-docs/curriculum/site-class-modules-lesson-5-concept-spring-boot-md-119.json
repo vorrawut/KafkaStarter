@@ -1,0 +1,15 @@
+{
+  "id": "modules/lesson_5/concept_spring_boot",
+  "title": "Concept",
+  "description": "Hello Kafka with Spring Boot",
+  "source": "@site/../class/modules/lesson_5/concept_spring_boot.md",
+  "sourceDirName": "modules/lesson_5",
+  "slug": "/modules/lesson_5/concept_spring_boot",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/concept_spring_boot.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {}
+}

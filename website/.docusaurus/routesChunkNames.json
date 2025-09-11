@@ -49,17 +49,17 @@
     },
     "content": "content---kafka-starter-answers-353-a42"
   },
-  "/KafkaStarter/curriculum-d7c": {
+  "/KafkaStarter/curriculum-e26": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---kafka-starter-curriculumf-30-a40"
     }
   },
-  "/KafkaStarter/curriculum-ebe": {
+  "/KafkaStarter/curriculum-4d0": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---kafka-starter-curriculum-8-ec-911"
   },
-  "/KafkaStarter/curriculum-a2c": {
+  "/KafkaStarter/curriculum-951": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/KafkaStarter/curriculum/CURRICULUM_GUIDE-076": {
@@ -126,7 +126,7 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-21-concept-771-051"
   },
-  "/KafkaStarter/curriculum/modules/lesson_3/concept-af5": {
+  "/KafkaStarter/curriculum/modules/lesson_3/concept-758": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-3-concept-8-b-2-f2f"
   },
@@ -134,17 +134,37 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-3-workshop-4-a-8-0e8"
   },
-  "/KafkaStarter/curriculum/modules/lesson_4/concept-25e": {
+  "/KafkaStarter/curriculum/modules/lesson_4/broker-b1e": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-4-concept-4-c-6-0a0"
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-broker-418-639"
   },
-  "/KafkaStarter/curriculum/modules/lesson_4/workshop-49d": {
+  "/KafkaStarter/curriculum/modules/lesson_4/offset-2cd": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-offset-651-234"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/partition-e4d": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-partition-81-c-d4e"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/replication-668": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-replicationde-7-b6f"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/topic-955": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-4-topic-892-637"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_4/workshop-d43": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-4-workshop-71-f-23c"
   },
   "/KafkaStarter/curriculum/modules/lesson_5/concept-b32": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-5-concept-318-164"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot-f15": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-5-concept-spring-boot-119-090"
   },
   "/KafkaStarter/curriculum/modules/lesson_5/workshop-5a9": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -182,7 +202,7 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-practical-usecases-guideline-1-cb-620"
   },
-  "/KafkaStarter/curriculum/workshop/lesson_1/-1f0": {
+  "/KafkaStarter/curriculum/workshop/lesson_1/-902": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-workshop-lesson-1-513-105"
   },
@@ -226,7 +246,7 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-workshop-lesson-19-a-6-b-2ef"
   },
-  "/KafkaStarter/curriculum/workshop/lesson_2/-9f0": {
+  "/KafkaStarter/curriculum/workshop/lesson_2/-2fd": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-workshop-lesson-2-f-03-80b"
   },

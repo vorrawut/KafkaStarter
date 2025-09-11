@@ -42,11 +42,11 @@ const sidebars = {
           type: "category",
           label: "Lesson 4: Topics & Partitions",
           items: [
-            "modules/lesson_4/concept",
+            "modules/lesson_4/topic",
             "modules/lesson_4/partition",
+            "modules/lesson_4/offset",
             "modules/lesson_4/broker",
             "modules/lesson_4/replication",
-            "modules/lesson_4/workshop",
           ],
         },
         {

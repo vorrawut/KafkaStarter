@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_4/partition",
+  "title": "Partitions",
+  "description": "Apache Kafka is a distributed system. That means it runs across multiple machines but looks like one big system from the outside.",
+  "source": "@site/../class/modules/lesson_4/partition.md",
+  "sourceDirName": "modules/lesson_4",
+  "slug": "/modules/lesson_4/partition",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_4/partition",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_4/partition.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Topic",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/topic"
+  },
+  "next": {
+    "title": "offset",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/offset"
+  }
+}

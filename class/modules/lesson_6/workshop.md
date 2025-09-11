@@ -248,7 +248,7 @@ Once you complete this workshop:
 3. Add multiple consumers to see load balancing
 4. Explore the Kafka UI to understand message flow
 
-Ready for the next level? [Lesson 4: Topics, Partitions & Offsets](../lesson_4/concept.md) dives deeper into Kafka's core concepts.
+Ready for the next level? [Lesson 4: Topics, Partitions & Offsets](../lesson_4/topic.md) dives deeper into Kafka's core concepts.
 
 ---
 

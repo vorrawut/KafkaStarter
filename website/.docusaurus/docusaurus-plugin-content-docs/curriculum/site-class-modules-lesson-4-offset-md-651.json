@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_4/offset",
+  "title": "offset",
+  "description": "",
+  "source": "@site/../class/modules/lesson_4/offset.md",
+  "sourceDirName": "modules/lesson_4",
+  "slug": "/modules/lesson_4/offset",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_4/offset",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_4/offset.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Partitions",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/partition"
+  },
+  "next": {
+    "title": "broker",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/broker"
+  }
+}

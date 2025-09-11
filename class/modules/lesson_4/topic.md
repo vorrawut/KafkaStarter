@@ -1,12 +1,8 @@
-# Concept
+# Topic
 
-## Topics, Partitions & Offsets - Kafka's Storage Model
+### 1. Databases vs Kafka
 
-## Introduction of Topics
-
-## 1. Databases vs Kafka
-
-### Traditional Database
+#### Traditional Database
 - Data stored in **tables** (rows & columns).
 - Example: `thermostat_readings` table with:
    - `sensor_id`
@@ -20,7 +16,7 @@
 
 👉 Problem: difficult to track historical changes (e.g., kitchen temp rising from 22°C → 24°C).
 
-### Kafka
+#### Kafka
 - Uses **logs** instead of tables.
 - **Log = sequence of immutable events/messages**.
 - The equivalent of a table = **topic**.
@@ -29,7 +25,7 @@
 
 ---
 
-## 2. Kafka Topics
+### 2. Kafka Topics
 - A **topic** is a named log that stores messages (events).
 - Messages are always **appended** to the end.
 - You can have **thousands of topics** in a cluster.
@@ -56,7 +52,7 @@
 
 ---
 
-## 3. Kafka ≠ Queue
+### 3. Kafka ≠ Queue
 
 | Queue | Kafka Topic (Log) |
 |-------|-------------------|
@@ -76,7 +72,7 @@ A Kafka topic (log) is like a notebook: when someone reads a page, the page does
 
 ---
 
-## 4. Kafka Message Structure
+### 4. Kafka Message Structure
 
 ![message.png](images/message.png)
 
@@ -93,7 +89,7 @@ A Kafka message has several fields:
 
 ---
 
-## 5. log
+### 5. log
 ![log_cleanup.png](images/log_cleanup.png)
 
 ### Kafka Log Retention vs Compaction
@@ -156,7 +152,7 @@ Kafka cleans up old values for the same key (`user1`, `user2`) and keeps only th
 
 ---
 
-## 6. Transforming Topics
+### 6. Transforming Topics
 - Messages are immutable.
 - To change data → **create new topics**.
 - Example:
@@ -165,7 +161,7 @@ Kafka cleans up old values for the same key (`user1`, `user2`) and keeps only th
 
 ---
 
-## 7. Key Takeaways
+### 7. Key Takeaways
 - Kafka topics = **immutable logs** of messages.
 - Logs ≠ queues → data isn’t removed after reading.
 - Messages contain **value, key, timestamp, headers, topic, offset**.

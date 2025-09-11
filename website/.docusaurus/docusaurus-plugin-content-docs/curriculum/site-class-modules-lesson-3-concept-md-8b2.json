@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_3/concept",
-  "title": "Concept",
-  "description": "First Producer/Consumer",
+  "title": "concept",
+  "description": "",
   "source": "@site/../class/modules/lesson_3/concept.md",
   "sourceDirName": "modules/lesson_3",
   "slug": "/modules/lesson_3/concept",
@@ -11,14 +11,5 @@
   "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_3/concept.md",
   "tags": [],
   "version": "current",
-  "frontMatter": {},
-  "sidebar": "tutorialSidebar",
-  "previous": {
-    "title": "Workshop: Environment Setup & Kafka Infrastructure",
-    "permalink": "/KafkaStarter/curriculum/workshop/lesson_2/"
-  },
-  "next": {
-    "title": "workshop",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/workshop"
-  }
+  "frontMatter": {}
 }

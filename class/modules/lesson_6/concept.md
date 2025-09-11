@@ -436,7 +436,7 @@ You've mastered this lesson when you can:
 
 Now that you can produce and consume events, let's dive deeper into Kafka's storage model!
 
-**Next**: [Lesson 4 - Topics, Partitions & Offsets](../lesson_4/concept.md) where you'll master how Kafka stores and distributes your events for optimal performance and scalability.
+**Next**: [Lesson 4 - Topics, Partitions & Offsets](../lesson_4/topic.md) where you'll master how Kafka stores and distributes your events for optimal performance and scalability.
 
 ---
 

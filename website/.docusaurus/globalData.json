@@ -91,8 +91,7 @@
             },
             {
               "id": "modules/lesson_3/concept",
-              "path": "/KafkaStarter/curriculum/modules/lesson_3/concept",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/modules/lesson_3/concept"
             },
             {
               "id": "modules/lesson_3/workshop",
@@ -100,19 +99,42 @@
               "sidebar": "tutorialSidebar"
             },
             {
-              "id": "modules/lesson_4/concept",
-              "path": "/KafkaStarter/curriculum/modules/lesson_4/concept",
+              "id": "modules/lesson_4/broker",
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/broker",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_4/offset",
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/offset",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_4/partition",
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/partition",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_4/replication",
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/replication",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_4/topic",
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/topic",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "modules/lesson_4/workshop",
-              "path": "/KafkaStarter/curriculum/modules/lesson_4/workshop",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/modules/lesson_4/workshop"
             },
             {
               "id": "modules/lesson_5/concept",
               "path": "/KafkaStarter/curriculum/modules/lesson_5/concept",
               "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_5/concept_spring_boot",
+              "path": "/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot"
             },
             {
               "id": "modules/lesson_5/workshop",
@@ -160,8 +182,7 @@
             },
             {
               "id": "workshop/lesson_1/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_1/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_1/"
             },
             {
               "id": "workshop/lesson_10/README",
@@ -215,8 +236,7 @@
             },
             {
               "id": "workshop/lesson_2/README",
-              "path": "/KafkaStarter/curriculum/workshop/lesson_2/",
-              "sidebar": "tutorialSidebar"
+              "path": "/KafkaStarter/curriculum/workshop/lesson_2/"
             },
             {
               "id": "workshop/lesson_20/README",

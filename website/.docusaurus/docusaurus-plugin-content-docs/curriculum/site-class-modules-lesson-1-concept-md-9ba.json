@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_1/concept",
   "title": "Concept",
-  "description": "Why Kafka? Understanding Event-Driven Architecture",
+  "description": "What is Kafka?",
   "source": "@site/../class/modules/lesson_1/concept.md",
   "sourceDirName": "modules/lesson_1",
   "slug": "/modules/lesson_1/concept",
@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/CURRICULUM_GUIDE"
   },
   "next": {
-    "title": "Workshop: Why Kafka? Understanding Event-Driven Architecture",
-    "permalink": "/KafkaStarter/curriculum/workshop/lesson_1/"
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
   }
 }
