@@ -8,7 +8,6 @@ Storing a partition on only one broker is risky.
 
 👉 To prevent data loss, Kafka makes **copies of partitions** across multiple brokers.  
 This process is called **replication**.
-
 ---
 
 ## Replication Factor
@@ -18,17 +17,30 @@ This process is called **replication**.
     - **1 Leader replica** (the main copy).
     - **Followers** (the other copies).
 
----
+![replication_1.png](images/replication/replication_1.png)
 
-## How It Works
-- **Writes**: Always go to the **leader replica**.
+![replication_2.png](images/replication/replication_2.png)
+
+![replication_3.png](images/replication/replication_3.png)
 - **Followers**: Continuously replicate data from the leader.
+
+### If one broker down
+![replication_5.png](images/replication/replication_5.png)
+
+#### How It Works
+- **Writes**: Always go to the **leader replica**.
+![replication_7.png](images/replication/replication_7.png)
+
+![replication_8.png](images/replication/replication_8.png)
 - **Reads**: By default, clients also read from the leader.
 
+
 ### Failover
+![replication_4.png](images/replication/replication_4.png)
 - If a broker fails:
     - Kafka elects a **new leader** from the followers.
     - No data is lost, cluster keeps running.
+
 - Once the failed broker recovers, it can **re-sync replicas**.
 
 ---
@@ -37,6 +49,8 @@ This process is called **replication**.
 - Since recent Kafka versions, clients can be configured to:
     - Read from the **nearest replica** (even if it’s a follower).
     - Useful for **low latency** in geographically distributed clusters.
+
+![replication_9.png](images/replication/replication_9.png)
 
 ---
 
@@ -54,5 +68,4 @@ Replication is a **cornerstone of Kafka’s reliability**:
 - **Replication factor = number of copies per partition.**
 - **Leader handles writes, followers replicate.**
 - Failover = automatic leader election, no data loss.
-- Can read from followers for **faster performance**.
 - Replication = Kafka’s built-in **fault tolerance + reliability**.
