@@ -44,6 +44,7 @@ const sidebars = {
           items: [
             "modules/lesson_4/concept",
             "modules/lesson_4/partition",
+            "modules/lesson_4/broker",
             "modules/lesson_4/workshop",
           ],
         },
