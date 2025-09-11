@@ -16,6 +16,8 @@
 - New data → **insert row**
 - Updated data → **update row** (loses history ❌)
 
+![database.png](images/database.png)
+
 👉 Problem: difficult to track historical changes (e.g., kitchen temp rising from 22°C → 24°C).
 
 ### Kafka
@@ -37,15 +39,32 @@
    - Messages can be read by **many consumers**.
    - Messages are **not deleted** after reading.
 
+
+**Action**
+![kafka_message_1.png](images/kafka_message_1.png)
+
+**New message coming**
+![kafka_message_2.jpg](images/kafka_message_2.jpg)
+
+**Multiple topics**
+![img.png](images/kafka_message_3.png)
+
+- There is no fixed limit on the number of topics a Kafka cluster can handle.
 ---
 
 ## 3. Kafka ≠ Queue
 
 | Queue | Kafka Topic (Log) |
 |-------|-------------------|
-| Message removed after reading | Message stays, can be read again |
-| One-time consumption | Multiple consumers can read independently |
-| Ephemeral | Persistent, ordered log |
+| Messages disappear once a consumer reads them | Messages stay in the log even after being read |
+| Each message can be consumed only once | Many consumers can read the same message independently |
+| Temporary storage (short-lived) | Persistent, ordered storage (like an append-only history) |
+
+👉 Think of it like this:
+--------
+A queue is like a post-it note: once someone takes it, it’s gone.
+
+A Kafka topic (log) is like a notebook: when someone reads a page, the page doesn’t vanish — others can read it too, and the whole history is kept in order.
 
 ⚠️ Don’t call it a “Kafka Queue.” Kafka uses **logs**.
 
