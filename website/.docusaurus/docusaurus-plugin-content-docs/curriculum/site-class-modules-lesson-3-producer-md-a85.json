@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_3/producer",
+  "title": "Producers",
+  "description": "In Kafka, producers are client applications responsible for writing data into a Kafka cluster.",
+  "source": "@site/../class/modules/lesson_3/producer.md",
+  "sourceDirName": "modules/lesson_3",
+  "slug": "/modules/lesson_3/producer",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_3/producer",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_3/producer.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
+  },
+  "next": {
+    "title": "Consumers",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/consumer"
+  }
+}

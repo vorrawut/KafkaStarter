@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_5/workshop",
   "title": "Workshop",
-  "description": "Schema Registry with Avro & Protobuf",
+  "description": "Let's build a Kafka basic application!",
   "source": "@site/../class/modules/lesson_5/workshop.md",
   "sourceDirName": "modules/lesson_5",
   "slug": "/modules/lesson_5/workshop",

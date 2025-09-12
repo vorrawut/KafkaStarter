@@ -1,7 +1,7 @@
 {
   "id": "modules/practical_usecases_guideline",
-  "title": "practical_usecases_guideline",
-  "description": "",
+  "title": "Best Practices",
+  "description": "Partition should be equal to the number of the consumers",
   "source": "@site/../class/modules/practical_usecases_guideline.md",
   "sourceDirName": "modules",
   "slug": "/modules/practical_usecases_guideline",

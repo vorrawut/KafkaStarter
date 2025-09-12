@@ -49,17 +49,17 @@
     },
     "content": "content---kafka-starter-answers-353-a42"
   },
-  "/KafkaStarter/curriculum-3c6": {
+  "/KafkaStarter/curriculum-09f": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---kafka-starter-curriculumf-30-a40"
     }
   },
-  "/KafkaStarter/curriculum-646": {
+  "/KafkaStarter/curriculum-91d": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---kafka-starter-curriculum-8-ec-911"
   },
-  "/KafkaStarter/curriculum-e29": {
+  "/KafkaStarter/curriculum-4f9": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/KafkaStarter/curriculum/CURRICULUM_GUIDE-076": {
@@ -130,9 +130,13 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-21-concept-771-051"
   },
-  "/KafkaStarter/curriculum/modules/lesson_3/concept-758": {
+  "/KafkaStarter/curriculum/modules/lesson_3/consumer-2f5": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-3-concept-8-b-2-f2f"
+    "content": "content---kafka-starter-curriculum-modules-lesson-3-consumer-93-a-bed"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_3/producer-d83": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-3-producera-85-091"
   },
   "/KafkaStarter/curriculum/modules/lesson_3/workshop-782": {
     "__comp": "__comp---theme-doc-item-178-a40",

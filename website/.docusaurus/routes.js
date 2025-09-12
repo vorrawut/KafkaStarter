@@ -44,15 +44,15 @@ export default [
   },
   {
     path: '/KafkaStarter/curriculum',
-    component: ComponentCreator('/KafkaStarter/curriculum', '3c6'),
+    component: ComponentCreator('/KafkaStarter/curriculum', '09f'),
     routes: [
       {
         path: '/KafkaStarter/curriculum',
-        component: ComponentCreator('/KafkaStarter/curriculum', '646'),
+        component: ComponentCreator('/KafkaStarter/curriculum', '91d'),
         routes: [
           {
             path: '/KafkaStarter/curriculum',
-            component: ComponentCreator('/KafkaStarter/curriculum', 'e29'),
+            component: ComponentCreator('/KafkaStarter/curriculum', '4f9'),
             routes: [
               {
                 path: '/KafkaStarter/curriculum/CURRICULUM_GUIDE',
@@ -156,9 +156,16 @@ export default [
                 sidebar: "tutorialSidebar"
               },
               {
-                path: '/KafkaStarter/curriculum/modules/lesson_3/concept',
-                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_3/concept', '758'),
-                exact: true
+                path: '/KafkaStarter/curriculum/modules/lesson_3/consumer',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_3/consumer', '2f5'),
+                exact: true,
+                sidebar: "tutorialSidebar"
+              },
+              {
+                path: '/KafkaStarter/curriculum/modules/lesson_3/producer',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_3/producer', 'd83'),
+                exact: true,
+                sidebar: "tutorialSidebar"
               },
               {
                 path: '/KafkaStarter/curriculum/modules/lesson_3/workshop',

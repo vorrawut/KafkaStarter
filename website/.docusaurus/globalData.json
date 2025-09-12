@@ -95,8 +95,14 @@
               "sidebar": "tutorialSidebar"
             },
             {
-              "id": "modules/lesson_3/concept",
-              "path": "/KafkaStarter/curriculum/modules/lesson_3/concept"
+              "id": "modules/lesson_3/consumer",
+              "path": "/KafkaStarter/curriculum/modules/lesson_3/consumer",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_3/producer",
+              "path": "/KafkaStarter/curriculum/modules/lesson_3/producer",
+              "sidebar": "tutorialSidebar"
             },
             {
               "id": "modules/lesson_3/workshop",

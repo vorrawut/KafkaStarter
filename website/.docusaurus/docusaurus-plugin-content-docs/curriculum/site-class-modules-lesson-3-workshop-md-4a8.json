@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_2/concept"
+    "title": "Consumers",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/consumer"
   },
   "next": {
     "title": "Topic",

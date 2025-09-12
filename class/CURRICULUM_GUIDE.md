@@ -11,7 +11,7 @@ Track your progress through the curriculum:
 ### 🧱 Phase 1: Foundations (Lessons 1-6)
 - [ ] **Lesson 1**: Why Kafka? *(Theory)* → [Start](modules/lesson_1/concept.md)
 - [ ] **Lesson 2**: Environment Setup *(Setup)* → [Start](modules/lesson_2/concept.md)  
-- [ ] **Lesson 3**: First Producer/Consumer *(Hands-on)* → [Workshop](workshop/lesson_3/) | [Concepts](modules/lesson_3/concept.md)
+- [ ] **Lesson 3**: First Producer/Consumer *(Hands-on)* → [Workshop](workshop/lesson_3/) | [Concepts](modules/lesson_3/producer.md)
 - [ ] **Lesson 4**: Topics & Partitions *(Hands-on)* → [Workshop](workshop/lesson_4/)
 - [ ] **Lesson 5**: Schema Registry *(Hands-on)* → [Workshop](workshop/lesson_6/)
 - [ ] **Lesson 6**: Development Tools *(Hands-on)* → [Workshop](workshop/lesson_7/)

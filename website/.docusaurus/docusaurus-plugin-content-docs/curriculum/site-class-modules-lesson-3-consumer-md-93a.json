@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_3/consumer",
+  "title": "Consumers",
+  "description": "🔹 What is a Consumer?",
+  "source": "@site/../class/modules/lesson_3/consumer.md",
+  "sourceDirName": "modules/lesson_3",
+  "slug": "/modules/lesson_3/consumer",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_3/consumer",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_3/consumer.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Producers",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/producer"
+  },
+  "next": {
+    "title": "Workshop",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_3/workshop"
+  }
+}
