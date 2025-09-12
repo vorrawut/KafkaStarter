@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_1/event",
-  "title": "event",
-  "description": "Why Kafka? Understanding Event-Driven Architecture",
+  "title": "Event",
+  "description": "What is Event-Driven Architecture?",
   "source": "@site/../class/modules/lesson_1/event.md",
   "sourceDirName": "modules/lesson_1",
   "slug": "/modules/lesson_1/event",

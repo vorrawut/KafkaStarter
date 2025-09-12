@@ -1,8 +1,4 @@
-
-
-## Why Kafka? Understanding Event-Driven Architecture
-
-## 🧠 Core Concepts
+# Event
 
 ### What is Event-Driven Architecture?
 
