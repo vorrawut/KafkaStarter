@@ -56,7 +56,7 @@ This distribution is how Kafka scales.
 ---
 
 ## ZooKeeper in Kafka
-
+![zoo-keeper.png](images/broker/zoo-keeper.png)
 #### Did ZooKeeper Control Clients and Brokers?
 ➡️ **No.**  
 ZooKeeper was **never** a controller sitting between clients and brokers.  

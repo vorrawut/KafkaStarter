@@ -6,11 +6,11 @@ Storing a partition on only one broker is risky.
 - **Disks fail.**
 - Cloud instances can disappear.
 
-👉 To prevent data loss, Kafka makes **copies of partitions** across multiple brokers.  
-This process is called **replication**.
+#### 👉 To prevent data loss, Kafka makes copies of partitions across multiple brokers. This process is called replication.
+
 ---
 
-## Replication Factor
+### Replication Factor
 - You configure replication with a **replication factor** (e.g., 3).
 - That means **3 copies** of each partition exist.
 - Among them:
