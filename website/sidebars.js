@@ -53,6 +53,7 @@ const sidebars = {
           type: "category",
           label: "Lesson 5: Kafka in Spring boot",
           items: [
+            "modules/lesson_5/recap",
             "modules/lesson_5/concept",
             "modules/lesson_5/workshop",
           ],
