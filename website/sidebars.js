@@ -24,7 +24,7 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 1: Why Kafka?",
-          items: ["modules/lesson_1/concept","modules/lesson_1/event"],
+          items: ["modules/lesson_1/concept", "modules/lesson_1/event"],
         },
         {
           type: "category",
@@ -34,9 +34,7 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 3: First Producer/Consumer",
-          items: [
-            "modules/lesson_3/workshop",
-          ],
+          items: ["modules/lesson_3/producer", "modules/lesson_3/consumer", "modules/lesson_3/workshop"],
         },
         {
           type: "category",
@@ -62,18 +60,12 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 6: Schema Registry",
-          items: [
-            "modules/lesson_6/concept",
-            "modules/lesson_6/workshop",
-          ],
+          items: ["modules/lesson_6/concept", "modules/lesson_6/workshop"],
         },
         {
           type: "category",
           label: "Lesson 7: Development Tools",
-          items: [
-            "modules/lesson_7/concept",
-            "modules/lesson_7/workshop",
-          ],
+          items: ["modules/lesson_7/concept", "modules/lesson_7/workshop"],
         },
       ],
     },
@@ -95,10 +87,7 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 10: Exactly-Once Processing",
-          items: [
-            "modules/lesson_10/concept",
-            "workshop/lesson_10/README",
-          ],
+          items: ["modules/lesson_10/concept", "workshop/lesson_10/README"],
         },
         {
           type: "category",
@@ -173,7 +162,7 @@ const sidebars = {
     },
     {
       type: "doc",
-      id:"modules/practical_usecases_guideline",
+      id: "modules/practical_usecases_guideline",
       label: "👍 Practical Use Cases",
     },
   ],

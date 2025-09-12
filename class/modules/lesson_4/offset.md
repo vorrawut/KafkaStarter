@@ -48,7 +48,13 @@ Without offsets, a consumer would have no idea:
     - You don’t lose messages.
     - But you might reprocess some if you commit late.
 
+![offset_commit_2.png](images/offset/offset_commit_2.png)
+
+![offset_commit_1.png](images/offset/offset_commit_1.png)
+
 ---
+
+
 
 ## Consumer Group
 A **consumer group** is a set of consumers that work together to read data from a topic.
