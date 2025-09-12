@@ -90,4 +90,64 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '"test"'
   ```
+If you can see your message in the consumer, congratulations!
 
+## Next, let's build a Kafka Consumer!
+
+### Kafka Consumer Configuration
+
+Add the following code to the `KafkaConfig` class.
+
+```kotlin
+    // Consumer Configuration
+    @Bean
+    fun consumerFactory(): ConsumerFactory<String, String> {
+        val props = HashMap<String, Any>()
+        props[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapServers
+        props[ConsumerConfig.GROUP_ID_CONFIG] = groupId
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        props[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+    
+        return DefaultKafkaConsumerFactory(props)
+    }
+    
+    @Bean
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
+        factory.consumerFactory = consumerFactory()
+        
+        return factory
+    }
+```
+- **Boostrap Servers** - is the address of the Kafka server.
+- **Group ID** - is the group id for the consumer.
+- **Key Deserializer** - is the deserializer for the key.
+- **Value Deserializer** - is the deserializer for the value.
+- **Auto Offset Reset** - is the auto offset reset, there are 2 options: `earliest` and `latest`.
+  - The `earliest` option will start from the beginning of the topic.
+  - The `latest` option will start from the end of the topic.
+
+### Kafka Consumer Service
+
+Create a simple consumer service to receive messages from the topic.
+
+```kotlin
+@Service
+class ConsumerService {
+
+    private val logger = LoggerFactory.getLogger(ConsumerService::class.java)
+    
+    @KafkaListener(topics = [TOPIC_NAME])
+    fun consumeMessage(message: String) {
+        logger.info("Received message from the topic: $message")
+    }
+}
+```
+
+### Re-run the application
+
+### Open swagger and try sending a message to the topic.
+
+If you can see your message in the consumer, congratulations! You've successfully built a Kafka application!
+![consumer_success.png](workshop_images/consumer_success.png)

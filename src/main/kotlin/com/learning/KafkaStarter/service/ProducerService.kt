@@ -18,7 +18,7 @@ class ProducerService(
         const val TOPIC_NAME = "test-topic"
         const val CLOUD_TOPIC_NAME = "hello-topic"
     }
-    
+
     fun sendMessage(message: String) {
         TODO("Not yet implemented")
     }
