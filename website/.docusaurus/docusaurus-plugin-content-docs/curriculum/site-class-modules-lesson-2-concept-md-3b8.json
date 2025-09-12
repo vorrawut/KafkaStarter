@@ -14,8 +14,8 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_1/concept"
+    "title": "event",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_1/event"
   },
   "next": {
     "title": "Workshop",

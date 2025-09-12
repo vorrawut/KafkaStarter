@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "broker",
+    "title": "Brokers",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_4/broker"
   },
   "next": {
-    "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
+    "title": "Overview",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/overview"
   }
 }

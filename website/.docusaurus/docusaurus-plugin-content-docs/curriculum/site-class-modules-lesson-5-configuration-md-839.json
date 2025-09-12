@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_5/configuration",
+  "title": "Configuration",
+  "description": "---",
+  "source": "@site/../class/modules/lesson_5/configuration.md",
+  "sourceDirName": "modules/lesson_5",
+  "slug": "/modules/lesson_5/configuration",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/configuration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/configuration.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Overview",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/overview"
+  },
+  "next": {
+    "title": "Concept",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer"
+  }
+}

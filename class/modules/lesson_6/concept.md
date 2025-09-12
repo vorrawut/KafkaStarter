@@ -1036,7 +1036,7 @@ class TopicHealthService {
 
 You've mastered Kafka's storage fundamentals! Now let's add structure to your events with schemas.
 
-**Next**: [Lesson 5 - Schema Registry & Evolution](../lesson_5/concept.md) where you'll learn to manage data formats, ensure compatibility, and evolve your event schemas safely over time.
+**Next**: [Lesson 5 - Schema Registry & Evolution](../lesson_5/overview.md) where you'll learn to manage data formats, ensure compatibility, and evolve your event schemas safely over time.
 
 ---
 

@@ -362,7 +362,7 @@ After completing this workshop, you'll understand:
 
 ## 🚀 Next Steps
 
-Once you've mastered topic and partition management, you're ready for [Lesson 5: Schema Registry](../lesson_5/concept.md), where you'll learn to manage structured data with schema evolution and type safety.
+Once you've mastered topic and partition management, you're ready for [Lesson 5: Schema Registry](../lesson_5/overview.md), where you'll learn to manage structured data with schema evolution and type safety.
 
 ---
 

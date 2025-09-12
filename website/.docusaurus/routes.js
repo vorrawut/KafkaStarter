@@ -44,15 +44,15 @@ export default [
   },
   {
     path: '/KafkaStarter/curriculum',
-    component: ComponentCreator('/KafkaStarter/curriculum', 'e26'),
+    component: ComponentCreator('/KafkaStarter/curriculum', '3c6'),
     routes: [
       {
         path: '/KafkaStarter/curriculum',
-        component: ComponentCreator('/KafkaStarter/curriculum', '4d0'),
+        component: ComponentCreator('/KafkaStarter/curriculum', '646'),
         routes: [
           {
             path: '/KafkaStarter/curriculum',
-            component: ComponentCreator('/KafkaStarter/curriculum', '951'),
+            component: ComponentCreator('/KafkaStarter/curriculum', 'e29'),
             routes: [
               {
                 path: '/KafkaStarter/curriculum/CURRICULUM_GUIDE',
@@ -63,6 +63,12 @@ export default [
               {
                 path: '/KafkaStarter/curriculum/modules/lesson_1/concept',
                 component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_1/concept', '987'),
+                exact: true,
+                sidebar: "tutorialSidebar"
+              },
+              {
+                path: '/KafkaStarter/curriculum/modules/lesson_1/event',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_1/event', '98c'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
@@ -196,15 +202,22 @@ export default [
                 exact: true
               },
               {
-                path: '/KafkaStarter/curriculum/modules/lesson_5/concept',
-                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_5/concept', 'b32'),
+                path: '/KafkaStarter/curriculum/modules/lesson_5/configuration',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_5/configuration', '12f'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
               {
-                path: '/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot',
-                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot', 'f15'),
-                exact: true
+                path: '/KafkaStarter/curriculum/modules/lesson_5/overview',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_5/overview', 'bd6'),
+                exact: true,
+                sidebar: "tutorialSidebar"
+              },
+              {
+                path: '/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer',
+                component: ComponentCreator('/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer', '937'),
+                exact: true,
+                sidebar: "tutorialSidebar"
               },
               {
                 path: '/KafkaStarter/curriculum/modules/lesson_5/workshop',

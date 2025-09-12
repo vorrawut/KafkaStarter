@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_4/broker",
-  "title": "broker",
-  "description": "Brokers",
+  "title": "Brokers",
+  "description": "We’ve talked about events, topics, and partitions.",
   "source": "@site/../class/modules/lesson_4/broker.md",
   "sourceDirName": "modules/lesson_4",
   "slug": "/modules/lesson_4/broker",

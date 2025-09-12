@@ -1,0 +1,24 @@
+{
+  "id": "modules/lesson_5/overview",
+  "title": "Overview",
+  "description": "",
+  "source": "@site/../class/modules/lesson_5/overview.md",
+  "sourceDirName": "modules/lesson_5",
+  "slug": "/modules/lesson_5/overview",
+  "permalink": "/KafkaStarter/curriculum/modules/lesson_5/overview",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/vorrawut/KafkaStarter/tree/main/class/../class/modules/lesson_5/overview.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Replication",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_4/replication"
+  },
+  "next": {
+    "title": "Configuration",
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/configuration"
+  }
+}

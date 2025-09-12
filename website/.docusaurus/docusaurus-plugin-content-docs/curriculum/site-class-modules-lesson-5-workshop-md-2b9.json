@@ -15,7 +15,7 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "Concept",
-    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/concept"
+    "permalink": "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer"
   },
   "next": {
     "title": "Concept",

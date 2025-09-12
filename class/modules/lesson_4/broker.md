@@ -1,4 +1,4 @@
-## Brokers
+# Brokers
 
 We’ve talked about **events**, **topics**, and **partitions**.  
 Now let’s meet the actual **machines that do the work**: the **brokers**.

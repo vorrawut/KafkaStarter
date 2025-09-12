@@ -21,6 +21,11 @@
               "sidebar": "tutorialSidebar"
             },
             {
+              "id": "modules/lesson_1/event",
+              "path": "/KafkaStarter/curriculum/modules/lesson_1/event",
+              "sidebar": "tutorialSidebar"
+            },
+            {
               "id": "modules/lesson_10/concept",
               "path": "/KafkaStarter/curriculum/modules/lesson_10/concept",
               "sidebar": "tutorialSidebar"
@@ -128,13 +133,19 @@
               "path": "/KafkaStarter/curriculum/modules/lesson_4/workshop"
             },
             {
-              "id": "modules/lesson_5/concept",
-              "path": "/KafkaStarter/curriculum/modules/lesson_5/concept",
+              "id": "modules/lesson_5/configuration",
+              "path": "/KafkaStarter/curriculum/modules/lesson_5/configuration",
               "sidebar": "tutorialSidebar"
             },
             {
-              "id": "modules/lesson_5/concept_spring_boot",
-              "path": "/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot"
+              "id": "modules/lesson_5/overview",
+              "path": "/KafkaStarter/curriculum/modules/lesson_5/overview",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "modules/lesson_5/serialize_deserializer",
+              "path": "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer",
+              "sidebar": "tutorialSidebar"
             },
             {
               "id": "modules/lesson_5/workshop",

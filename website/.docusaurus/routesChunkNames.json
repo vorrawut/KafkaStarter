@@ -49,17 +49,17 @@
     },
     "content": "content---kafka-starter-answers-353-a42"
   },
-  "/KafkaStarter/curriculum-e26": {
+  "/KafkaStarter/curriculum-3c6": {
     "__comp": "__comp---theme-docs-root-5-e-9-0b6",
     "__context": {
       "plugin": "plugin---kafka-starter-curriculumf-30-a40"
     }
   },
-  "/KafkaStarter/curriculum-4d0": {
+  "/KafkaStarter/curriculum-646": {
     "__comp": "__comp---theme-doc-version-roota-7-b-5de",
     "__props": "__props---kafka-starter-curriculum-8-ec-911"
   },
-  "/KafkaStarter/curriculum-951": {
+  "/KafkaStarter/curriculum-e29": {
     "__comp": "__comp---theme-doc-roota-94-67a"
   },
   "/KafkaStarter/curriculum/CURRICULUM_GUIDE-076": {
@@ -69,6 +69,10 @@
   "/KafkaStarter/curriculum/modules/lesson_1/concept-987": {
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-1-concept-9-ba-e58"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_1/event-98c": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-1-event-192-4ef"
   },
   "/KafkaStarter/curriculum/modules/lesson_10/concept-c6e": {
     "__comp": "__comp---theme-doc-item-178-a40",
@@ -158,13 +162,17 @@
     "__comp": "__comp---theme-doc-item-178-a40",
     "content": "content---kafka-starter-curriculum-modules-lesson-4-workshop-71-f-23c"
   },
-  "/KafkaStarter/curriculum/modules/lesson_5/concept-b32": {
+  "/KafkaStarter/curriculum/modules/lesson_5/configuration-12f": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-5-concept-318-164"
+    "content": "content---kafka-starter-curriculum-modules-lesson-5-configuration-839-917"
   },
-  "/KafkaStarter/curriculum/modules/lesson_5/concept_spring_boot-f15": {
+  "/KafkaStarter/curriculum/modules/lesson_5/overview-bd6": {
     "__comp": "__comp---theme-doc-item-178-a40",
-    "content": "content---kafka-starter-curriculum-modules-lesson-5-concept-spring-boot-119-090"
+    "content": "content---kafka-starter-curriculum-modules-lesson-5-overview-888-2f0"
+  },
+  "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer-937": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---kafka-starter-curriculum-modules-lesson-5-serialize-deserializer-816-6b0"
   },
   "/KafkaStarter/curriculum/modules/lesson_5/workshop-5a9": {
     "__comp": "__comp---theme-doc-item-178-a40",

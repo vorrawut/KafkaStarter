@@ -1,4 +1,4 @@
-# Kafka with Spring Boot and Kotlin
+# Configuration
 
 ---
 
