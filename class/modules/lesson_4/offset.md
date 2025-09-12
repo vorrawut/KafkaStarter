@@ -50,6 +50,16 @@ Without offsets, a consumer would have no idea:
 
 ---
 
+## Consumer Group
+A **consumer group** is a set of consumers that work together to read data from a topic.
+
+![offset_3.png](images/offset/offset_3.png)
+
+- Each consumer has the **same group.id**.
+- Kafka assigns partitions in the topic to consumers in the group.
+- **Each partition is read by only one consumer in the group.**
+- If a consumer leaves or joins, Kafka **rebalances** and reassigns partitions.
+
 ### Important Details
 - Offsets are **partition-specific**:
     - Consumer groups keep track of offsets per partition.
