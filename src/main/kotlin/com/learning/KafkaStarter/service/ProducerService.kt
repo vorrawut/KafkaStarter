@@ -20,15 +20,6 @@ class ProducerService(
     }
     
     fun sendMessage(message: String) {
-        logger.info("Sending message to topic $TOPIC_NAME: $message")
-        val key = UUID.randomUUID().toString()
-        kafkaTemplate.send(TOPIC_NAME, key, message)
-            .whenComplete { result, exception ->
-                if (exception != null) {
-                    logger.error("Failed to send message: ${exception.message}")
-                } else {
-                    logger.info("Message sent successfully to ${result?.recordMetadata?.topic()}:${result?.recordMetadata?.partition()}")
-                }
-            }
+        TODO("Not yet implemented")
     }
 }
