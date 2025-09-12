@@ -4,11 +4,13 @@ In Kafka, producers are client applications responsible for writing data into a 
 - Brokers handle storage, replication, and partition management.
 - Producers send messages (key–value pairs) into topics.
 
+![producer_3.png](images/producer_3.png)
 Any application that sends data to Kafka—whether a microservice, IoT device, or a data pipeline—is considered a producer.
 
 ---
 
 ### 🧩 Producer Basics
+![producer.png](images/producer.png)
 - Producers connect to Kafka and publish events.
 - Events are just key–value pairs stored as bytes inside Kafka.
 - Kafka takes care of the heavy lifting:
@@ -34,6 +36,9 @@ Kafka offers a simple but powerful API, available in many languages:
    - Manages the connection to the cluster.
    - Handles sending messages.
 
+
+![producer_2.webp](images/producer_2.webp)
+
 2. ProducerRecord
    - Represents the message (topic, key, value).
    - Can also include: partition, timestamp, headers.
@@ -41,6 +46,7 @@ Kafka offers a simple but powerful API, available in many languages:
 ---
 
 ### ⚙️ Configuring a Producer
+![kafka-broker-beginner.png](images/kafka-broker-beginner.png)
 
 Producers require a set of properties (key–value pairs) such as:
 - bootstrap.servers → List of broker addresses.
@@ -49,7 +55,6 @@ Producers require a set of properties (key–value pairs) such as:
   - 0 → No ack (fastest, unsafe)
   - 1 → Leader only
   - all → Strongest guarantee (leader + replicas)
-
 - Serializers → Convert keys and values into bytes.
   - Built-in: StringSerializer, IntegerSerializer, LongSerializer, etc.
 

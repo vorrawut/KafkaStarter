@@ -7,7 +7,6 @@
 
 #### 🔹 Connecting a Consumer
 - A consumer needs bootstrap servers (addresses of brokers) to connect.
-
 - You don’t need to list all brokers. Just one (or a few) is enough → Kafka will discover the rest.
 
 #### 🔹 Subscribing to Topics
