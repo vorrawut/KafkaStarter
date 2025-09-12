@@ -1,6 +1,5 @@
 # Concept
 
-
 ## What is Kafka? 
 
 Apache Kafka is a **distributed messaging system** that acts like a **digital post office** for applications. It allows different software systems to send and receive messages (called events) in real-time, without needing to talk directly to each other.
