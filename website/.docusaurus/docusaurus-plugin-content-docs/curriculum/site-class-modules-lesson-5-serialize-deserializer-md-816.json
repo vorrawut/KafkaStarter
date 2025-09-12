@@ -1,7 +1,7 @@
 {
   "id": "modules/lesson_5/serialize_deserializer",
-  "title": "Concept",
-  "description": "Hello Kafka with Spring Boot",
+  "title": "Serialization & Deserializer",
+  "description": "serder.png",
   "source": "@site/../class/modules/lesson_5/serialize_deserializer.md",
   "sourceDirName": "modules/lesson_5",
   "slug": "/modules/lesson_5/serialize_deserializer",

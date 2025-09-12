@@ -14,7 +14,7 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Concept",
+    "title": "Serialization & Deserializer",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer"
   },
   "next": {

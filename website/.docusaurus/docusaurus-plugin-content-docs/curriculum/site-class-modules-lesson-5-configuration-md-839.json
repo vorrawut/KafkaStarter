@@ -18,7 +18,7 @@
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/overview"
   },
   "next": {
-    "title": "Concept",
+    "title": "Serialization & Deserializer",
     "permalink": "/KafkaStarter/curriculum/modules/lesson_5/serialize_deserializer"
   }
 }
