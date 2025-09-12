@@ -151,3 +151,64 @@ class ConsumerService {
 
 If you can see your message in the consumer, congratulations! You've successfully built a Kafka application!
 ![consumer_success.png](workshop_images/consumer_success.png)
+
+## Let's try to connect to a remote Kafka server!
+
+### Kafka Configuration
+
+Add some more configuration to the `KafkaConfig` class.
+```kotlin
+@Value("\${spring.kafka.security.protocol}")
+    private lateinit var securityProtocol: String
+
+    @Value("\${spring.kafka.properties.sasl.mechanism}")
+    private lateinit var saslMechanism: String
+
+    @Value("\${spring.kafka.properties.sasl.jaas.config}")
+    private lateinit var saslJaasConfig: String
+
+    @Value("\${spring.kafka.properties.ssl.endpoint.identification.algorithm}")
+    private lateinit var sslEndpointIdentificationAlgorithm: String
+
+    @Value("\${spring.kafka.properties.client.dns.lookup}")
+    private lateinit var clientDnsLookup: String
+
+    private fun getCommonSecurityProperties(): Map<String, Any> {
+        return mapOf(
+            "security.protocol" to securityProtocol,
+            SaslConfigs.SASL_MECHANISM to saslMechanism,
+            SaslConfigs.SASL_JAAS_CONFIG to saslJaasConfig,
+            SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to sslEndpointIdentificationAlgorithm,
+            "client.dns.lookup" to clientDnsLookup
+        )
+    }
+```
+
+In the `producerFactory()`, add the following code. As well as in the `consumerFactory()`.
+```kotlin
+        // Add security properties
+        configProps.putAll(getCommonSecurityProperties())
+```
+
+In the `application.properties`, add the following configuration.
+```properties
+spring.kafka.bootstrap-servers=pkc-l7j7w.asia-east1.gcp.confluent.cloud:9092
+spring.kafka.consumer.group-id={LETS_SEPARATE_GROUP_ID}}
+
+
+spring.kafka.security.protocol=SASL_SSL
+spring.kafka.properties.sasl.mechanism=PLAIN
+spring.kafka.properties.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="3OFJGVL3G3YQY2UC" password="cfltYpG9GFIC5Fx0Z8WuayLW7sbPv8Ef7ywbGqU5r4qi0PjSJTe3KN0IlnLyugzQ";
+spring.kafka.properties.ssl.endpoint.identification.algorithm=https
+spring.kafka.properties.client.dns.lookup=use_all_dns_ips
+```
+
+For the group id, you can select from one of these group ids.
+- chiang-mai-consumer-group
+- bangkok-consumer-group
+- phuket-consumer-group
+- khon-kaen-consumer-group
+- kanchanaburi-consumer-group
+
+### Re-run the application
+### Try sending a message to the topic!
