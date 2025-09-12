@@ -11,4 +11,19 @@
   ![consumer_group_3](consumer_group_3.png "Consumer Group 3")
 
 ## Be careful what you've sent!
-- 1 wrong deserialize can cause a claustrophobic to the system, DLQ & Error handling is necessary
+A record that has been produced to a Kafka topic can cause a claustrophobic to the system 
+
+If it fails to be consumed or not handled properly, it is called a Poison Pill. 
+
+![poison_pill.png](poison_pill.png)
+
+### To prevent this, there are multiple ways that we can do:
+- Send the invalid record to Dead Letter Queue
+- Send the invalid record to another topic
+- Send the invalid record to another topic and delete the record from the original topic
+- Logging the invalid record
+- etc. 
+
+## Kafka UI
+- https://medium.com/@vortj/ui-for-apache-kafka-clean-modern-and-easy-to-use-20041ecb5578
+
