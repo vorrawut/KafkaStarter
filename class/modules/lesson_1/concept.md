@@ -39,9 +39,6 @@ Kafka is different: it processes data **as soon as it happens**.
 **Flow:**  
 Event happens → Kafka → Your system reacts immediately
 
-yaml
-Copy code
-
 This is why Kafka powers **real-time applications**, not just after-the-fact reports.
 
 ---

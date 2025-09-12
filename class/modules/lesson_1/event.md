@@ -1,8 +1,9 @@
 # Event
 
 ### What is Event-Driven Architecture?
-
-Event-driven architecture (EDA) is a software design pattern where services communicate by producing and consuming events. Instead of direct service-to-service calls, components react to events that represent meaningful business occurrences.
+![Event-Driven-Architecture.png](resources/Event-Driven-Architecture.png)
+Event-driven architecture (EDA) is a software design pattern where services communicate by producing and consuming events. 
+Instead of direct service-to-service calls, components react to events that represent meaningful business occurrences.
 
 ```mermaid
 graph LR
@@ -62,6 +63,8 @@ sequenceDiagram
 
 ### Event-Driven Architecture
 
+![Event-Driven-Architecture-diagram.webp](resources/Event-Driven-Architecture-diagram.webp)
+
 ```mermaid
 sequenceDiagram
     participant U as User
@@ -96,7 +99,7 @@ sequenceDiagram
 | Tightly connected (rigid) | Loosely connected (flexible) |
 
 ## 🏢 Real-World Use Cases
-
+![event-driven-architecture-of-e-commerce-site.webp](resources/event-driven-architecture-of-e-commerce-site.webp)
 ### 1. **E-Commerce Platforms**
 **Challenge**: Coordinating order processing across multiple services
 **Solution**: Event-driven order lifecycle
