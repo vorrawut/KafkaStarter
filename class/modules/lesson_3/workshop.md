@@ -19,16 +19,17 @@ Should return the version, in this case should be `4.1.0`
 If you are seeing this, that's mean you are able to use the Kafka CLI!
 
 #### Highlight CLI commands
-•  kafka-topics - Create, delete, describe, list, and manage Kafka topics
-•  kafka-console-producer - Produce messages to Kafka topics from command line
-•  kafka-console-consumer - Consume messages from Kafka topics to command line
-And many other useful Kafka CLI
+- **kafka-topics** - Create, delete, describe, list, and manage Kafka topics
+- **kafka-console-producer** - Produce messages to Kafka topics from command line
+- **kafka-console-consumer** - Consume messages from Kafka topics to command line
+- **kafka-consumer-groups** - Manage Kafka consumer groups
+- ...
 
 ### Local setup
 
 Create a docker-compose file
 
-```aiignore
+```yaml
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0

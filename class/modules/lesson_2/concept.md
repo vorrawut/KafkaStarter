@@ -95,11 +95,6 @@ Data in Kafka is organized into **topics**, which are logical channels to which 
 #### Reader Groups (Consumer Groups)
 A **consumer group** works like a family sharing one newspaper subscription:
 
-![consumer_group_1](resources/consumer_group_1.png "Consumer Group 1")
-![consumer_group_2](resources/consumer_group_2.png "Consumer Group 2")
-![consumer_group_3](resources/consumer_group_3.png "Consumer Group 3")
-![consumer_group_4](resources/consumer_group_4.png "Consumer Group 4")
-
 ```
 👨‍👩‍👧‍👦 The Johnson Family (Consumer Group)
 ├── 👨 Dad reads Sports (from Press #1)
