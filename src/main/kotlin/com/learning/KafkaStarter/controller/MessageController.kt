@@ -15,12 +15,6 @@ class MessageController(
 ) {
 
     @PostMapping("/send")
-    fun sendMessage(@RequestBody request: String): ResponseEntity<String> {
-
+    fun sendMessage(@RequestBody request: String) =
         producerService.sendMessage(request)
-
-        return ResponseEntity.ok(
-                "Message sent successfully"
-        )
-    }
 }
