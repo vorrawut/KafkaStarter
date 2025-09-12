@@ -91,7 +91,7 @@ Use the annotation for quick, per-listener setup:
     groupId = "\${kafka.consumer.groupId:test-consumer-group}",
 )
 fun receive(message: String) {
-println("Received: $message")
+    println("Received: $message")
 }
 ```
 
