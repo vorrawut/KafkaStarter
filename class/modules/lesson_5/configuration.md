@@ -18,30 +18,28 @@ dependencies {
 For configuration, we’re using the default values and updating any that are necessary.
 
 ```kotlin
+@ConfigurationProperties("kafka")
+data class KafkaProperties(
+    val bootstrapServers: String,
+    val clientIdPrefix: String,
+)
+
 @Configuration
-open class Config {
+class KafkaConfig {
+    @Bean
+    fun producerFactory(kafkaProperties: KafkaProperties): DefaultKafkaProducerFactory<String, String> {
+        val senderProps: MutableMap<String, Any> = mutableMapOf()
 
-    @Autowired
-    private lateinit var kafkaProperties: KafkaProperties
+        senderProps[ProducerConfig.BOOTSTRAP_SERVERS_CONFIG] = kafkaProperties.bootstrapServers
+        senderProps[ProducerConfig.CLIENT_ID_CONFIG] = kafkaProperties.clientIdPrefix
+        senderProps[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        senderProps[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
 
-    private fun consumerFactory(): ConsumerFactory<String, Foo> {
-        val configs = kafkaProperties.buildConsumerProperties()
-        configs[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-        configs[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
-
-        return DefaultKafkaConsumerFactory(
-            configs,
-            StringDeserializer(),
-            JsonDeserializer<Foo>()
-        )
+        return DefaultKafkaProducerFactory<String, String>(senderProps)
     }
 
-    @Bean(name = ["kafkaListenerContainerFactory"])
-    open fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, Foo>? {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, Foo>()
-        factory.consumerFactory = consumerFactory()
-        return factory
-    }
+    @Bean
+    fun kafkaTemplate(producerFactory: ProducerFactory<String, String>) = KafkaTemplate(producerFactory)
 }
 ```
 
