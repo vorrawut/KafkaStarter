@@ -89,8 +89,6 @@ Use the annotation for quick, per-listener setup:
 @KafkaListener(
     topics = ["\${kafka.topic.name:test-topic}"],
     groupId = "\${kafka.consumer.groupId:test-consumer-group}",
-    clientIdPrefix = "neo",
-    concurrency = "4"
 )
 fun receive(message: String) {
 println("Received: $message")

@@ -24,7 +24,7 @@ const sidebars = {
         {
           type: "category",
           label: "Lesson 1: Why Kafka?",
-          items: ["modules/lesson_1/concept", "modules/lesson_1/event"],
+          items: ["modules/lesson_1/concept", "modules/lesson_1/event", "modules/lesson_1/workshop"],
         },
         {
           type: "category",
